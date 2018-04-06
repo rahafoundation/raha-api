@@ -1,0 +1,25 @@
+{
+  "name": "raha-api",
+  "version": "1.0.0",
+  "description": "Backend services for Raha.",
+  "main": "dist/app.js",
+  "author": "Raha Foundation",
+  "license": "Apache-2.0",
+  "private": null,
+  "dependencies": {
+    "@koa/cors": "2",
+    "firebase-admin": "^5.12.0",
+    "koa": "^2.5.0"
+  },
+  "scripts": {
+    "use-prod-db": "cp src/config/firebase.prod.json src/config/firebase.config.json",
+    "use-test-db": "cp src/config/firebase.test.json src/config/firebase.config.json",
+    "build": "rm -rf dist && tsc && mkdir -p dist/config && cp src/config/firebase.config.json dist/config/firebase.config.json",
+    "start": "node dist/app.js",
+    "deploy": "yarn build && gcloud app deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^9.6.2",
+    "typescript": "^2.8.1"
+  }
+}
