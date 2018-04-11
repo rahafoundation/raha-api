@@ -30,6 +30,25 @@ const app = new Koa();
 
 app.use(cors());
 
+const publicRouter = new Router()
+    .get('/api/operations', async ctx => {
+        // TODO: Do we need to paginate?
+        const ops = await operations.orderBy('created_at').get();
+        const parsedOps: Array<Object> = [];
+        ops.forEach(op => parsedOps.push({
+            creator_mid: op.get('creator_mid'),
+            creator_uid: op.get('creator_uid'),
+            op_code: op.get('op_code'),
+            data: op.get('data'),
+        }));
+        ctx.body = JSON.stringify(parsedOps);
+        ctx.status = 200;
+        return;
+    });
+
+app.use(publicRouter.routes());
+app.use(publicRouter.allowedMethods());
+
 // Put endpoints that don't need the user to be authenticated above this.
 app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
