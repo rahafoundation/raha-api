@@ -49,7 +49,6 @@ const authenticatedRouter = new Router()
         const authMember = await members.doc(authUid).get();
         try {
             const newOperation = await operations.add({
-                applied: false,
                 creator_mid: authMember.get('mid'),
                 creator_uid: authUid,
                 op_code: 'TRUST',
