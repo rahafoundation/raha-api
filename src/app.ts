@@ -36,6 +36,7 @@ const publicRouter = new Router()
         const ops = await operations.orderBy('created_at').get();
         const parsedOps: Array<Object> = [];
         ops.forEach(op => parsedOps.push({
+            id: op.id,
             creator_mid: op.get('creator_mid'),
             creator_uid: op.get('creator_uid'),
             op_code: op.get('op_code'),
