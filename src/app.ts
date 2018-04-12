@@ -5,6 +5,7 @@ import path from 'path';
 import Koa from 'koa';
 import cors from '@koa/cors';
 import Router from 'koa-router';
+import bodyParser from 'koa-bodyparser';
 
 import { getAdmin } from './firebaseAdmin';
 import  { verifyFirebaseIdToken } from './verifyFirebaseIdToken';
@@ -29,6 +30,7 @@ const operations = db.collection('operations');
 const app = new Koa();
 
 app.use(cors());
+app.use(bodyParser());
 
 const publicRouter = new Router()
     .get('/api/operations', async ctx => {
@@ -62,6 +64,30 @@ const authenticatedRouter = new Router()
         }
         ctx.state.toMember = midQuery.docs[0];
         return await next();
+    })
+    .post('/api/members/:mid/request_invite', async ctx => {
+        const authUid = ctx.state.user.uid;
+        const authMember = await members.doc(authUid).get();
+        try {
+            const newOperation = {
+                creator_mid: authMember.get('mid'),
+                creator_uid: authUid,
+                op_code: 'REQUEST_INVITE',
+                data: {
+                    full_name: ctx.request.body.fullName,
+                    to_mid: ctx.state.toMember.get('mid'),
+                    to_uid: ctx.state.toMember.id,
+                    video_url: ctx.request.body.videoUrl,
+                },
+            };
+            await operations.add(newOperation);
+            ctx.body = newOperation;
+            ctx.status = 201;
+            return;
+        } catch (error) {
+            ctx.body = error;
+            ctx.status = 500;
+        }
     })
     .post('/api/members/:mid/trust', async ctx => {
         const authUid = ctx.state.user.uid;
