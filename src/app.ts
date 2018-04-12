@@ -57,12 +57,12 @@ app.use(verifyFirebaseIdToken(admin));
 
 const authenticatedRouter = new Router()
     .param('uid', async (uid, ctx, next) => {
-        const uidQuery = (await members.doc(uid).get());
-        if (uidQuery.empty) {
+        const uidDoc = (await members.doc(uid).get());
+        if (!uidDoc.exists) {
             ctx.status = 404;
             return;
         }
-        ctx.state.toMember = uidQuery.docs[0];
+        ctx.state.toMember = uidDoc;
         return await next();
     })
     .post('/api/members/:uid/request_invite', async ctx => {
@@ -80,8 +80,11 @@ const authenticatedRouter = new Router()
                     video_url: ctx.request.body.videoUrl,
                 },
             };
-            await operations.add(newOperation);
-            ctx.body = newOperation;
+            const newOperationDoc = await operations.add(newOperation);
+            ctx.body = {
+                ...newOperation,
+                id: newOperationDoc.id,
+            };
             ctx.status = 201;
             return;
         } catch (error) {
@@ -93,7 +96,7 @@ const authenticatedRouter = new Router()
         const authUid = ctx.state.user.uid;
         const authMember = await members.doc(authUid).get();
         try {
-            const newOperation = await operations.add({
+            const newOperation = {
                 creator_mid: authMember.get('mid'),
                 creator_uid: authUid,
                 op_code: 'TRUST',
@@ -101,8 +104,12 @@ const authenticatedRouter = new Router()
                     to_mid: ctx.state.toMember.get('mid'),
                     to_uid: ctx.state.toMember.id,
                 },
-            });
-            ctx.body = newOperation;
+            };
+            const newOperationDoc = await operations.add(newOperation);
+            ctx.body = {
+                ...newOperation,
+                id: newOperationDoc.id
+            };
             ctx.status = 201;
             return;
         } catch (error) {
