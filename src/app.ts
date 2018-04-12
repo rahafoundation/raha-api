@@ -5,6 +5,7 @@ import path from 'path';
 import Koa from 'koa';
 import cors from '@koa/cors';
 import Router from 'koa-router';
+import bodyParser from 'koa-bodyparser';
 
 import { getAdmin } from './firebaseAdmin';
 import  { verifyFirebaseIdToken } from './verifyFirebaseIdToken';
@@ -29,6 +30,7 @@ const operations = db.collection('operations');
 const app = new Koa();
 
 app.use(cors());
+app.use(bodyParser());
 
 const publicRouter = new Router()
     .get('/api/operations', async ctx => {
@@ -55,20 +57,47 @@ app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
 const authenticatedRouter = new Router()
-    .param('mid', async (mid, ctx, next) => {
-        const midQuery = (await members.where('mid', '==', mid).get());
-        if (midQuery.empty) {
+    .param('uid', async (uid, ctx, next) => {
+        const uidDoc = (await members.doc(uid).get());
+        if (!uidDoc.exists) {
             ctx.status = 404;
             return;
         }
-        ctx.state.toMember = midQuery.docs[0];
+        ctx.state.toMember = uidDoc;
         return await next();
     })
-    .post('/api/members/:mid/trust', async ctx => {
+    .post('/api/members/:uid/request_invite', async ctx => {
         const authUid = ctx.state.user.uid;
         const authMember = await members.doc(authUid).get();
         try {
-            const newOperation = await operations.add({
+            const newOperation = {
+                creator_mid: authMember.get('mid'),
+                creator_uid: authUid,
+                op_code: 'REQUEST_INVITE',
+                data: {
+                    full_name: ctx.request.body.fullName,
+                    to_mid: ctx.state.toMember.get('mid'),
+                    to_uid: ctx.state.toMember.id,
+                    video_url: ctx.request.body.videoUrl,
+                },
+            };
+            const newOperationDoc = await operations.add(newOperation);
+            ctx.body = {
+                ...newOperation,
+                id: newOperationDoc.id,
+            };
+            ctx.status = 201;
+            return;
+        } catch (error) {
+            ctx.body = error;
+            ctx.status = 500;
+        }
+    })
+    .post('/api/members/:uid/trust', async ctx => {
+        const authUid = ctx.state.user.uid;
+        const authMember = await members.doc(authUid).get();
+        try {
+            const newOperation = {
                 creator_mid: authMember.get('mid'),
                 creator_uid: authUid,
                 op_code: 'TRUST',
@@ -76,8 +105,12 @@ const authenticatedRouter = new Router()
                     to_mid: ctx.state.toMember.get('mid'),
                     to_uid: ctx.state.toMember.id,
                 },
-            });
-            ctx.body = newOperation;
+            };
+            const newOperationDoc = await operations.add(newOperation);
+            ctx.body = {
+                ...newOperation,
+                id: newOperationDoc.id
+            };
             ctx.status = 201;
             return;
         } catch (error) {
