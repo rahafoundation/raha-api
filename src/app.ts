@@ -56,16 +56,16 @@ app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
 const authenticatedRouter = new Router()
-    .param('mid', async (mid, ctx, next) => {
-        const midQuery = (await members.where('mid', '==', mid).get());
-        if (midQuery.empty) {
+    .param('uid', async (uid, ctx, next) => {
+        const uidQuery = (await members.doc(uid).get());
+        if (uidQuery.empty) {
             ctx.status = 404;
             return;
         }
-        ctx.state.toMember = midQuery.docs[0];
+        ctx.state.toMember = uidQuery.docs[0];
         return await next();
     })
-    .post('/api/members/:mid/request_invite', async ctx => {
+    .post('/api/members/:uid/request_invite', async ctx => {
         const authUid = ctx.state.user.uid;
         const authMember = await members.doc(authUid).get();
         try {
@@ -89,7 +89,7 @@ const authenticatedRouter = new Router()
             ctx.status = 500;
         }
     })
-    .post('/api/members/:mid/trust', async ctx => {
+    .post('/api/members/:uid/trust', async ctx => {
         const authUid = ctx.state.user.uid;
         const authMember = await members.doc(authUid).get();
         try {
