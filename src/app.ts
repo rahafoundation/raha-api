@@ -9,6 +9,7 @@ import bodyParser from 'koa-bodyparser';
 
 import { getAdmin } from './firebaseAdmin';
 import  { verifyFirebaseIdToken } from './verifyFirebaseIdToken';
+import { firestore } from 'firebase-admin';
 
 let admin;
 if (process.env.NODE_ENV === 'test' && process.argv.length > 2) {
@@ -80,16 +81,17 @@ const authenticatedRouter = new Router()
                     to_uid: ctx.state.toMember.id,
                     video_url: ctx.request.body.videoUrl,
                 },
+                created_at: firestore.FieldValue.serverTimestamp(),
             };
             const newOperationDoc = await operations.add(newOperation);
             ctx.body = {
-                ...newOperation,
+                ...(await newOperationDoc.get()).data(),
                 id: newOperationDoc.id,
-            };
+            }
             ctx.status = 201;
             return;
         } catch (error) {
-            ctx.body = error;
+            ctx.body = "An error occurred while creating this operation.";
             ctx.status = 500;
         }
     })
@@ -105,16 +107,17 @@ const authenticatedRouter = new Router()
                     to_mid: ctx.state.toMember.get('mid'),
                     to_uid: ctx.state.toMember.id,
                 },
+                created_at: firestore.FieldValue.serverTimestamp(),
             };
             const newOperationDoc = await operations.add(newOperation);
             ctx.body = {
-                ...newOperation,
-                id: newOperationDoc.id
-            };
+                ...(await newOperationDoc.get()).data(),
+                id: newOperationDoc.id,
+            }
             ctx.status = 201;
             return;
         } catch (error) {
-            ctx.body = error;
+            ctx.body = "An error occurred while creating this operation.";
             ctx.status = 500;
         }
     });
