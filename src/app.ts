@@ -72,10 +72,9 @@ const authenticatedRouter = new Router()
   })
   .post("/api/members/:uid/request_invite", async ctx => {
     const authUid = ctx.state.user.uid;
-    const authMember = await members.doc(authUid).get();
     try {
       const newOperation = {
-        creator_mid: authMember.get("mid"),
+        creator_mid: ctx.request.body.creatorMid,
         creator_uid: authUid,
         op_code: "REQUEST_INVITE",
         data: {
@@ -94,6 +93,7 @@ const authenticatedRouter = new Router()
       ctx.status = 201;
       return;
     } catch (error) {
+      console.error(error);
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
     }
@@ -120,6 +120,7 @@ const authenticatedRouter = new Router()
       ctx.status = 201;
       return;
     } catch (error) {
+      console.error(error);
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
     }
@@ -128,4 +129,4 @@ const authenticatedRouter = new Router()
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 4000);
