@@ -7,6 +7,7 @@ import Koa from "koa";
 import cors from "@koa/cors";
 import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
+import asyncBusboy from "async-busboy";
 import * as coconut from "coconutjs";
 
 import Storage from "@google-cloud/storage";
@@ -20,7 +21,7 @@ const PRIVATE_VIDEO_BUCKET = "raha-5395e.appspot.com";
 const PUBLIC_VIDEO_BUCKET = "raha-video";
 const TEN_MINUTES = 1000 * 60 * 10;
 
-let admin, storage;
+let admin, storage: Storage.Storage;
 if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
   const credentialsPathArg = process.argv[2];
   if (path.isAbsolute(credentialsPathArg)) {
@@ -56,16 +57,14 @@ async function validateUid(uid, ctx, next) {
   return await next();
 }
 
-function getPrivateVideoRef(memberUid) {
+function getPrivateVideoRef(memberUid): Storage.File {
   return storage
     .bucket(PRIVATE_VIDEO_BUCKET)
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
-function getPublicVideoRef(memberMid) {
-  return storage
-    .bucket(PUBLIC_VIDEO_BUCKET)
-    .file(`public-video/${memberMid}/invite.mp4`);
+function getPublicVideoRef(memberMid): Storage.File {
+  return storage.bucket(PUBLIC_VIDEO_BUCKET).file(`${memberMid}/invite.mp4`);
 }
 
 async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
@@ -130,8 +129,10 @@ const publicRouter = new Router()
   .post("/api/members/:uid/notify_video_encoded", async ctx => {
     try {
       const videoRef = getPrivateVideoRef(ctx.state.toMember.id);
-      if (await videoRef.exists()) {
+      if ((await videoRef.exists())[0]) {
         await videoRef.delete();
+      } else {
+        console.warn("We expected a private video file to exist that did not.");
       }
       ctx.status = 200;
     } catch (error) {
@@ -140,33 +141,66 @@ const publicRouter = new Router()
     }
     return;
   })
-  .post("/api/members/:uid/upload_video", async ctx => {
-    try {
-      const { mid } = ctx.query;
-      if (!mid) {
-        ctx.status = 400;
-        ctx.body = "Must supply MID when uploading video.";
-        return;
-      }
+  .post("/api/members/:uid/upload_video", ctx => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { mid } = ctx.query;
+        if (!mid) {
+          ctx.status = 400;
+          ctx.body = "Must supply MID when uploading video.";
+          return resolve();
+        }
 
-      const videoRef = getPublicVideoRef(mid);
-      if (await videoRef.exists()) {
-        ctx.status = 400;
-        ctx.body =
-          "Video already exists at intended storage destination. Cannot overwrite.";
-        return;
-      }
+        const videoRef = getPublicVideoRef(decodeURIComponent(mid));
+        if ((await videoRef.exists())[0]) {
+          ctx.status = 400;
+          ctx.body =
+            "Video already exists at intended storage destination. Cannot overwrite.";
+          return resolve();
+        }
 
-      await videoRef.save(ctx.request.body.encoded_video, { resumable: false });
-      ctx.status = 201;
-    } catch (error) {
-      console.error(
-        "An error occurred while saving an encoded video from Coconut."
-      );
-      console.error(error);
-      ctx.status = 500;
-    }
-    return;
+        const reqType = ctx.request.type;
+        if (reqType !== "multipart/form-data") {
+          ctx.status = 400;
+          ctx.body = "Must submit data as multipart/form-data";
+          return resolve();
+        }
+
+        const { files } = await asyncBusboy(ctx.req);
+        const encodedVideo = files.filter(
+          file => file.fieldname === "encoded_video"
+        );
+        if (encodedVideo.length !== 1) {
+          ctx.status = 400;
+          ctx.body = "Zero or multiple encoded videos supplied with request.";
+          return resolve();
+        }
+
+        encodedVideo[0]
+          .pipe(videoRef.createWriteStream())
+          .on("error", error => {
+            const errorMessage = "Failed to write file to Google storage.";
+            console.error(errorMessage);
+            console.error(error);
+            ctx.body = errorMessage;
+            ctx.status = 500;
+            resolve();
+          })
+          .on("finish", () => {
+            ctx.status = 201;
+            resolve();
+          });
+      } catch (error) {
+        const errorMessage =
+          "An error occurred while saving an encoded video from Coconut.";
+        console.error(errorMessage);
+        console.error(error);
+        ctx.body = errorMessage;
+        ctx.status = 500;
+        resolve();
+      }
+      return;
+    });
   });
 
 app.use(publicRouter.routes());
@@ -179,32 +213,53 @@ app.use(verifyFirebaseIdToken(admin));
 const authenticatedRouter = new Router()
   .param("uid", validateUid)
   .post("/api/members/:uid/request_invite", async ctx => {
-    const loggedInUid = ctx.state.user.uid;
     try {
+      const loggedInUid = ctx.state.user.uid;
+      const loggedInMemberRef = members.doc(loggedInUid);
+
+      if ((await loggedInMemberRef.get()).exists) {
+        ctx.status = 400;
+        ctx.body = "You have already requested an invite.";
+        return;
+      }
+
       const { creatorMid, fullName } = ctx.request.body;
+      const requestingInviteFromMid = ctx.state.toMember.get("mid");
+      const requestingInviteFromUid = ctx.state.toMember.id;
+
       const newOperation = {
         creator_mid: creatorMid,
         creator_uid: loggedInUid,
         op_code: "REQUEST_INVITE",
         data: {
           full_name: fullName,
-          to_mid: ctx.state.toMember.get("mid"),
-          to_uid: ctx.state.toMember.id
+          to_mid: requestingInviteFromMid,
+          to_uid: requestingInviteFromUid
           // TODO: Eventually we need to extract file extension from this or a similar parameter.
           // Currently we only handle videos uploaded as invite.mp4.
           // video_url: ctx.request.body.videoUrl
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
+      const newMember = {
+        mid: creatorMid,
+        full_name: fullName,
+        request_invite_from_uid: requestingInviteFromUid,
+        request_invite_from_mid: requestingInviteFromMid,
+        created_at: firestore.FieldValue.serverTimestamp(),
+        request_invite_block_at: null,
+        request_invite_block_seq: null,
+        request_invite_op_seq: null
+      };
 
       createCoconutVideoEncodingJob(loggedInUid, creatorMid);
 
-      // const newOperationDoc = await operations.add(newOperation);
-      // ctx.body = {
-      //   ...(await newOperationDoc.get()).data(),
-      //   id: newOperationDoc.id
-      // };
-      ctx.body = newOperation;
+      const newOperationDoc = await operations.add(newOperation);
+      await loggedInMemberRef.create(newMember);
+      ctx.body = {
+        ...(await newOperationDoc.get()).data(),
+        id: newOperationDoc.id
+      };
       ctx.status = 201;
       return;
     } catch (error) {
