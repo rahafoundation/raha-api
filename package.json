@@ -8,6 +8,7 @@
   "private": null,
   "dependencies": {
     "@koa/cors": "2",
+    "coconutjs": "^2.2.0",
     "firebase-admin": "^5.12.0",
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
@@ -16,13 +17,14 @@
   "scripts": {
     "use-prod-db": "cp src/config/firebase.prod.json src/config/firebase.config.json",
     "use-test-db": "cp src/config/firebase.test.json src/config/firebase.config.json",
-    "build": "rm -rf dist && tsc && mkdir -p dist/config && cp src/config/firebase.config.json dist/config/firebase.config.json",
+    "build": "rm -rf dist && tsc && mkdir -p dist/config && cp src/DO_NOT_COMMIT.config.json dist/ && cp src/config/firebase.config.json dist/config/firebase.config.json",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
     "deploy": "yarn build && gcloud app deploy"
   },
   "devDependencies": {
     "@types/node": "^9.6.2",
+    "tslint": "^5.9.1",
     "typescript": "^2.8.1"
   }
 }
