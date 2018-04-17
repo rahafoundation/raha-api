@@ -8,6 +8,7 @@
   "private": null,
   "dependencies": {
     "@koa/cors": "2",
+    "async-busboy": "^0.6.2",
     "coconutjs": "^2.2.0",
     "firebase-admin": "^5.12.0",
     "koa": "^2.5.0",
