@@ -1,5 +1,5 @@
 {
-  "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier"],
+  "extends": ["tslint:latest", "tslint-config-prettier"],
   "rules": {
     // I think putting I in front of interface names doesn't get us anything
     "interface-name": false,
@@ -17,8 +17,6 @@
     "no-empty-interface": false,
     // multiple classes in file is useful for child components in React
     "max-classes-per-file": false,
-    // perf isn't important enough for this inconvenience
-    "jsx-no-lambda": false,
     // dev dependencies aren't implicit
     "no-implicit-dependencies": [true, "dev"],
     // too strict, not useful
