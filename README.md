@@ -15,12 +15,12 @@
 # Acquiring Coconut API key
 
 We use [Coconut](https://app.coconut.co) to handle encoding our videos. Coconut
-requires an API key which we include in the `./src/DO_NOT_COMMIT.config.json`
+requires an API key which we include in the `./src/data/DO_NOT_COMMIT.secrets.config.json`
 file with the following structure:
 
 ```
 {
-    "coconut_api_key": <api_key>
+    "coconutApiKey": <api_key>
 }
 ```
 
@@ -30,4 +30,4 @@ Ask @rahulgi for the key.
 
 # Deploy Instructions
 
-1.  Deploy: `yarn deploy`
+1.  Deploy: `yarn deploy-<prod/test>`

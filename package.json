@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "author": "Raha Foundation",
   "license": "Apache-2.0",
-  "private": null,
+  "private": true,
   "dependencies": {
     "@google-cloud/storage": "^1.6.0",
     "@koa/cors": "2",
@@ -17,12 +17,16 @@
     "koa-router": "^7.4.0"
   },
   "scripts": {
-    "use-prod-db": "cp src/config/firebase.prod.json src/config/firebase.config.json",
-    "use-test-db": "cp src/config/firebase.test.json src/config/firebase.config.json",
-    "build": "rm -rf dist && tsc && mkdir -p dist/config && cp src/DO_NOT_COMMIT.config.json dist/ && cp src/config/firebase.config.json dist/config/firebase.config.json",
+    "use-prod-config": "cp src/data/prod.config.json src/data/config.json",
+    "use-test-config": "cp src/data/test.config.json src/data/config.json",
+    "build":
+      "rm -rf dist && tsc && mkdir -p dist/data && cp src/data/config.json dist/data/config.json && cp src/data/DO_NOT_COMMIT.secrets.config.json dist/data",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
-    "deploy": "yarn build && gcloud app deploy"
+    "deploy-prod":
+      "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
+    "deploy-test":
+      "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
   },
   "devDependencies": {
     "@types/node": "^9.6.2",
