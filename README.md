@@ -1,14 +1,33 @@
 # Make sure you have gcloud installed
-1. Install gcloud: `brew cask install google-cloud-sdk`
-1. Initialize gcloud: `gcloud init`
+
+1.  Install gcloud: `brew cask install google-cloud-sdk`
+1.  Initialize gcloud: `gcloud init`
 
 # Running locally
-1. Run server: `yarn test <path to service account credentials>`
-1. If you don't have service account credentials, follow the instructions at:
-https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app. DO NOT
-COMMIT THESE CREDENTIALS.
-1. If you receive an error about default application credentials:
-`gcloud auth application-default login`
+
+1.  Run server: `yarn test <path to service account credentials>`
+1.  If you don't have service account credentials, follow the instructions at:
+    https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app. DO NOT
+    COMMIT THESE CREDENTIALS.
+1.  If you receive an error about default application credentials:
+    `gcloud auth application-default login`
+
+# Acquiring Coconut API key
+
+We use [Coconut](https://app.coconut.co) to handle encoding our videos. Coconut
+requires an API key which we include in the `./src/DO_NOT_COMMIT.config.json`
+file with the following structure:
+
+```
+{
+    "coconut_api_key": <api_key>
+}
+```
+
+This file must be present to deploy raha-api or run it locally. Until we have
+a better key management system, you will have to create this file yourself.
+Ask @rahulgi for the key.
 
 # Deploy Instructions
-1. Deploy: `yarn deploy`
+
+1.  Deploy: `yarn deploy`
