@@ -17,6 +17,8 @@ import { firestore } from "firebase-admin";
 
 const { coconut_api_key } = require("./DO_NOT_COMMIT.config.json");
 
+const API_BASE = "https://raha-5395e.appspot.com";
+
 const PRIVATE_VIDEO_BUCKET = "raha-5395e.appspot.com";
 const PUBLIC_VIDEO_BUCKET = "raha-video";
 const TEN_MINUTES = 1000 * 60 * 10;
@@ -77,12 +79,9 @@ async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
 
   const webhookUrl = new URL(
     `/api/members/${memberUid}/notify_video_encoded`,
-    "https://raha-5395e.appspot.com"
+    API_BASE
   );
-  const uploadUrl = new URL(
-    `/api/members/${memberUid}/upload_video`,
-    "https://raha-5395e.appspot.com"
-  );
+  const uploadUrl = new URL(`/api/members/${memberUid}/upload_video`, API_BASE);
   uploadUrl.searchParams.append("mid", creatorMid);
 
   coconut.createJob(
@@ -123,7 +122,6 @@ const publicRouter = new Router()
     );
     ctx.body = JSON.stringify(parsedOps);
     ctx.status = 200;
-    return;
   })
   /* These endpoints are consumed by coconut. */
   .post("/api/members/:uid/notify_video_encoded", async ctx => {
@@ -139,68 +137,61 @@ const publicRouter = new Router()
       console.error(error);
       ctx.status = 500;
     }
-    return;
   })
-  .post("/api/members/:uid/upload_video", ctx => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const { mid } = ctx.query;
-        if (!mid) {
-          ctx.status = 400;
-          ctx.body = "Must supply MID when uploading video.";
-          return resolve();
-        }
+  .post("/api/members/:uid/upload_video", async ctx => {
+    try {
+      const { mid } = ctx.query;
+      if (!mid) {
+        ctx.status = 400;
+        ctx.body = "Must supply MID when uploading video.";
+        return;
+      }
 
-        const videoRef = getPublicVideoRef(decodeURIComponent(mid));
-        if ((await videoRef.exists())[0]) {
-          ctx.status = 400;
-          ctx.body =
-            "Video already exists at intended storage destination. Cannot overwrite.";
-          return resolve();
-        }
+      const videoRef = getPublicVideoRef(decodeURIComponent(mid));
+      if ((await videoRef.exists())[0]) {
+        ctx.status = 400;
+        ctx.body =
+          "Video already exists at intended storage destination. Cannot overwrite.";
+        return;
+      }
 
-        const reqType = ctx.request.type;
-        if (reqType !== "multipart/form-data") {
-          ctx.status = 400;
-          ctx.body = "Must submit data as multipart/form-data";
-          return resolve();
-        }
+      const reqType = ctx.request.type;
+      if (reqType !== "multipart/form-data") {
+        ctx.status = 400;
+        ctx.body = "Must submit data as multipart/form-data";
+        return;
+      }
 
-        const { files } = await asyncBusboy(ctx.req);
-        const encodedVideo = files.filter(
-          file => file.fieldname === "encoded_video"
-        );
-        if (encodedVideo.length !== 1) {
-          ctx.status = 400;
-          ctx.body = "Zero or multiple encoded videos supplied with request.";
-          return resolve();
-        }
+      const { files } = await asyncBusboy(ctx.req);
+      const encodedVideo = files.filter(
+        file => file.fieldname === "encoded_video"
+      );
+      if (encodedVideo.length !== 1) {
+        ctx.status = 400;
+        ctx.body = "Zero or multiple encoded videos supplied with request.";
+        return;
+      }
 
+      await new Promise((resolve, reject) => {
         encodedVideo[0]
           .pipe(videoRef.createWriteStream())
           .on("error", error => {
-            const errorMessage = "Failed to write file to Google storage.";
-            console.error(errorMessage);
             console.error(error);
-            ctx.body = errorMessage;
-            ctx.status = 500;
-            resolve();
+            reject("Failed to write file to Google storage.");
           })
           .on("finish", () => {
-            ctx.status = 201;
             resolve();
           });
-      } catch (error) {
-        const errorMessage =
-          "An error occurred while saving an encoded video from Coconut.";
-        console.error(errorMessage);
-        console.error(error);
-        ctx.body = errorMessage;
-        ctx.status = 500;
-        resolve();
-      }
-      return;
-    });
+      });
+      ctx.status = 201;
+    } catch (error) {
+      const errorMessage =
+        "An error occurred while saving an encoded video from Coconut.";
+      console.error(errorMessage);
+      console.error(error);
+      ctx.body = errorMessage;
+      ctx.status = 500;
+    }
   });
 
 app.use(publicRouter.routes());
@@ -261,7 +252,6 @@ const authenticatedRouter = new Router()
         id: newOperationDoc.id
       };
       ctx.status = 201;
-      return;
     } catch (error) {
       console.error(error);
       ctx.body = "An error occurred while creating this operation.";
@@ -288,7 +278,6 @@ const authenticatedRouter = new Router()
         id: newOperationDoc.id
       };
       ctx.status = 201;
-      return;
     } catch (error) {
       console.error(error);
       ctx.body = "An error occurred while creating this operation.";
