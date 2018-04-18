@@ -15,6 +15,7 @@ import { getAdmin } from "./firebaseAdmin";
 import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
 import { firestore } from "firebase-admin";
 
+// tslint:disable-next-line:no-var-requires
 const { coconut_api_key } = require("./DO_NOT_COMMIT.config.json");
 
 const API_BASE = "https://raha-5395e.appspot.com";
@@ -23,7 +24,8 @@ const PRIVATE_VIDEO_BUCKET = "raha-5395e.appspot.com";
 const PUBLIC_VIDEO_BUCKET = "raha-video";
 const TEN_MINUTES = 1000 * 60 * 10;
 
-let admin, storage: Storage.Storage;
+let admin;
+let storage: Storage.Storage;
 if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
   const credentialsPathArg = process.argv[2];
   if (path.isAbsolute(credentialsPathArg)) {
@@ -56,7 +58,7 @@ async function validateUid(uid, ctx, next) {
     return;
   }
   ctx.state.toMember = uidDoc;
-  return await next();
+  return next();
 }
 
 function getPrivateVideoRef(memberUid): Storage.File {
@@ -95,10 +97,14 @@ async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
     },
     job => {
       if (job.status === "ok") {
+        // tslint:disable-next-line:no-console
         console.log("Coconut encoding job created successfully.");
+        // tslint:disable-next-line:no-console
         console.log(job.id);
       } else {
+        // tslint:disable-next-line:no-console
         console.error("Coconut encoding job error", job.error_code);
+        // tslint:disable-next-line:no-console
         console.error(job.error_message);
       }
     }
@@ -110,7 +116,7 @@ const publicRouter = new Router()
   .get("/api/operations", async ctx => {
     // TODO: Do we need to paginate?
     const ops = await operations.orderBy("created_at").get();
-    const parsedOps: Array<Object> = [];
+    const parsedOps: object[] = [];
     ops.forEach(op =>
       parsedOps.push({
         id: op.id,
@@ -130,10 +136,12 @@ const publicRouter = new Router()
       if ((await videoRef.exists())[0]) {
         await videoRef.delete();
       } else {
+        // tslint:disable-next-line:no-console
         console.warn("We expected a private video file to exist that did not.");
       }
       ctx.status = 200;
     } catch (error) {
+      // tslint:disable-next-line:no-console
       console.error(error);
       ctx.status = 500;
     }
@@ -176,6 +184,7 @@ const publicRouter = new Router()
         encodedVideo[0]
           .pipe(videoRef.createWriteStream())
           .on("error", error => {
+            // tslint:disable-next-line:no-console
             console.error(error);
             reject("Failed to write file to Google storage.");
           })
@@ -187,7 +196,9 @@ const publicRouter = new Router()
     } catch (error) {
       const errorMessage =
         "An error occurred while saving an encoded video from Coconut.";
+      // tslint:disable-next-line:no-console
       console.error(errorMessage);
+      // tslint:disable-next-line:no-console
       console.error(error);
       ctx.body = errorMessage;
       ctx.status = 500;
@@ -253,6 +264,7 @@ const authenticatedRouter = new Router()
       };
       ctx.status = 201;
     } catch (error) {
+      // tslint:disable-next-line:no-console
       console.error(error);
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
@@ -279,6 +291,7 @@ const authenticatedRouter = new Router()
       };
       ctx.status = 201;
     } catch (error) {
+      // tslint:disable-next-line:no-console
       console.error(error);
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
