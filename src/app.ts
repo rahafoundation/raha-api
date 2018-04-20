@@ -9,6 +9,7 @@ import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import asyncBusboy from "async-busboy";
 import * as coconut from "coconutjs";
+import sgMail from "@sendgrid/mail";
 
 import Storage from "@google-cloud/storage";
 import { getAdmin } from "./firebaseAdmin";
@@ -17,8 +18,10 @@ import { firestore } from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
 const config = require("./config/config.json");
-// tslint:disable-next-line:no-var-requires
-const { coconutApiKey } = require("./config/DO_NOT_COMMIT.secrets.config");
+import {
+  coconutApiKey,
+  sendgridApiKey
+} from "./config/DO_NOT_COMMIT.secrets.config";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 
@@ -43,6 +46,8 @@ if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
 const db = admin.firestore();
 const members = db.collection("members");
 const operations = db.collection("operations");
+
+sgMail.setApiKey(sendgridApiKey);
 
 const app = new Koa();
 
@@ -299,6 +304,53 @@ const authenticatedRouter = new Router()
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
     }
+  })
+  .post("/api/me/send_invite", async ctx => {
+    const loggedInUid = ctx.state.user.uid;
+    const loggedInMember = await members.doc(loggedInUid).get();
+    const { inviteEmail } = ctx.request.body;
+
+    if (!loggedInMember.exists) {
+      ctx.status = 400;
+      ctx.body = "You must yourself have been invited to Raha to send invites.";
+      return;
+    }
+
+    if (!inviteEmail) {
+      ctx.status = 400;
+      ctx.body = "No invite email included in request.";
+      return;
+    }
+
+    const loggedInFullName = loggedInMember.get("full_name");
+    const loggedInMid = loggedInMember.get("mid");
+    const inviteLink = new URL(
+      `/m/${loggedInMid}/invite`,
+      config.appBase
+    ).toString();
+
+    const msg = {
+      to: inviteEmail,
+      from: "invites@raha.io",
+      subject: `${loggedInFullName} invited you to join Raha!`,
+      text:
+        "Raha is the foundation for a global universal basic income. " +
+        "To ensure that only real humans can join, people must be invited " +
+        `by an existing member of the Raha network. ${loggedInFullName} ` +
+        "has invited you to join!\n\n" +
+        `Visit ${inviteLink} to join Raha!`,
+      html:
+        "<span><strong>Raha is the foundation for a global universal basic income.</strong><br /><br />" +
+        "To ensure that only real humans can join, people must be invited " +
+        `by an existing member of the Raha network. ${loggedInFullName} ` +
+        "has invited you to join!</span><br /><br />" +
+        `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`
+    };
+    sgMail.send(msg);
+    ctx.status = 201;
+    ctx.body = {
+      message: "Invite succesfully sent!"
+    };
   });
 
 app.use(authenticatedRouter.routes());
