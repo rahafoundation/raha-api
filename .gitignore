@@ -1,6 +1,6 @@
 dist/
 node_modules/
 
-DO_NOT_COMMIT.config.json
-firebase.config.json
+DO_NOT_COMMIT.secrets.config.json
+config.json
 yarn-error.log

@@ -16,12 +16,10 @@ import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
 import { firestore } from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
-const { coconut_api_key } = require("./DO_NOT_COMMIT.config.json");
+const config = require("./config/config.json");
+// tslint:disable-next-line:no-var-requires
+const { coconutApiKey } = require("./config/DO_NOT_COMMIT.secrets.config");
 
-const API_BASE = "https://raha-5395e.appspot.com";
-
-const PRIVATE_VIDEO_BUCKET = "raha-5395e.appspot.com";
-const PUBLIC_VIDEO_BUCKET = "raha-video";
 const TEN_MINUTES = 1000 * 60 * 10;
 
 let admin;
@@ -63,12 +61,14 @@ async function validateUid(uid, ctx, next) {
 
 function getPrivateVideoRef(memberUid): Storage.File {
   return storage
-    .bucket(PRIVATE_VIDEO_BUCKET)
+    .bucket(config.privateVideoBucket)
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
 function getPublicVideoRef(memberMid): Storage.File {
-  return storage.bucket(PUBLIC_VIDEO_BUCKET).file(`${memberMid}/invite.mp4`);
+  return storage
+    .bucket(config.publicVideoBucket)
+    .file(`${memberMid}/invite.mp4`);
 }
 
 async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
@@ -80,15 +80,18 @@ async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
   }))[0];
 
   const webhookUrl = new URL(
-    `/api/members/${memberUid}/notify_video_encoded`,
-    API_BASE
+    `/members/${memberUid}/notify_video_encoded`,
+    config.apiBase
   );
-  const uploadUrl = new URL(`/api/members/${memberUid}/upload_video`, API_BASE);
+  const uploadUrl = new URL(
+    `/members/${memberUid}/upload_video`,
+    config.apiBase
+  );
   uploadUrl.searchParams.append("mid", creatorMid);
 
   coconut.createJob(
     {
-      api_key: coconut_api_key,
+      api_key: coconutApiKey,
       source: temporaryAccessUrl,
       webhook: webhookUrl.toString(),
       outputs: {
