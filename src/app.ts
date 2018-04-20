@@ -47,6 +47,8 @@ const db = admin.firestore();
 const members = db.collection("members");
 const operations = db.collection("operations");
 
+sgMail.setApiKey(sendgridApiKey);
+
 const app = new Koa();
 
 app.use(cors());
@@ -327,7 +329,6 @@ const authenticatedRouter = new Router()
       config.appBase
     ).toString();
 
-    sgMail.setApiKey(sendgridApiKey);
     const msg = {
       to: inviteEmail,
       from: "invites@raha.io",
