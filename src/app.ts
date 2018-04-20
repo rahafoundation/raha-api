@@ -16,9 +16,9 @@ import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
 import { firestore } from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
-const config = require("./data/config.json");
+const config = require("./config/config.json");
 // tslint:disable-next-line:no-var-requires
-const { coconutApiKey } = require("./data/DO_NOT_COMMIT.secrets.config.json");
+const { coconutApiKey } = require("./config/DO_NOT_COMMIT.secrets.config");
 
 const TEN_MINUTES = 1000 * 60 * 10;
 

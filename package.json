@@ -17,10 +17,10 @@
     "koa-router": "^7.4.0"
   },
   "scripts": {
-    "use-prod-config": "cp src/data/prod.config.json src/data/config.json",
-    "use-test-config": "cp src/data/test.config.json src/data/config.json",
+    "use-prod-config": "cp src/config/prod.config.json src/config/config.json",
+    "use-test-config": "cp src/config/test.config.json src/config/config.json",
     "build":
-      "rm -rf dist && tsc && mkdir -p dist/data && cp src/data/config.json dist/data/config.json && cp src/data/DO_NOT_COMMIT.secrets.config.json dist/data",
+      "rm -rf dist && tsc && cp src/config/config.json dist/config/config.json",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
     "deploy-prod":
