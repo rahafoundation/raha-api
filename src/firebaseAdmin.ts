@@ -1,7 +1,7 @@
 import admin from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
-const config = require("./data/config.json");
+const config = require("./config/config.json");
 
 function getAdmin(credentialsPath?: string) {
   if (process.env.NODE_ENV === "test" && credentialsPath) {
