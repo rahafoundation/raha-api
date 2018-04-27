@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 
+import crypto from "crypto";
 import path from "path";
 import { URL } from "url";
 
-import Koa from "koa";
-import cors from "@koa/cors";
-import Router from "koa-router";
-import bodyParser from "koa-bodyparser";
 import asyncBusboy from "async-busboy";
 import * as coconut from "coconutjs";
+import { firestore } from "firebase-admin";
+import Storage from "@google-cloud/storage";
+import Koa from "koa";
+import bodyParser from "koa-bodyparser";
+import cors from "@koa/cors";
+import Router from "koa-router";
+import * as multihashes from "multihashes";
 import sgMail from "@sendgrid/mail";
 
-import Storage from "@google-cloud/storage";
 import { getAdmin } from "./firebaseAdmin";
 import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
-import { firestore } from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
 const config = require("./config/config.json");
@@ -46,6 +48,7 @@ if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
 const db = admin.firestore();
 const members = db.collection("members");
 const operations = db.collection("operations");
+const uidToVideoMultiHash = db.collection("uidToVideoMultiHashMap");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -119,6 +122,34 @@ async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
   );
 }
 
+/**
+ * Reads the entire stream of video data into a Buffer.
+ * @param videoStream ReadableStream of video data.
+ */
+function getVideoBufferFromStream(videoStream): Promise<Buffer> {
+  const buffers: Buffer[] = [];
+  const bufferPromise = new Promise<Buffer>((resolve, reject) => {
+    videoStream.on("data", (data: Buffer) => {
+      buffers.push(data);
+    });
+    videoStream.on("end", () => {
+      resolve(Buffer.concat(buffers));
+    });
+  });
+  videoStream.resume();
+  return bufferPromise;
+}
+
+/**
+ * Calculate the sha256 multihash of the video.
+ * @param videoBuffer Buffer of video data.
+ */
+function getMultiHashFromVideoBuffer(videoBuffer: Buffer): string {
+  const hash = crypto.createHash("sha256");
+  hash.update(videoBuffer);
+  return multihashes.toB58String(multihashes.encode(hash.digest(), "sha2-256"));
+}
+
 const publicRouter = new Router()
   .param("uid", validateUid)
   .get("/api/operations", async ctx => {
@@ -188,18 +219,22 @@ const publicRouter = new Router()
         return;
       }
 
-      await new Promise((resolve, reject) => {
-        encodedVideo[0]
-          .pipe(videoRef.createWriteStream())
-          .on("error", error => {
-            // tslint:disable-next-line:no-console
-            console.error(error);
-            reject("Failed to write file to Google storage.");
-          })
-          .on("finish", () => {
-            resolve();
-          });
+      const videoBuf = await getVideoBufferFromStream(encodedVideo[0]);
+      const multiHash = getMultiHashFromVideoBuffer(videoBuf);
+
+      const multiHashMappingRef = uidToVideoMultiHash.doc(
+        ctx.state.toMember.id
+      );
+      if ((await multiHashMappingRef.get()).exists) {
+        ctx.status = 400;
+        ctx.body = "Invite video already exists for specified user.";
+        return;
+      }
+      await multiHashMappingRef.create({
+        multiHash
       });
+
+      await videoRef.save(videoBuf);
       ctx.status = 201;
     } catch (error) {
       const errorMessage =
