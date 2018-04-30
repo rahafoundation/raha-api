@@ -88,11 +88,11 @@ async function createCoconutVideoEncodingJob(memberUid, creatorMid) {
   }))[0];
 
   const webhookUrl = new URL(
-    `/members/${memberUid}/notify_video_encoded`,
+    `/api/members/${memberUid}/notify_video_encoded`,
     config.apiBase
   );
   const uploadUrl = new URL(
-    `/members/${memberUid}/upload_video`,
+    `/api/members/${memberUid}/upload_video`,
     config.apiBase
   );
   uploadUrl.searchParams.append("mid", creatorMid);
