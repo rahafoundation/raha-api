@@ -170,20 +170,7 @@ const publicRouter = new Router()
   })
   /* These endpoints are consumed by coconut. */
   .post("/api/members/:uid/notify_video_encoded", async ctx => {
-    try {
-      const videoRef = getPrivateVideoRef(ctx.state.toMember.id);
-      if ((await videoRef.exists())[0]) {
-        await videoRef.delete();
-      } else {
-        // tslint:disable-next-line:no-console
-        console.warn("We expected a private video file to exist that did not.");
-      }
-      ctx.status = 200;
-    } catch (error) {
-      // tslint:disable-next-line:no-console
-      console.error(error);
-      ctx.status = 500;
-    }
+    ctx.status = 200;
   })
   .post("/api/members/:uid/upload_video", async ctx => {
     try {
@@ -194,8 +181,8 @@ const publicRouter = new Router()
         return;
       }
 
-      const videoRef = getPublicVideoRef(decodeURIComponent(mid));
-      if ((await videoRef.exists())[0]) {
+      const publicVideoRef = getPublicVideoRef(decodeURIComponent(mid));
+      if ((await publicVideoRef.exists())[0]) {
         ctx.status = 400;
         ctx.body =
           "Video already exists at intended storage destination. Cannot overwrite.";
@@ -234,7 +221,16 @@ const publicRouter = new Router()
         multiHash
       });
 
-      await videoRef.save(videoBuf);
+      await publicVideoRef.save(videoBuf);
+
+      const privateVideoRef = getPrivateVideoRef(ctx.state.toMember.id);
+      if ((await privateVideoRef.exists())[0]) {
+        await privateVideoRef.delete();
+      } else {
+        // tslint:disable-next-line:no-console
+        console.warn("We expected a private video file to exist that did not.");
+      }
+
       ctx.status = 201;
     } catch (error) {
       const errorMessage =
