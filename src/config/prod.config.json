@@ -1,5 +1,5 @@
 {
-  "apiBase": "https://raha-5395e.appspot.com/",
+  "apiBase": "https://raha-5395e.appspot.com/api/",
   "appBase": "https://raha.io",
   "privateVideoBucket": "raha-5395e.appspot.com",
   "publicVideoBucket": "raha-video",

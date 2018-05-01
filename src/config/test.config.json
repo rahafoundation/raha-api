@@ -1,5 +1,5 @@
 {
-  "apiBase": "https://raha-test.appspot.com",
+  "apiBase": "https://raha-test.appspot.com/api/",
   "appBase": "https://next.raha.io",
   "privateVideoBucket": "raha-test.appspot.com",
   "publicVideoBucket": "raha-video-test",
