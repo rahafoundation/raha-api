@@ -5,7 +5,7 @@
   "publicVideoBucket": "raha-video",
   "firebase": {
     "apiKey": "AIzaSyBXuACowZcLcr1wlhM53LHtibFwa59EmAY",
-    "authDomain": "raha.io",
+    "authDomain": "app.raha.io",
     "databaseURL": "https://raha-5395e.firebaseio.com",
     "projectId": "raha-5395e",
     "storageBucket": "raha-5395e.appspot.com",
