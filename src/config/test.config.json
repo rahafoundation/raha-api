@@ -1,6 +1,6 @@
 {
   "apiBase": "https://raha-test.appspot.com/api/",
-  "appBase": "https://next.raha.io",
+  "appBase": "https://next.app.raha.io",
   "privateVideoBucket": "raha-test.appspot.com",
   "publicVideoBucket": "raha-video-test",
   "firebase": {
