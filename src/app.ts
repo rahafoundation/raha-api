@@ -12,7 +12,6 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import cors from "@koa/cors";
 import Router from "koa-router";
-import * as multihashes from "multihashes";
 import sgMail from "@sendgrid/mail";
 
 import { getAdmin } from "./firebaseAdmin";
@@ -48,7 +47,7 @@ if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
 const db = admin.firestore();
 const members = db.collection("members");
 const operations = db.collection("operations");
-const uidToVideoMultiHash = db.collection("uidToVideoMultiHashMap");
+const uidToVideoHash = db.collection("uidToVideoHashMap");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -141,13 +140,13 @@ function getVideoBufferFromStream(videoStream): Promise<Buffer> {
 }
 
 /**
- * Calculate the sha256 multihash of the video.
+ * Calculate the hex-encoded sha256 hash of the video.
  * @param videoBuffer Buffer of video data.
  */
-function getMultiHashFromVideoBuffer(videoBuffer: Buffer): string {
+function getHashFromVideoBuffer(videoBuffer: Buffer): string {
   const hash = crypto.createHash("sha256");
   hash.update(videoBuffer);
-  return multihashes.toB58String(multihashes.encode(hash.digest(), "sha2-256"));
+  return hash.digest("hex");
 }
 
 const publicRouter = new Router()
@@ -207,18 +206,16 @@ const publicRouter = new Router()
       }
 
       const videoBuf = await getVideoBufferFromStream(encodedVideo[0]);
-      const multiHash = getMultiHashFromVideoBuffer(videoBuf);
+      const hash = getHashFromVideoBuffer(videoBuf);
 
-      const multiHashMappingRef = uidToVideoMultiHash.doc(
-        ctx.state.toMember.id
-      );
-      if ((await multiHashMappingRef.get()).exists) {
+      const hashMappingRef = uidToVideoHash.doc(ctx.state.toMember.id);
+      if ((await hashMappingRef.get()).exists) {
         ctx.status = 400;
         ctx.body = "Invite video already exists for specified user.";
         return;
       }
-      await multiHashMappingRef.create({
-        multiHash
+      await hashMappingRef.create({
+        hash
       });
 
       await publicVideoRef.save(videoBuf);
