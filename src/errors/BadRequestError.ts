@@ -1,7 +1,7 @@
 import ApplicationError from "./ApplicationError";
 
 /**
- * If the network request failed (i.e. fetch threw), this error wraps it
+ * If a request is bad, this error wraps it
  */
 export default class BadRequestError extends ApplicationError {
   constructor(message: string) {
