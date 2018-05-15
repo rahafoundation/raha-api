@@ -4,6 +4,7 @@ import crypto from "crypto";
 import path from "path";
 import { URL } from "url";
 
+import Big from "big.js";
 import asyncBusboy from "async-busboy";
 import * as coconut from "coconutjs";
 import { firestore } from "firebase-admin";
@@ -16,6 +17,7 @@ import sgMail from "@sendgrid/mail";
 
 import { getAdmin } from "./firebaseAdmin";
 import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
+import BadRequestError from "./errors/BadRequestError";
 
 // tslint:disable-next-line:no-var-requires
 const config = require("./config/config.json");
@@ -23,8 +25,11 @@ import {
   coconutApiKey,
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
+import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 
 const TEN_MINUTES = 1000 * 60 * 10;
+const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
+const DEFAULT_DONATION_RATE = 0.03;
 
 let admin;
 let storage: Storage.Storage;
@@ -44,7 +49,7 @@ if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
   storage = Storage();
 }
 
-const db = admin.firestore();
+const db: Firestore = admin.firestore();
 const members = db.collection("members");
 const operations = db.collection("operations");
 const uidToVideoHash = db.collection("uidToVideoHashMap");
@@ -331,6 +336,101 @@ const authenticatedRouter = new Router()
       console.error(error);
       ctx.body = "An error occurred while creating this operation.";
       ctx.status = 500;
+    }
+  })
+  .post("/api/members/:uid/give", async ctx => {
+    try {
+      const newOperationReference = await db.runTransaction(
+        async transaction => {
+          const loggedInUid = ctx.state.user.uid;
+          const loggedInMember = await transaction.get(
+            members.doc(loggedInUid)
+          );
+          const toMember = await transaction.get(
+            (ctx.state.toMember as DocumentSnapshot).ref
+          );
+          const { amount } = ctx.request.body;
+
+          const donationRecipient = await transaction.get(
+            members.doc(
+              ctx.state.toMember.get("donation_to") ||
+                DEFAULT_DONATION_RECIPIENT_UID
+            )
+          );
+
+          if (donationRecipient === undefined) {
+            throw new BadRequestError("Donation recipient does not exist.");
+          }
+
+          const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
+          const toBalance = new Big(toMember.get("raha_balance") || 0);
+          const donationRecipientBalance = new Big(
+            donationRecipient.get("raha_balance") || 0
+          );
+
+          const donationRate = new Big(
+            ctx.state.toMember.get("donation_rate") || DEFAULT_DONATION_RATE
+          );
+          const bigAmount = new Big(amount);
+          // Round to 2 decimal places and using rounding mode 0 = round down.
+          const donationAmount = bigAmount.times(donationRate).round(2, 0);
+          const toAmount = bigAmount.minus(donationAmount);
+
+          const newFromBalance = fromBalance.minus(bigAmount);
+          if (newFromBalance.lt(0)) {
+            throw new BadRequestError("Amount exceeds account balance.");
+          }
+
+          const newOperation = {
+            creator_uid: loggedInUid,
+            op_code: "GIVE",
+            data: {
+              to_uid: toMember.id,
+              amount: toAmount.toString(),
+              donation_to: donationRecipient.id,
+              donation_amount: donationAmount.toString()
+            },
+            created_at: firestore.FieldValue.serverTimestamp()
+          };
+
+          const newOperationRef = operations.doc();
+
+          transaction
+            .update(loggedInMember.ref, {
+              raha_balance: newFromBalance.toString()
+            })
+            .update(toMember.ref, {
+              raha_balance: toBalance.plus(bigAmount).toString()
+            })
+            .update(donationRecipient.ref, {
+              raha_balance: donationRecipientBalance
+                .plus(donationAmount)
+                .toString()
+            })
+            .set(newOperationRef, newOperation);
+          return newOperationRef;
+        }
+      );
+
+      ctx.body = {
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
+      };
+      ctx.status = 201;
+    } catch (error) {
+      // tslint:disable-next-line:no-console
+      console.error(error);
+      if (error instanceof BadRequestError) {
+        ctx.body = {
+          error: error.message
+        };
+        ctx.status = 400;
+      } else {
+        ctx.body = {
+          error: "An error occurred while creating this operation."
+        };
+        ctx.status = 500;
+      }
     }
   })
   .post("/api/me/send_invite", async ctx => {
