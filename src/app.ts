@@ -28,7 +28,7 @@ import {
 import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 
 const TEN_MINUTES = 1000 * 60 * 10;
-const DEFAULT_DONATION_RECIPIENT = "RAHA";
+const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
 let admin;
@@ -354,7 +354,7 @@ const authenticatedRouter = new Router()
           const donationRecipient = await transaction.get(
             members.doc(
               ctx.state.toMember.get("donation_to") ||
-                DEFAULT_DONATION_RECIPIENT
+                DEFAULT_DONATION_RECIPIENT_UID
             )
           );
 
@@ -422,13 +422,11 @@ const authenticatedRouter = new Router()
       console.error(error);
       if (error instanceof BadRequestError) {
         ctx.body = {
-          status: 400,
           error: error.message
         };
         ctx.status = 400;
       } else {
         ctx.body = {
-          status: 500,
           error: "An error occurred while creating this operation."
         };
         ctx.status = 500;
