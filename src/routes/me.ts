@@ -3,7 +3,7 @@ import { URL } from "url";
 import { firestore } from "firebase-admin";
 import { CollectionReference } from "@google-cloud/firestore";
 
-import BadRequestError from "./errors/BadRequestError";
+import BadRequestError from "../errors/BadRequestError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;

@@ -19,7 +19,7 @@ import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 import { getAdmin } from "./firebaseAdmin";
 import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
 import BadRequestError from "./errors/BadRequestError";
-import * as me from "./me";
+import * as me from "./routes/me";
 
 // tslint:disable-next-line:no-var-requires
 const config = require("./config/config.json");
