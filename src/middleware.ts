@@ -4,6 +4,8 @@
 
 import BadRequestError from "./errors/BadRequestError";
 
+// TODO: Logging
+
 /**
  * Handle BadRequestErrors.
  */
