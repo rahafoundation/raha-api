@@ -280,7 +280,7 @@ export const give = (
     const toMember = await transaction.get(
       (ctx.state.toMember as DocumentSnapshot).ref
     );
-    const { amount } = ctx.request.body;
+    const { amount, memo } = ctx.request.body;
 
     const donationRecipient = await transaction.get(
       members.doc(
@@ -311,12 +311,15 @@ export const give = (
       throw new BadRequestError("Amount exceeds account balance.");
     }
 
+    const transactionMemo: string = memo ? memo : "";
+
     const newOperation = {
       creator_uid: loggedInUid,
       op_code: "GIVE",
       data: {
         to_uid: toMember.id,
         amount: toAmount.toString(),
+        memo: transactionMemo,
         donation_to: donationRecipient.id,
         donation_amount: donationAmount.toString()
       },
