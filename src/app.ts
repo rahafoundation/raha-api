@@ -11,6 +11,7 @@ import sgMail from "@sendgrid/mail";
 import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 
 import { getAdmin } from "./firebaseAdmin";
+import { handleErrors } from "./middleware";
 import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
 import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
@@ -52,11 +53,12 @@ const app = new Koa();
 
 app.use(cors());
 app.use(bodyParser());
+app.use(handleErrors);
 
 async function validateUid(uid, ctx, next) {
   const uidDoc = await members.doc(uid).get();
   if (!uidDoc.exists) {
-    ctx.status = 404;
+    ctx.throw(404, "This member does not exist!");
     return;
   }
   ctx.state.toMember = uidDoc;
