@@ -34,13 +34,14 @@ const verifyFirebaseIdToken = admin => async (ctx, next) => {
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
     ctx.state.user = decodedIdToken;
-    return await next();
   } catch (error) {
     // tslint:disable-next-line:no-console
     console.error("Error while verifying Firebase ID token:", error);
     ctx.status = 403;
     ctx.body = "Unauthorized.";
+    return;
   }
+  return next();
 };
 
 export { verifyFirebaseIdToken };
