@@ -221,7 +221,6 @@ export const requestInvite = (
     mid: creatorMid,
     full_name: fullName,
     request_invite_from_uid: requestingInviteFromUid,
-    request_invite_from_mid: requestingInviteFromMid,
     created_at: firestore.FieldValue.serverTimestamp(),
     request_invite_block_at: null,
     request_invite_block_seq: null,
