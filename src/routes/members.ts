@@ -31,11 +31,11 @@ function getPrivateVideoRef(
 function getPublicVideoRef(
   config,
   storage: Storage.Storage,
-  memberMid: string
+  username: string
 ): Storage.File {
   return storage
     .bucket(config.publicVideoBucket)
-    .file(`${memberMid}/invite.mp4`);
+    .file(`${username}/invite.mp4`);
 }
 
 async function createCoconutVideoEncodingJob(
@@ -43,7 +43,7 @@ async function createCoconutVideoEncodingJob(
   storage: Storage.Storage,
   coconutApiKey: string,
   memberUid: string,
-  creatorMid: string
+  username: string
 ) {
   const videoRef = getPrivateVideoRef(config, storage, memberUid);
 
@@ -60,7 +60,7 @@ async function createCoconutVideoEncodingJob(
     `members/${memberUid}/upload_video`,
     config.apiBase
   );
-  uploadUrl.searchParams.append("mid", creatorMid);
+  uploadUrl.searchParams.append("username", username);
 
   coconut.createJob(
     {
@@ -124,15 +124,15 @@ export const uploadVideo = (
   storage: Storage.Storage,
   uidToVideoHash: CollectionReference
 ) => async ctx => {
-  const { mid } = ctx.query;
-  if (!mid) {
-    throw new BadRequestError("Must supply MID when uploading video.");
+  const { username } = ctx.query;
+  if (!username) {
+    throw new BadRequestError("Must supply username when uploading video.");
   }
 
   const publicVideoRef = getPublicVideoRef(
     config,
     storage,
-    decodeURIComponent(mid)
+    decodeURIComponent(username)
   );
   if ((await publicVideoRef.exists())[0]) {
     throw new BadRequestError(
@@ -199,17 +199,15 @@ export const requestInvite = (
     throw new BadRequestError("You have already requested an invite.");
   }
 
-  const { creatorMid, fullName } = ctx.request.body;
-  const requestingInviteFromMid = ctx.state.toMember.get("mid");
+  const { creatorUsername, fullName } = ctx.request.body;
+  const requestingInviteFromUsername = ctx.state.toMember.get("username");
   const requestingInviteFromUid = ctx.state.toMember.id;
 
   const newOperation = {
-    creator_mid: creatorMid,
     creator_uid: loggedInUid,
     op_code: "REQUEST_INVITE",
     data: {
       full_name: fullName,
-      to_mid: requestingInviteFromMid,
       to_uid: requestingInviteFromUid
       // TODO: Eventually we need to extract file extension from this or a similar parameter.
       // Currently we only handle videos uploaded as invite.mp4.
@@ -218,10 +216,9 @@ export const requestInvite = (
     created_at: firestore.FieldValue.serverTimestamp()
   };
   const newMember = {
-    mid: creatorMid,
+    username: creatorUsername,
     full_name: fullName,
     request_invite_from_uid: requestingInviteFromUid,
-    request_invite_from_mid: requestingInviteFromMid,
     created_at: firestore.FieldValue.serverTimestamp(),
     request_invite_block_at: null,
     request_invite_block_seq: null,
@@ -233,7 +230,7 @@ export const requestInvite = (
     storage,
     coconutApiKey,
     loggedInUid,
-    creatorMid
+    creatorUsername
   );
 
   const newOperationDoc = await operations.add(newOperation);
@@ -252,11 +249,9 @@ export const trust = (
   const loggedInUid = ctx.state.user.uid;
   const loggedInMember = await members.doc(loggedInUid).get();
   const newOperation = {
-    creator_mid: loggedInMember.get("mid"),
     creator_uid: loggedInUid,
     op_code: "TRUST",
     data: {
-      to_mid: ctx.state.toMember.get("mid"),
       to_uid: ctx.state.toMember.id
     },
     created_at: firestore.FieldValue.serverTimestamp()

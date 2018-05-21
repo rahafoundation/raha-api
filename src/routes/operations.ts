@@ -7,7 +7,6 @@ export const index = (operations: CollectionReference) => async ctx => {
   ops.forEach(op =>
     parsedOps.push({
       id: op.id,
-      creator_mid: op.get("creator_mid"),
       creator_uid: op.get("creator_uid"),
       op_code: op.get("op_code"),
       data: op.get("data")
