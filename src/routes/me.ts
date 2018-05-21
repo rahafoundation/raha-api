@@ -28,9 +28,9 @@ export const sendInvite = (
   }
 
   const loggedInFullName = loggedInMember.get("full_name");
-  const loggedInMid = loggedInMember.get("mid");
+  const loggedInUsername = loggedInMember.get("username");
   const inviteLink = new URL(
-    `/m/${loggedInMid}/invite`,
+    `/m/${loggedInUsername}/invite`,
     config.appBase
   ).toString();
 
