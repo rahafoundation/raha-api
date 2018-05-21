@@ -31,19 +31,16 @@ function getPrivateVideoRef(
 function getPublicVideoRef(
   config,
   storage: Storage.Storage,
-  username: string
+  uid: string
 ): Storage.File {
-  return storage
-    .bucket(config.publicVideoBucket)
-    .file(`${username}/invite.mp4`);
+  return storage.bucket(config.publicVideoBucket).file(`${uid}/invite.mp4`);
 }
 
 async function createCoconutVideoEncodingJob(
   config,
   storage: Storage.Storage,
   coconutApiKey: string,
-  memberUid: string,
-  username: string
+  memberUid: string
 ) {
   const videoRef = getPrivateVideoRef(config, storage, memberUid);
 
@@ -60,7 +57,6 @@ async function createCoconutVideoEncodingJob(
     `members/${memberUid}/upload_video`,
     config.apiBase
   );
-  uploadUrl.searchParams.append("username", username);
 
   coconut.createJob(
     {
@@ -124,15 +120,10 @@ export const uploadVideo = (
   storage: Storage.Storage,
   uidToVideoHash: CollectionReference
 ) => async ctx => {
-  const { username } = ctx.query;
-  if (!username) {
-    throw new BadRequestError("Must supply username when uploading video.");
-  }
-
   const publicVideoRef = getPublicVideoRef(
     config,
     storage,
-    decodeURIComponent(username)
+    ctx.state.toMember.id
   );
   if ((await publicVideoRef.exists())[0]) {
     throw new BadRequestError(
@@ -225,13 +216,7 @@ export const requestInvite = (
     request_invite_op_seq: null
   };
 
-  createCoconutVideoEncodingJob(
-    config,
-    storage,
-    coconutApiKey,
-    loggedInUid,
-    creatorUsername
-  );
+  createCoconutVideoEncodingJob(config, storage, coconutApiKey, loggedInUid);
 
   const newOperationDoc = await operations.add(newOperation);
   await loggedInMemberRef.create(newMember);
