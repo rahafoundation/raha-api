@@ -13,6 +13,8 @@ export async function handleErrors(ctx, next) {
   try {
     await next();
   } catch (error) {
+    // tslint:disable-next-line:no-console
+    console.error(error);
     if (error instanceof BadRequestError) {
       ctx.throw(400, error.message);
     } else {
