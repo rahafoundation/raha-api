@@ -9,6 +9,9 @@ export const index = (operations: CollectionReference) => async ctx => {
       id: op.id,
       creator_uid: op.get("creator_uid"),
       op_code: op.get("op_code"),
+      // This string conversion would actually be done automatically,
+      // but let's be explicit about what's happening.
+      created_at: (op.get("created_at") as Date).toString(),
       data: op.get("data")
     })
   );
