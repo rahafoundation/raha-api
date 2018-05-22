@@ -190,7 +190,7 @@ export const requestInvite = (
     throw new BadRequestError("You have already requested an invite.");
   }
 
-  const { creatorUsername, fullName } = ctx.request.body;
+  const { username, fullName } = ctx.request.body;
   const requestingInviteFromUsername = ctx.state.toMember.get("username");
   const requestingInviteFromUid = ctx.state.toMember.id;
 
@@ -198,6 +198,7 @@ export const requestInvite = (
     creator_uid: loggedInUid,
     op_code: "REQUEST_INVITE",
     data: {
+      username,
       full_name: fullName,
       to_uid: requestingInviteFromUid
       // TODO: Eventually we need to extract file extension from this or a similar parameter.
@@ -207,7 +208,7 @@ export const requestInvite = (
     created_at: firestore.FieldValue.serverTimestamp()
   };
   const newMember = {
-    username: creatorUsername,
+    username,
     full_name: fullName,
     request_invite_from_uid: requestingInviteFromUid,
     created_at: firestore.FieldValue.serverTimestamp(),
