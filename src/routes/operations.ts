@@ -11,6 +11,7 @@ export const index = (operations: CollectionReference) => async ctx => {
       op_code: op.get("op_code"),
       // This string conversion would actually be done automatically,
       // but let's be explicit about what's happening.
+      // TODO: Figure out how to get Firestore to return Timestamp's instead of Dates.
       created_at: (op.get("created_at") as Date).toString(),
       data: op.get("data")
     })
