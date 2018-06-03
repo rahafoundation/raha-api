@@ -17,8 +17,7 @@ import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
 
-// tslint:disable-next-line:no-var-requires
-const config = require("./config/config.json");
+import config from "./config/config";
 import {
   coconutApiKey,
   sendgridApiKey
