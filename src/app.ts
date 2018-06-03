@@ -43,9 +43,10 @@ if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
 }
 
 const db: Firestore = admin.firestore();
-const members = db.collection("members");
-const operations = db.collection("operations");
-const uidToVideoHash = db.collection("uidToVideoHashMap");
+const membersCollection = db.collection("members");
+const operationsCollection = db.collection("operations");
+// TODO: rename uid to memberId in collection name
+const memberIdToVideoHashCollection = db.collection("uidToVideoHashMap");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -55,27 +56,27 @@ app.use(cors());
 app.use(bodyParser());
 app.use(handleErrors);
 
-async function validateUid(uid, ctx, next) {
-  const uidDoc = await members.doc(uid).get();
-  if (!uidDoc.exists) {
+async function validateMemberId(id, ctx, next) {
+  const memberDoc = await membersCollection.doc(id).get();
+  if (!memberDoc.exists) {
     ctx.throw(404, "This member does not exist!");
     return;
   }
-  ctx.state.toMember = uidDoc;
+  ctx.state.toMember = memberDoc;
   return next();
 }
 
 const publicRouter = new Router()
-  .param("uid", validateUid)
-  .get("/api/operations", operationsRoutes.index(operations))
+  .param("memberId", validateMemberId)
+  .get("/api/operations", operationsRoutes.listOperations(operationsCollection))
   /* These endpoints are consumed by coconut. */
   .post(
-    "/api/members/:uid/notify_video_encoded",
+    "/api/members/:memberId/notify_video_encoded",
     membersRoutes.notifyVideoEncoded
   )
   .post(
-    "/api/members/:uid/upload_video",
-    membersRoutes.uploadVideo(config, storage, uidToVideoHash)
+    "/api/members/:memberId/upload_video",
+    membersRoutes.uploadVideo(config, storage, memberIdToVideoHashCollection)
   );
 
 app.use(publicRouter.routes());
@@ -86,21 +87,33 @@ app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
 const authenticatedRouter = new Router()
-  .param("uid", validateUid)
+  .param("memberId", validateMemberId)
   .post(
-    "/api/members/:uid/request_invite",
+    "/api/members/:memberId/request_invite",
     membersRoutes.requestInvite(
       config,
       storage,
       coconutApiKey,
-      members,
-      operations
+      membersCollection,
+      operationsCollection
     )
   )
-  .post("/api/members/:uid/trust", membersRoutes.trust(members, operations))
-  .post("/api/members/:uid/give", membersRoutes.give(db, members, operations))
-  .post("/api/me/mint", meRoutes.mint(db, members, operations))
-  .post("/api/me/send_invite", meRoutes.sendInvite(config, sgMail, members));
+  .post(
+    "/api/members/:memberId/trust",
+    membersRoutes.trust(membersCollection, operationsCollection)
+  )
+  .post(
+    "/api/members/:memberId/give",
+    membersRoutes.give(db, membersCollection, operationsCollection)
+  )
+  .post(
+    "/api/me/mint",
+    meRoutes.mint(db, membersCollection, operationsCollection)
+  )
+  .post(
+    "/api/me/send_invite",
+    meRoutes.sendInvite(config, sgMail, membersCollection)
+  );
 
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
