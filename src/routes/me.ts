@@ -1,7 +1,8 @@
 import { URL } from "url";
 import Big from "big.js";
 import { firestore } from "firebase-admin";
-import { CollectionReference } from "@google-cloud/firestore";
+import { CollectionReference, Firestore } from "@google-cloud/firestore";
+import * as sgMailLib from "@sendgrid/mail";
 
 import BadRequestError from "../errors/BadRequestError";
 import {
@@ -10,6 +11,7 @@ import {
   ApiEndpoint
 } from "./ApiEndpoint";
 import { OperationApiResponse, MessageApiResponse } from "./ApiResponse";
+import { Config } from "../config/prod.config";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
@@ -25,8 +27,8 @@ export type SendInviteApiEndpoint = ApiEndpointDefinition<
 >;
 
 export const sendInvite = (
-  config,
-  sgMail,
+  config: Config,
+  sgMail: typeof sgMailLib,
   members: CollectionReference
 ) => async ctx => {
   const loggedInUid = ctx.state.user.uid;
@@ -87,7 +89,7 @@ export type MintApiEndpoint = ApiEndpointDefinition<
 >;
 
 export const mint = (
-  db,
+  db: Firestore,
   members: CollectionReference,
   operations: CollectionReference
 ) => async ctx => {
@@ -107,7 +109,7 @@ export const mint = (
     // Round to 2 decimal places and using rounding mode 0 = round down.
     const bigAmount = new Big(amount).round(2, 0);
     const maxMintable =
-      RAHA_UBI_WEEKLY_RATE * sinceLastMinted / MILLISECONDS_PER_WEEK;
+      (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
     if (bigAmount.gt(maxMintable)) {
       throw new BadRequestError("Mint amount exceeds the allowed amount.");
     }

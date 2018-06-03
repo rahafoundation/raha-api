@@ -1,6 +1,6 @@
-import prodConfig from "./prod.config";
+import { Config } from "./prod.config";
 
-const config: typeof prodConfig = {
+const config: Config = {
   apiBase: "https://raha-test.appspot.com/api/",
   appBase: "https://next.raha.app",
   privateVideoBucket: "raha-test.appspot.com",

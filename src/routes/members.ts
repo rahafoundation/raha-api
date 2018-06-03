@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import * as crypto from "crypto";
 import { URL } from "url";
 
 import {
@@ -6,8 +6,8 @@ import {
   DocumentSnapshot,
   Firestore
 } from "@google-cloud/firestore";
-import Storage from "@google-cloud/storage";
-import asyncBusboy from "async-busboy";
+import * as Storage from "@google-cloud/storage";
+import * as asyncBusboy from "async-busboy";
 import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore } from "firebase-admin";
@@ -25,13 +25,15 @@ import {
   ApiEndpointDefinition
 } from "./ApiEndpoint";
 import { OperationApiResponse } from "./ApiResponse";
+import { Config } from "../config/prod.config";
+import { Readable as ReadableStream } from "stream";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
 function getPrivateVideoRef(
-  config,
+  config: Config,
   storage: Storage.Storage,
   memberUid: string
 ): Storage.File {
@@ -41,7 +43,7 @@ function getPrivateVideoRef(
 }
 
 function getPublicVideoRef(
-  config,
+  config: Config,
   storage: Storage.Storage,
   uid: string
 ): Storage.File {
@@ -49,7 +51,7 @@ function getPublicVideoRef(
 }
 
 async function createCoconutVideoEncodingJob(
-  config,
+  config: Config,
   storage: Storage.Storage,
   coconutApiKey: string,
   memberUid: string
@@ -79,7 +81,7 @@ async function createCoconutVideoEncodingJob(
         mp4: uploadUrl.toString()
       }
     },
-    job => {
+    (job: any) => {
       if (job.status === "ok") {
         // tslint:disable-next-line:no-console
         console.log("Coconut encoding job created successfully.");
@@ -97,9 +99,11 @@ async function createCoconutVideoEncodingJob(
 
 /**
  * Reads the entire stream of video data into a Buffer.
- * @param videoStream ReadableStream of video data.
+ * @param videoStream stream of video data.
  */
-function getVideoBufferFromStream(videoStream): Promise<Buffer> {
+function getVideoBufferFromStream(
+  videoStream: ReadableStream
+): Promise<Buffer> {
   const buffers: Buffer[] = [];
   const bufferPromise = new Promise<Buffer>((resolve, reject) => {
     videoStream.on("data", (data: Buffer) => {
@@ -128,7 +132,7 @@ export const notifyVideoEncoded = ctx => {
 };
 
 export const uploadVideo = (
-  config,
+  config: Config,
   storage: Storage.Storage,
   uidToVideoHash: CollectionReference
 ) => async ctx => {
@@ -151,7 +155,9 @@ export const uploadVideo = (
   }
 
   const { files } = await asyncBusboy(ctx.req);
-  const encodedVideo = files.filter(file => file.fieldname === "encoded_video");
+  const encodedVideo = files.filter(
+    (file: any) => file.fieldname === "encoded_video"
+  );
   if (encodedVideo.length !== 1) {
     throw new BadRequestError(
       "Zero or multiple encoded videos supplied with request."
@@ -200,7 +206,7 @@ export type RequestInviteApiEndpoint = ApiEndpointDefinition<
 >;
 
 export const requestInvite = (
-  config,
+  config: Config,
   storage: Storage.Storage,
   coconutApiKey: string,
   membersCollection: CollectionReference,

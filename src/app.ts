@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import path from "path";
+import * as path from "path";
 import { URL } from "url";
-import Storage from "@google-cloud/storage";
-import Koa from "koa";
-import bodyParser from "koa-bodyparser";
-import cors from "@koa/cors";
-import Router from "koa-router";
-import sgMail from "@sendgrid/mail";
+import * as Storage from "@google-cloud/storage";
+import * as Koa from "koa";
+import * as bodyParser from "koa-bodyparser";
+import * as cors from "@koa/cors";
+import * as Router from "koa-router";
+import * as sgMail from "@sendgrid/mail";
 import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 
 import { getAdmin } from "./firebaseAdmin";
@@ -22,6 +22,7 @@ import {
   coconutApiKey,
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
+import { MemberId } from "./models/identifiers";
 
 let admin;
 let storage: Storage.Storage;
@@ -55,7 +56,12 @@ app.use(cors());
 app.use(bodyParser());
 app.use(handleErrors);
 
-async function validateMemberId(id, ctx, next) {
+interface RahaApiContext {
+  // TODO: make this more specific
+  toMember?: FirebaseFirestore.DocumentReference;
+}
+
+const validateMemberId: Router.IParamMiddleware = async (id, ctx, next) => {
   const memberDoc = await membersCollection.doc(id).get();
   if (!memberDoc.exists) {
     ctx.throw(404, "This member does not exist!");
@@ -63,7 +69,7 @@ async function validateMemberId(id, ctx, next) {
   }
   ctx.state.toMember = memberDoc;
   return next();
-}
+};
 
 const publicRouter = new Router()
   .param("memberId", validateMemberId)
@@ -78,8 +84,10 @@ const publicRouter = new Router()
     membersRoutes.uploadVideo(config, storage, memberIdToVideoHashCollection)
   );
 
+// TODO: remove typecasts once the following is resolved:
+// https://github.com/DefinitelyTyped/DefinitelyTyped/issues/22568
 app.use(publicRouter.routes());
-app.use(publicRouter.allowedMethods());
+app.use(publicRouter.allowedMethods() as any);
 
 // Put endpoints that don't need the user to be authenticated above this.
 app.use(verifyFirebaseIdToken(admin));

@@ -3,13 +3,14 @@
  */
 
 import BadRequestError from "./errors/BadRequestError";
+import { Middleware } from "koa";
 
 // TODO: Logging
 
 /**
  * Handle BadRequestErrors.
  */
-export async function handleErrors(ctx, next) {
+export const handleErrors: Middleware = async (ctx, next) => {
   try {
     await next();
   } catch (error) {
@@ -21,4 +22,4 @@ export async function handleErrors(ctx, next) {
       throw error;
     }
   }
-}
+};

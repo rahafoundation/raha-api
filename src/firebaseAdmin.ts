@@ -1,9 +1,9 @@
-import admin from "firebase-admin";
+import * as admin from "firebase-admin";
 
 // tslint:disable-next-line:no-var-requires
 const config = require("./config/config.json");
 
-function getAdmin(credentialsPath?: string) {
+export function getAdmin(credentialsPath?: string) {
   if (process.env.NODE_ENV === "test" && credentialsPath) {
     const serviceAccount = require(credentialsPath);
     admin.initializeApp({
@@ -15,5 +15,3 @@ function getAdmin(credentialsPath?: string) {
   }
   return admin;
 }
-
-export { getAdmin };

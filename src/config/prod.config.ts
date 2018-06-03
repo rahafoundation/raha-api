@@ -1,4 +1,4 @@
-export default {
+const prodConfig = {
   apiBase: "https://raha-5395e.appspot.com/api/",
   appBase: "https://web.raha.app",
   privateVideoBucket: "raha-5395e.appspot.com",
@@ -12,3 +12,5 @@ export default {
     messagingSenderId: "677137485282"
   }
 };
+export default prodConfig;
+export type Config = typeof prodConfig;
