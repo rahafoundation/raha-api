@@ -1,13 +1,28 @@
 import { URL } from "url";
-
 import Big from "big.js";
 import { firestore } from "firebase-admin";
 import { CollectionReference } from "@google-cloud/firestore";
 
 import BadRequestError from "../errors/BadRequestError";
+import {
+  ApiEndpointDefinition,
+  ApiCallDefinition,
+  ApiEndpoint
+} from "./ApiEndpoint";
+import { OperationApiResponse, MessageApiResponse } from "./ApiResponse";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
+
+export type SendInviteApiCall = ApiCallDefinition<
+  ApiEndpoint.SEND_INVITE,
+  void,
+  { inviteEmail: string }
+>;
+export type SendInviteApiEndpoint = ApiEndpointDefinition<
+  SendInviteApiCall,
+  MessageApiResponse
+>;
 
 export const sendInvite = (
   config,
@@ -16,7 +31,8 @@ export const sendInvite = (
 ) => async ctx => {
   const loggedInUid = ctx.state.user.uid;
   const loggedInMember = await members.doc(loggedInUid).get();
-  const { inviteEmail } = ctx.request.body;
+
+  const { inviteEmail } = ctx.request.body as SendInviteApiCall["body"];
 
   if (!loggedInMember.exists) {
     throw new BadRequestError(
@@ -53,11 +69,22 @@ export const sendInvite = (
       `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`
   };
   sgMail.send(msg);
-  ctx.status = 201;
+
   ctx.body = {
     message: "Invite succesfully sent!"
-  };
+  } as SendInviteApiEndpoint["response"];
+  ctx.status = 201;
 };
+
+export type MintApiCall = ApiCallDefinition<
+  ApiEndpoint.MINT,
+  void,
+  { amount: string }
+>;
+export type MintApiEndpoint = ApiEndpointDefinition<
+  MintApiCall,
+  OperationApiResponse
+>;
 
 export const mint = (
   db,
@@ -67,7 +94,8 @@ export const mint = (
   const newOperationReference = await db.runTransaction(async transaction => {
     const loggedInUid = ctx.state.user.uid;
     const loggedInMember = await transaction.get(members.doc(loggedInUid));
-    const { amount } = ctx.request.body;
+
+    const { amount } = ctx.request.body as MintApiCall["body"];
 
     const creatorBalance = new Big(loggedInMember.get("raha_balance") || 0);
     const lastMinted: number =
@@ -106,6 +134,6 @@ export const mint = (
   ctx.body = {
     ...(await newOperationReference.get()).data(),
     id: newOperationReference.id
-  };
+  } as MintApiEndpoint["response"];
   ctx.status = 201;
 };

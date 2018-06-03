@@ -13,6 +13,18 @@ import * as coconut from "coconutjs";
 import { firestore } from "firebase-admin";
 
 import BadRequestError from "../errors/BadRequestError";
+import {
+  Operation,
+  OperationToBeCreated,
+  OperationType
+} from "../models/Operation";
+import { MemberId, MemberUsername } from "../models/identifiers";
+import {
+  ApiCallDefinition,
+  ApiEndpoint,
+  ApiEndpointDefinition
+} from "./ApiEndpoint";
+import { OperationApiResponse } from "./ApiResponse";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -176,27 +188,39 @@ export const uploadVideo = (
   ctx.status = 201;
 };
 
+export type RequestInviteApiCall = ApiCallDefinition<
+  ApiEndpoint.REQUEST_INVITE,
+  { memberId: MemberId },
+  { fullName: string; videoUrl: string; username: string }
+>;
+
+export type RequestInviteApiEndpoint = ApiEndpointDefinition<
+  RequestInviteApiCall,
+  OperationApiResponse
+>;
+
 export const requestInvite = (
   config,
   storage: Storage.Storage,
   coconutApiKey: string,
-  members: CollectionReference,
-  operations: CollectionReference
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference
 ) => async ctx => {
   const loggedInUid = ctx.state.user.uid;
-  const loggedInMemberRef = members.doc(loggedInUid);
+  const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
   if ((await loggedInMemberRef.get()).exists) {
     throw new BadRequestError("You have already requested an invite.");
   }
 
-  const { username, fullName } = ctx.request.body;
+  const { username, fullName } = ctx.request
+    .body as RequestInviteApiCall["body"];
   const requestingInviteFromUsername = ctx.state.toMember.get("username");
   const requestingInviteFromUid = ctx.state.toMember.id;
 
-  const newOperation = {
+  const newOperation: OperationToBeCreated = {
     creator_uid: loggedInUid,
-    op_code: "REQUEST_INVITE",
+    op_code: OperationType.REQUEST_INVITE,
     data: {
       username,
       full_name: fullName,
@@ -219,24 +243,42 @@ export const requestInvite = (
 
   createCoconutVideoEncodingJob(config, storage, coconutApiKey, loggedInUid);
 
-  const newOperationDoc = await operations.add(newOperation);
+  const newOperationDoc = await operationsCollection.add(newOperation);
   await loggedInMemberRef.create(newMember);
   ctx.body = {
     ...(await newOperationDoc.get()).data(),
     id: newOperationDoc.id
-  };
+  } as RequestInviteApiEndpoint["response"];
   ctx.status = 201;
 };
 
+// type UnauthenticatedEndpoint<Def extends ApiDefinition> = (params: Def["request"]["params"], body: Def["request"]["body"]) => Def["response"]["body"];
+// function trustEndpoint(params: TrustRequestParams, body: TrustRequestBody): TrustResponseBody {
+
+// }
+
+export type TrustMemberApiCall = ApiCallDefinition<
+  ApiEndpoint.TRUST_MEMBER,
+  { memberId: MemberId },
+  void
+>;
+export type TrustMemberApiEndpoint = ApiEndpointDefinition<
+  TrustMemberApiCall,
+  OperationApiResponse
+>;
+/**
+ * Create a trust relationship to a target member from the logged in member
+ */
 export const trust = (
   members: CollectionReference,
   operations: CollectionReference
 ) => async ctx => {
   const loggedInUid = ctx.state.user.uid;
   const loggedInMember = await members.doc(loggedInUid).get();
-  const newOperation = {
+
+  const newOperation: OperationToBeCreated = {
     creator_uid: loggedInUid,
-    op_code: "TRUST",
+    op_code: OperationType.TRUST,
     data: {
       to_uid: ctx.state.toMember.id
     },
@@ -246,10 +288,23 @@ export const trust = (
   ctx.body = {
     ...(await newOperationDoc.get()).data(),
     id: newOperationDoc.id
-  };
+  } as TrustMemberApiEndpoint["response"];
   ctx.status = 201;
 };
 
+export type GiveApiCall = ApiCallDefinition<
+  ApiEndpoint.GIVE,
+  { memberId: MemberId },
+  { amount: string; memo?: string }
+>;
+export type GiveApiEndpoint = ApiEndpointDefinition<
+  GiveApiCall,
+  OperationApiResponse
+>;
+
+/**
+ * Give Raha to a target member from the logged in member.
+ */
 export const give = (
   db: Firestore,
   members: CollectionReference,
@@ -258,10 +313,11 @@ export const give = (
   const newOperationReference = await db.runTransaction(async transaction => {
     const loggedInUid = ctx.state.user.uid;
     const loggedInMember = await transaction.get(members.doc(loggedInUid));
+
     const toMember = await transaction.get(
       (ctx.state.toMember as DocumentSnapshot).ref
     );
-    const { amount, memo } = ctx.request.body;
+    const { amount, memo } = ctx.request.body as GiveApiCall["body"];
 
     const donationRecipient = await transaction.get(
       members.doc(
@@ -294,9 +350,9 @@ export const give = (
 
     const transactionMemo: string = memo ? memo : "";
 
-    const newOperation = {
+    const newOperation: OperationToBeCreated = {
       creator_uid: loggedInUid,
-      op_code: "GIVE",
+      op_code: OperationType.GIVE,
       data: {
         to_uid: toMember.id,
         amount: toAmount.toString(),
@@ -326,6 +382,6 @@ export const give = (
   ctx.body = {
     ...(await newOperationReference.get()).data(),
     id: newOperationReference.id
-  };
+  } as GiveApiEndpoint["response"];
   ctx.status = 201;
 };
