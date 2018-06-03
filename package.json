@@ -1,11 +1,12 @@
 {
-  "name": "raha-api",
-  "version": "1.0.0",
+  "name": "@raha/api",
+  "version": "0.0.1",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
-  "author": "Raha Foundation",
+  "files": "src/**/*",
+  "author": "Raha",
   "license": "Apache-2.0",
-  "private": true,
+  "private": false,
   "dependencies": {
     "@google-cloud/firestore": "^0.13.1",
     "@google-cloud/storage": "^1.6.0",
