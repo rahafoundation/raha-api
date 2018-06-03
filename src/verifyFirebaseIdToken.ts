@@ -1,16 +1,23 @@
+import * as adminLib from "firebase-admin";
+import { Middleware } from "koa";
+
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
 // The Firebase ID token needs to be passed as a Bearer token in the Authorization HTTP header like this:
 // `Authorization: Bearer <Firebase ID Token>`.
 // when decoded successfully, the ID Token content will be added as `req.user`.
-const verifyFirebaseIdToken = admin => async (ctx, next) => {
+const verifyFirebaseIdToken: (
+  adminInstance: typeof adminLib
+) => Middleware = admin => async (ctx, next) => {
   // tslint:disable-next-line:no-console
   console.log("Check if request is authorized with Firebase ID token");
 
   const { headers, cookies } = ctx;
 
   if (
-    (!headers.authorization || !headers.authorization.startsWith("Bearer ")) &&
-    !cookies.__session
+    !headers.authorization ||
+    !headers.authorization.startsWith("Bearer ")
+    // TODO: determine if we should support session cookie as auth
+    // && !cookies.__session
   ) {
     // tslint:disable-next-line:no-console
     console.error(
@@ -28,8 +35,10 @@ const verifyFirebaseIdToken = admin => async (ctx, next) => {
     headers.authorization && headers.authorization.startsWith("Bearer ")
       ? // Read the ID Token from the Authorization header.
         headers.authorization.split("Bearer ")[1]
-      : // Read the ID Token from cookie.
-        cookies.__session;
+      : undefined;
+  // TODO: determine if we should support session cookie as auth
+  // // Read the ID Token from cookie.
+  //   cookies.__session;
 
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
