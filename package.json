@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
-  "files": "src/**/*",
+  "files": ["src/**/*"],
   "author": "Raha",
   "license": "Apache-2.0",
   "private": false,
@@ -23,11 +23,14 @@
   "scripts": {
     "use-prod-config": "cp src/config/prod.config.json src/config/config.json",
     "use-test-config": "cp src/config/test.config.json src/config/config.json",
-    "build": "rm -rf dist && tsc && cp src/config/config.json dist/config/config.json",
+    "build":
+      "rm -rf dist && tsc && cp src/config/config.json dist/config/config.json",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
-    "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
-    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
+    "deploy-prod":
+      "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
+    "deploy-test":
+      "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
   },
   "devDependencies": {
     "@types/big.js": "^4.0.4",
