@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "private": false,
   "dependencies": {
-    "@google-cloud/firestore": "^0.13.1",
+    "@google-cloud/firestore": "^0.14.1",
     "@google-cloud/storage": "^1.6.0",
     "@koa/cors": "2",
     "@sendgrid/mail": "^6.2.1",
