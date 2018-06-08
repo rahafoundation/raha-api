@@ -1,8 +1,6 @@
 /**
  * Definitions of endpoints—how they are called and how they respond.
  */
-import { Context } from "koa";
-
 import { ApiCall } from "./ApiCall";
 import { ApiResponse } from "./ApiResponse";
 
@@ -13,7 +11,7 @@ import {
 } from "../members";
 import { MintApiEndpoint, SendInviteApiEndpoint } from "../me";
 import { ListOperationsApiEndpoint } from "../operations";
-import { RahaApiContext } from "../../app";
+import { RahaApiContext, LoggedInContext } from "../../app";
 
 /**
  * Canonical name of an endpoint you can query.
@@ -50,6 +48,16 @@ export type ApiDefinition =
   | GiveApiEndpoint
   | MintApiEndpoint;
 
+export type ApiHandler<Def extends ApiDefinition> = (
+  call: {
+    params: Def["call"]["params"];
+    body: Def["call"]["body"];
+  },
+  loggedInMemberToken: Def["call"]["authenticated"] extends true
+    ? LoggedInContext["state"]["loggedInMemberToken"]
+    : undefined
+) => Promise<Def["response"]>;
+
 /**
  * Extracts data necessary to process an API call from the context,
  * computes the response and then returns it.
@@ -57,16 +65,18 @@ export type ApiDefinition =
  * @param apiHandler Handler for that endpoint
  */
 export function createApiRoute<Def extends ApiDefinition>(
-  endpoint: Def["endpoint"],
-  apiHandler: (call: Def["call"]) => Def["response"]
-): (ctx: Context) => Promise<void> {
+  apiHandler: ApiHandler<Def>
+): (ctx: RahaApiContext<Def["call"]["authenticated"]>) => Promise<void> {
   return async ctx => {
-    const { status, body } = await apiHandler({
-      params: ctx.params,
-      body: ctx.body
-    });
+    const { status, body } = await apiHandler(
+      {
+        params: ctx.params,
+        body: ctx.request.body
+      },
+      ctx.state.loggedInMemberToken
+    );
     ctx.status = status;
-    ctx.body = body;
+    ctx.body = JSON.stringify(body);
     return;
   };
 }
