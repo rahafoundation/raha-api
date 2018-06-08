@@ -42,7 +42,7 @@ const verifyFirebaseIdToken: (
 
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
-    ctx.state.user = decodedIdToken;
+    ctx.state.loggedInMemberToken = decodedIdToken;
   } catch (error) {
     // tslint:disable-next-line:no-console
     console.error("Error while verifying Firebase ID token:", error);

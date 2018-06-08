@@ -12,7 +12,7 @@ import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
 
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
-import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
+import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
 import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
