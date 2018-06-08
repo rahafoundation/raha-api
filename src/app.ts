@@ -24,23 +24,17 @@ import {
 } from "./config/DO_NOT_COMMIT.secrets.config";
 import { MemberId } from "./models/identifiers";
 
-let admin;
-let storage: Storage.Storage;
-if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
-  const credentialsPathArg = process.argv[2];
-  if (path.isAbsolute(credentialsPathArg)) {
-    admin = getAdmin(credentialsPathArg);
-  } else {
-    // Resolve the path relative to the cwd.
-    admin = getAdmin(
-      path.resolve(path.join(process.cwd(), credentialsPathArg))
-    );
-  }
-  storage = admin.storage();
-} else {
-  admin = getAdmin();
-  storage = Storage();
-}
+const isTestEnv = process.env.NODE_ENV === "test";
+const credentialsPathArg =
+  isTestEnv && process.argv.length > 2 ? process.argv[2] : undefined;
+const credentialsPath = credentialsPathArg
+  ? path.isAbsolute(credentialsPathArg)
+    ? credentialsPathArg
+    : path.join(process.cwd(), credentialsPathArg)
+  : undefined;
+
+const admin = credentialsPath ? getAdmin(credentialsPath) : getAdmin();
+const storage = credentialsPath ? admin.storage() : Storage();
 
 const db: Firestore = admin.firestore();
 const membersCollection = db.collection("members");

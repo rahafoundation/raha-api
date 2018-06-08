@@ -10,7 +10,7 @@ import * as Storage from "@google-cloud/storage";
 import * as asyncBusboy from "async-busboy";
 import Big from "big.js";
 import * as coconut from "coconutjs";
-import { firestore } from "firebase-admin";
+import { firestore, storage as adminStorage } from "firebase-admin";
 
 import BadRequestError from "../errors/BadRequestError";
 import {
@@ -32,27 +32,32 @@ const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
+type BucketStorage = adminStorage.Storage | Storage.Storage;
 function getPrivateVideoRef(
   config: Config,
-  storage: Storage.Storage,
+  storage: BucketStorage,
   memberUid: string
 ): Storage.File {
-  return storage
+  // TODO: this is a quick hack to make the types work out; created issue
+  // https://github.com/firebase/firebase-admin-node/issues/289
+  return (storage as Storage.Storage)
     .bucket(config.privateVideoBucket)
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
 function getPublicVideoRef(
   config: Config,
-  storage: Storage.Storage,
+  storage: BucketStorage,
   uid: string
 ): Storage.File {
-  return storage.bucket(config.publicVideoBucket).file(`${uid}/invite.mp4`);
+  return (storage as Storage.Storage)
+    .bucket(config.publicVideoBucket)
+    .file(`${uid}/invite.mp4`);
 }
 
 async function createCoconutVideoEncodingJob(
   config: Config,
-  storage: Storage.Storage,
+  storage: BucketStorage,
   coconutApiKey: string,
   memberUid: string
 ) {
@@ -133,7 +138,7 @@ export const notifyVideoEncoded = ctx => {
 
 export const uploadVideo = (
   config: Config,
-  storage: Storage.Storage,
+  storage: BucketStorage,
   uidToVideoHash: CollectionReference
 ) => async ctx => {
   const publicVideoRef = getPublicVideoRef(
@@ -207,7 +212,7 @@ export type RequestInviteApiEndpoint = ApiEndpointDefinition<
 
 export const requestInvite = (
   config: Config,
-  storage: Storage.Storage,
+  storage: BucketStorage,
   coconutApiKey: string,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
