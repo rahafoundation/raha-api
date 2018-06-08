@@ -11,7 +11,7 @@ import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 /**
  * Defines how to call the ListOperations endpoint
  */
-export type ListOperationsApiCall = ApiCallDefinition<void, void>;
+export type ListOperationsApiCall = ApiCallDefinition<void, void, false>;
 export type ListOperationsApiResponse = ApiResponseDefinition<
   200,
   OperationsApiResponseBody

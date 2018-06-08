@@ -202,7 +202,8 @@ export const uploadVideo = (
 
 export type RequestInviteApiCall = ApiCallDefinition<
   { memberId: MemberId },
-  { fullName: string; videoUrl: string; username: string }
+  { fullName: string; videoUrl: string; username: string },
+  true
 >;
 export type RequestInviteApiResponse = ApiResponseDefinition<
   201,
@@ -275,7 +276,8 @@ export const requestInvite = (
 
 export type TrustMemberApiCall = ApiCallDefinition<
   { memberId: MemberId },
-  void
+  void,
+  true
 >;
 export type TrustMemberApiResponse = ApiResponseDefinition<
   201,
@@ -292,29 +294,33 @@ export type TrustMemberApiEndpoint = ApiEndpointDefinition<
 export const trust = (
   members: CollectionReference,
   operations: CollectionReference
-) => async ctx => {
-  const loggedInUid = ctx.state.user.uid;
-  const loggedInMember = await members.doc(loggedInUid).get();
+) =>
+  createApiRoute<TrustMemberApiEndpoint>(async (call, loggedInMemberToken) => {
+    const loggedInUid = loggedInMemberToken.uid;
+    const loggedInMember = await members.doc(loggedInUid).get();
 
-  const newOperation: OperationToBeCreated = {
-    creator_uid: loggedInUid,
-    op_code: OperationType.TRUST,
-    data: {
-      to_uid: ctx.state.toMember.id
-    },
-    created_at: firestore.FieldValue.serverTimestamp()
-  };
-  const newOperationDoc = await operations.add(newOperation);
-  ctx.body = {
-    ...(await newOperationDoc.get()).data(),
-    id: newOperationDoc.id
-  } as TrustMemberApiEndpoint["response"];
-  ctx.status = 201;
-};
+    const newOperation: OperationToBeCreated = {
+      creator_uid: loggedInUid,
+      op_code: OperationType.TRUST,
+      data: {
+        to_uid: ctx.state.toMember.id
+      },
+      created_at: firestore.FieldValue.serverTimestamp()
+    };
+    const newOperationDoc = await operations.add(newOperation);
+    return {
+      body: {
+        ...(await newOperationDoc.get()).data(),
+        id: newOperationDoc.id
+      } as Operation,
+      status: 201
+    };
+  });
 
 export type GiveApiCall = ApiCallDefinition<
   { memberId: MemberId },
-  { amount: string; memo?: string }
+  { amount: string; memo?: string },
+  true
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,

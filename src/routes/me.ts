@@ -22,7 +22,8 @@ const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
 export type SendInviteApiCall = ApiCallDefinition<
   void,
-  { inviteEmail: string }
+  { inviteEmail: string },
+  true
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
