@@ -9,6 +9,7 @@ import * as cors from "@koa/cors";
 import * as Router from "koa-router";
 import * as sgMail from "@sendgrid/mail";
 import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
+import * as adminLib from "firebase-admin";
 
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
@@ -50,10 +51,14 @@ app.use(cors());
 app.use(bodyParser());
 app.use(handleErrors);
 
-interface RahaApiContext {
-  // TODO: make this more specific
-  toMember?: FirebaseFirestore.DocumentReference;
+export interface LoggedInContext extends Koa.Context {
+  state: {
+    loggedInMemberToken: adminLib.auth.DecodedIdToken;
+  };
 }
+export type RahaApiContext<
+  Authenticated extends boolean
+> = Authenticated extends true ? LoggedInContext : Koa.Context;
 
 const validateMemberId: Router.IParamMiddleware = async (id, ctx, next) => {
   const memberDoc = await membersCollection.doc(id).get();
