@@ -23,7 +23,8 @@ import {
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointName,
-  ApiEndpointDefinition
+  ApiEndpointDefinition,
+  createApiRoute
 } from "./ApiEndpoint";
 import { OperationApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
@@ -222,52 +223,61 @@ export const requestInvite = (
   coconutApiKey: string,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
-) => async ctx => {
-  const loggedInUid = ctx.state.user.uid;
-  const loggedInMemberRef = membersCollection.doc(loggedInUid);
+) =>
+  createApiRoute<RequestInviteApiEndpoint>(
+    async (call, loggedInMemberToken) => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
-  if ((await loggedInMemberRef.get()).exists) {
-    throw new BadRequestError("You have already requested an invite.");
-  }
+      if ((await loggedInMemberRef.get()).exists) {
+        throw new BadRequestError("You have already requested an invite.");
+      }
 
-  const { username, fullName } = ctx.request
-    .body as RequestInviteApiCall["body"];
-  const requestingInviteFromUsername = ctx.state.toMember.get("username");
-  const requestingInviteFromUid = ctx.state.toMember.id;
+      const { username, fullName } = call.body;
+      const requestingInviteFromUsername = ctx.state.toMember.get("username");
+      const requestingInviteFromUid = ctx.state.toMember.id;
 
-  const newOperation: OperationToBeCreated = {
-    creator_uid: loggedInUid,
-    op_code: OperationType.REQUEST_INVITE,
-    data: {
-      username,
-      full_name: fullName,
-      to_uid: requestingInviteFromUid
-      // TODO: Eventually we need to extract file extension from this or a similar parameter.
-      // Currently we only handle videos uploaded as invite.mp4.
-      // video_url: ctx.request.body.videoUrl
-    },
-    created_at: firestore.FieldValue.serverTimestamp()
-  };
-  const newMember = {
-    username,
-    full_name: fullName,
-    request_invite_from_uid: requestingInviteFromUid,
-    created_at: firestore.FieldValue.serverTimestamp(),
-    request_invite_block_at: null,
-    request_invite_block_seq: null,
-    request_invite_op_seq: null
-  };
+      const newOperation: OperationToBeCreated = {
+        creator_uid: loggedInUid,
+        op_code: OperationType.REQUEST_INVITE,
+        data: {
+          username,
+          full_name: fullName,
+          to_uid: requestingInviteFromUid
+          // TODO: Eventually we need to extract file extension from this or a similar parameter.
+          // Currently we only handle videos uploaded as invite.mp4.
+          // video_url: ctx.request.body.videoUrl
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newMember = {
+        username,
+        full_name: fullName,
+        request_invite_from_uid: requestingInviteFromUid,
+        created_at: firestore.FieldValue.serverTimestamp(),
+        request_invite_block_at: null,
+        request_invite_block_seq: null,
+        request_invite_op_seq: null
+      };
 
-  createCoconutVideoEncodingJob(config, storage, coconutApiKey, loggedInUid);
+      createCoconutVideoEncodingJob(
+        config,
+        storage,
+        coconutApiKey,
+        loggedInUid
+      );
 
-  const newOperationDoc = await operationsCollection.add(newOperation);
-  await loggedInMemberRef.create(newMember);
-  ctx.body = {
-    ...(await newOperationDoc.get()).data(),
-    id: newOperationDoc.id
-  } as RequestInviteApiEndpoint["response"];
-  ctx.status = 201;
-};
+      const newOperationDoc = await operationsCollection.add(newOperation);
+      await loggedInMemberRef.create(newMember);
+      return {
+        body: {
+          ...(await newOperationDoc.get()).data(),
+          id: newOperationDoc.id
+        } as Operation,
+        status: 201
+      };
+    }
+  );
 
 // type UnauthenticatedEndpoint<Def extends ApiDefinition> = (params: Def["request"]["params"], body: Def["request"]["body"]) => Def["response"]["body"];
 // function trustEndpoint(params: TrustRequestParams, body: TrustRequestBody): TrustResponseBody {
@@ -339,79 +349,85 @@ export const give = (
   db: Firestore,
   members: CollectionReference,
   operations: CollectionReference
-) => async ctx => {
-  const newOperationReference = await db.runTransaction(async transaction => {
-    const loggedInUid = ctx.state.user.uid;
-    const loggedInMember = await transaction.get(members.doc(loggedInUid));
+) =>
+  createApiRoute<GiveApiEndpoint>(async (call, loggedInMemberToken) => {
+    const newOperationReference = await db.runTransaction(async transaction => {
+      const loggedInMemberId = loggedInMemberToken.uid;
+      const loggedInMember = await transaction.get(
+        members.doc(loggedInMemberId)
+      );
 
-    const toMember = await transaction.get(
-      (ctx.state.toMember as DocumentSnapshot).ref
-    );
-    const { amount, memo } = ctx.request.body as GiveApiCall["body"];
+      const toMember = await transaction.get(
+        (ctx.state.toMember as DocumentSnapshot).ref
+      );
+      const { amount, memo } = call.body;
 
-    const donationRecipient = await transaction.get(
-      members.doc(
-        ctx.state.toMember.get("donation_to") || DEFAULT_DONATION_RECIPIENT_UID
-      )
-    );
+      const donationRecipient = await transaction.get(
+        members.doc(
+          ctx.state.toMember.get("donation_to") ||
+            DEFAULT_DONATION_RECIPIENT_UID
+        )
+      );
 
-    if (donationRecipient === undefined) {
-      throw new BadRequestError("Donation recipient does not exist.");
-    }
+      if (donationRecipient === undefined) {
+        throw new BadRequestError("Donation recipient does not exist.");
+      }
 
-    const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
-    const toBalance = new Big(toMember.get("raha_balance") || 0);
-    const donationRecipientBalance = new Big(
-      donationRecipient.get("raha_balance") || 0
-    );
+      const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
+      const toBalance = new Big(toMember.get("raha_balance") || 0);
+      const donationRecipientBalance = new Big(
+        donationRecipient.get("raha_balance") || 0
+      );
 
-    const donationRate = new Big(
-      ctx.state.toMember.get("donation_rate") || DEFAULT_DONATION_RATE
-    );
-    const bigAmount = new Big(amount);
-    // Round to 2 decimal places and using rounding mode 0 = round down.
-    const donationAmount = bigAmount.times(donationRate).round(2, 0);
-    const toAmount = bigAmount.minus(donationAmount);
+      const donationRate = new Big(
+        ctx.state.toMember.get("donation_rate") || DEFAULT_DONATION_RATE
+      );
+      const bigAmount = new Big(amount);
+      // Round to 2 decimal places and using rounding mode 0 = round down.
+      const donationAmount = bigAmount.times(donationRate).round(2, 0);
+      const toAmount = bigAmount.minus(donationAmount);
 
-    const newFromBalance = fromBalance.minus(bigAmount);
-    if (newFromBalance.lt(0)) {
-      throw new BadRequestError("Amount exceeds account balance.");
-    }
+      const newFromBalance = fromBalance.minus(bigAmount);
+      if (newFromBalance.lt(0)) {
+        throw new BadRequestError("Amount exceeds account balance.");
+      }
 
-    const transactionMemo: string = memo ? memo : "";
+      const transactionMemo: string = memo ? memo : "";
 
-    const newOperation: OperationToBeCreated = {
-      creator_uid: loggedInUid,
-      op_code: OperationType.GIVE,
-      data: {
-        to_uid: toMember.id,
-        amount: toAmount.toString(),
-        memo: transactionMemo,
-        donation_to: donationRecipient.id,
-        donation_amount: donationAmount.toString()
-      },
-      created_at: firestore.FieldValue.serverTimestamp()
+      const newOperation: OperationToBeCreated = {
+        creator_uid: loggedInMemberId,
+        op_code: OperationType.GIVE,
+        data: {
+          to_uid: toMember.id,
+          amount: toAmount.toString(),
+          memo: transactionMemo,
+          donation_to: donationRecipient.id,
+          donation_amount: donationAmount.toString()
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+
+      const newOperationRef = operations.doc();
+
+      transaction
+        .update(loggedInMember.ref, {
+          raha_balance: newFromBalance.toString()
+        })
+        .update(toMember.ref, {
+          raha_balance: toBalance.plus(bigAmount).toString()
+        })
+        .update(donationRecipient.ref, {
+          raha_balance: donationRecipientBalance.plus(donationAmount).toString()
+        })
+        .set(newOperationRef, newOperation);
+      return newOperationRef;
+    });
+
+    return {
+      body: {
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
+      } as Operation,
+      status: 201
     };
-
-    const newOperationRef = operations.doc();
-
-    transaction
-      .update(loggedInMember.ref, {
-        raha_balance: newFromBalance.toString()
-      })
-      .update(toMember.ref, {
-        raha_balance: toBalance.plus(bigAmount).toString()
-      })
-      .update(donationRecipient.ref, {
-        raha_balance: donationRecipientBalance.plus(donationAmount).toString()
-      })
-      .set(newOperationRef, newOperation);
-    return newOperationRef;
   });
-
-  ctx.body = {
-    ...(await newOperationReference.get()).data(),
-    id: newOperationReference.id
-  } as GiveApiEndpoint["response"];
-  ctx.status = 201;
-};

@@ -4,7 +4,8 @@ import {
   ApiEndpointName,
   ApiCallDefinition,
   ApiResponseDefinition,
-  ApiEndpointDefinition
+  ApiEndpointDefinition,
+  createApiRoute
 } from "./ApiEndpoint";
 import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 
@@ -31,22 +32,24 @@ export type ListOperationsApiEndpoint = ApiEndpointDefinition<
  *
  * TODO: allow filtering of operations.
  */
-export const listOperations = (
-  operations: CollectionReference
-) => async ctx => {
-  // TODO: Do we need to paginate?
-  const ops = await operations.orderBy("created_at").get();
-  const parsedOps: Operation[] = [];
-  ops.forEach(op =>
-    parsedOps.push({
-      id: op.id,
-      creator_uid: op.get("creator_uid"),
-      op_code: op.get("op_code"),
-      // TODO: Figure out how to get Firestore to return Timestamp's instead of Dates.
-      created_at: op.get("created_at"),
-      data: op.get("data")
-    })
-  );
-  ctx.body = JSON.stringify(parsedOps);
-  ctx.status = 200;
-};
+export const listOperations = (operations: CollectionReference) =>
+  createApiRoute<ListOperationsApiEndpoint>(async call => {
+    // TODO: Do we need to paginate?
+    const ops = await operations.orderBy("created_at").get();
+    const parsedOps: Operation[] = [];
+    ops.forEach(op =>
+      parsedOps.push({
+        id: op.id,
+        creator_uid: op.get("creator_uid"),
+        op_code: op.get("op_code"),
+        // TODO: Figure out how to get Firestore to return Timestamp's instead of Dates.
+        created_at: op.get("created_at"),
+        data: op.get("data")
+      })
+    );
+
+    return {
+      body: parsedOps,
+      status: 200
+    };
+  });

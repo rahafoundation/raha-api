@@ -9,7 +9,8 @@ import {
   ApiEndpointDefinition,
   ApiCallDefinition,
   ApiResponseDefinition,
-  ApiEndpointName
+  ApiEndpointName,
+  createApiRoute
 } from "./ApiEndpoint";
 import {
   OperationApiResponseBody,
@@ -39,55 +40,58 @@ export const sendInvite = (
   config: Config,
   sgMail: typeof sgMailLib,
   members: CollectionReference
-) => async ctx => {
-  const loggedInUid = ctx.state.user.uid;
-  const loggedInMember = await members.doc(loggedInUid).get();
+) =>
+  createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
+    const loggedInMemberId = loggedInMemberToken.uid;
+    const loggedInMember = await members.doc(loggedInMemberId).get();
 
-  const { inviteEmail } = ctx.request.body as SendInviteApiCall["body"];
+    const { inviteEmail } = call.body;
 
-  if (!loggedInMember.exists) {
-    throw new BadRequestError(
-      "You must yourself have been invited to Raha to send invites."
-    );
-  }
+    if (!loggedInMember.exists) {
+      throw new BadRequestError(
+        "You must yourself have been invited to Raha to send invites."
+      );
+    }
 
-  if (!inviteEmail) {
-    throw new BadRequestError("No invite email included in request.");
-  }
+    if (!inviteEmail) {
+      throw new BadRequestError("No invite email included in request.");
+    }
 
-  const loggedInFullName = loggedInMember.get("full_name");
-  const loggedInUsername = loggedInMember.get("username");
-  const inviteLink = new URL(
-    `/m/${loggedInUsername}/invite`,
-    config.appBase
-  ).toString();
+    const loggedInFullName = loggedInMember.get("full_name");
+    const loggedInUsername = loggedInMember.get("username");
+    const inviteLink = new URL(
+      `/m/${loggedInUsername}/invite`,
+      config.appBase
+    ).toString();
 
-  const msg = {
-    to: inviteEmail,
-    from: "invites@raha.io",
-    subject: `${loggedInFullName} invited you to join Raha!`,
-    text:
-      "Raha is the foundation for a global universal basic income. " +
-      "To ensure that only real humans can join, people must be invited " +
-      `by an existing member of the Raha network. ${loggedInFullName} ` +
-      "has invited you to join!\n\n" +
-      `Visit ${inviteLink} to join Raha!`,
-    html:
-      "<span><strong>Raha is the foundation for a global universal basic income.</strong><br /><br />" +
-      "To ensure that only real humans can join, people must be invited " +
-      `by an existing member of the Raha network. ${loggedInFullName} ` +
-      "has invited you to join!</span><br /><br />" +
-      `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`
-  };
-  sgMail.send(msg);
+    const msg = {
+      to: inviteEmail,
+      from: "invites@raha.io",
+      subject: `${loggedInFullName} invited you to join Raha!`,
+      text:
+        "Raha is the foundation for a global universal basic income. " +
+        "To ensure that only real humans can join, people must be invited " +
+        `by an existing member of the Raha network. ${loggedInFullName} ` +
+        "has invited you to join!\n\n" +
+        `Visit ${inviteLink} to join Raha!`,
+      html:
+        "<span><strong>Raha is the foundation for a global universal basic income.</strong><br /><br />" +
+        "To ensure that only real humans can join, people must be invited " +
+        `by an existing member of the Raha network. ${loggedInFullName} ` +
+        "has invited you to join!</span><br /><br />" +
+        `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`
+    };
+    sgMail.send(msg);
 
-  ctx.body = {
-    message: "Invite succesfully sent!"
-  } as SendInviteApiEndpoint["response"];
-  ctx.status = 201;
-};
+    return {
+      status: 201,
+      body: {
+        message: "Invite succesfully sent!"
+      }
+    };
+  });
 
-export type MintApiCall = ApiCallDefinition<void, { amount: string }>;
+export type MintApiCall = ApiCallDefinition<void, { amount: string }, true>;
 export type MintApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
@@ -102,50 +106,53 @@ export const mint = (
   db: Firestore,
   members: CollectionReference,
   operations: CollectionReference
-) => async ctx => {
-  const newOperationReference = await db.runTransaction(async transaction => {
-    const loggedInUid = ctx.state.user.uid;
-    const loggedInMember = await transaction.get(members.doc(loggedInUid));
+) =>
+  createApiRoute<MintApiEndpoint>(async (call, loggedInMemberToken) => {
+    const newOperationReference = await db.runTransaction(async transaction => {
+      const loggedInUid = loggedInMemberToken.user.uid;
+      const loggedInMember = await transaction.get(members.doc(loggedInUid));
 
-    const { amount } = ctx.request.body as MintApiCall["body"];
+      const { amount } = call.body;
 
-    const creatorBalance = new Big(loggedInMember.get("raha_balance") || 0);
-    const lastMinted: number =
-      loggedInMember.get("last_minted") ||
-      loggedInMember.get("created_at") ||
-      Date.now();
-    const now = Date.now();
-    const sinceLastMinted = now - lastMinted;
-    // Round to 2 decimal places and using rounding mode 0 = round down.
-    const bigAmount = new Big(amount).round(2, 0);
-    const maxMintable =
-      (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
-    if (bigAmount.gt(maxMintable)) {
-      throw new BadRequestError("Mint amount exceeds the allowed amount.");
-    }
+      const creatorBalance = new Big(loggedInMember.get("raha_balance") || 0);
+      const lastMinted: number =
+        loggedInMember.get("last_minted") ||
+        loggedInMember.get("created_at") ||
+        Date.now();
+      const now = Date.now();
+      const sinceLastMinted = now - lastMinted;
+      // Round to 2 decimal places and using rounding mode 0 = round down.
+      const bigAmount = new Big(amount).round(2, 0);
+      const maxMintable =
+        (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
+      if (bigAmount.gt(maxMintable)) {
+        throw new BadRequestError("Mint amount exceeds the allowed amount.");
+      }
 
-    const newCreatorBalance = creatorBalance.plus(bigAmount);
-    const newOperation = {
-      creator_uid: loggedInUid,
-      op_code: "MINT",
-      data: {
-        amount: bigAmount.toString()
-      },
-      created_at: firestore.FieldValue.serverTimestamp()
+      const newCreatorBalance = creatorBalance.plus(bigAmount);
+      const newOperation = {
+        creator_uid: loggedInUid,
+        op_code: "MINT",
+        data: {
+          amount: bigAmount.toString()
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newOperationRef = operations.doc();
+      transaction
+        .update(loggedInMember.ref, {
+          raha_balance: newCreatorBalance.toString(),
+          last_minted: firestore.FieldValue.serverTimestamp()
+        })
+        .set(newOperationRef, newOperation);
+      return newOperationRef;
+    });
+
+    return {
+      body: {
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
+      } as OperationApiResponseBody,
+      status: 201
     };
-    const newOperationRef = operations.doc();
-    transaction
-      .update(loggedInMember.ref, {
-        raha_balance: newCreatorBalance.toString(),
-        last_minted: firestore.FieldValue.serverTimestamp()
-      })
-      .set(newOperationRef, newOperation);
-    return newOperationRef;
   });
-
-  ctx.body = {
-    ...(await newOperationReference.get()).data(),
-    id: newOperationReference.id
-  } as MintApiEndpoint["response"];
-  ctx.status = 201;
-};
