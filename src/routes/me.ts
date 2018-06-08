@@ -8,22 +8,30 @@ import BadRequestError from "../errors/BadRequestError";
 import {
   ApiEndpointDefinition,
   ApiCallDefinition,
-  ApiEndpoint
+  ApiResponseDefinition,
+  ApiEndpointName
 } from "./ApiEndpoint";
-import { OperationApiResponse, MessageApiResponse } from "./ApiResponse";
+import {
+  OperationApiResponseBody,
+  MessageApiResponseBody
+} from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
 export type SendInviteApiCall = ApiCallDefinition<
-  ApiEndpoint.SEND_INVITE,
   void,
   { inviteEmail: string }
 >;
+export type SendInviteApiResponse = ApiResponseDefinition<
+  201,
+  MessageApiResponseBody
+>;
 export type SendInviteApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.SEND_INVITE,
   SendInviteApiCall,
-  MessageApiResponse
+  SendInviteApiResponse
 >;
 
 export const sendInvite = (
@@ -78,14 +86,15 @@ export const sendInvite = (
   ctx.status = 201;
 };
 
-export type MintApiCall = ApiCallDefinition<
-  ApiEndpoint.MINT,
-  void,
-  { amount: string }
+export type MintApiCall = ApiCallDefinition<void, { amount: string }>;
+export type MintApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
 >;
 export type MintApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.MINT,
   MintApiCall,
-  OperationApiResponse
+  MintApiResponse
 >;
 
 export const mint = (

@@ -1,32 +1,31 @@
 import { CollectionReference } from "@google-cloud/firestore";
 import { Operation } from "../models/Operation";
 import {
-  ApiEndpoint,
+  ApiEndpointName,
   ApiCallDefinition,
+  ApiResponseDefinition,
   ApiEndpointDefinition
 } from "./ApiEndpoint";
-import { OperationsApiResponse } from "./ApiResponse";
+import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 
 /**
  * Defines how to call the ListOperations endpoint
  */
-export type ListOperationsApiCall = ApiCallDefinition<
-  ApiEndpoint.GET_OPERATIONS,
-  void,
-  void
+export type ListOperationsApiCall = ApiCallDefinition<void, void>;
+export type ListOperationsApiResponse = ApiResponseDefinition<
+  200,
+  OperationsApiResponseBody
 >;
 
 /**
  * Fully defines the ListOperations endpoint
  */
 export type ListOperationsApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.GET_OPERATIONS,
   ListOperationsApiCall,
-  OperationsApiResponse
+  ListOperationsApiResponse
 >;
 
-export interface ListOperationsRequestParams {}
-export interface ListOperationsRequestBody {}
-export type ListOperationsResponseBody = Operation[];
 /**
  * Lists all Operations.
  *

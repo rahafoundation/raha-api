@@ -21,10 +21,11 @@ import {
 import { MemberId, MemberUsername } from "../models/identifiers";
 import {
   ApiCallDefinition,
-  ApiEndpoint,
+  ApiResponseDefinition,
+  ApiEndpointName,
   ApiEndpointDefinition
 } from "./ApiEndpoint";
-import { OperationApiResponse } from "./ApiResponse";
+import { OperationApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
 import { Readable as ReadableStream } from "stream";
 
@@ -200,14 +201,18 @@ export const uploadVideo = (
 };
 
 export type RequestInviteApiCall = ApiCallDefinition<
-  ApiEndpoint.REQUEST_INVITE,
   { memberId: MemberId },
   { fullName: string; videoUrl: string; username: string }
 >;
+export type RequestInviteApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
 
 export type RequestInviteApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.REQUEST_INVITE,
   RequestInviteApiCall,
-  OperationApiResponse
+  RequestInviteApiResponse
 >;
 
 export const requestInvite = (
@@ -269,13 +274,17 @@ export const requestInvite = (
 // }
 
 export type TrustMemberApiCall = ApiCallDefinition<
-  ApiEndpoint.TRUST_MEMBER,
   { memberId: MemberId },
   void
 >;
+export type TrustMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
 export type TrustMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.TRUST_MEMBER,
   TrustMemberApiCall,
-  OperationApiResponse
+  TrustMemberApiResponse
 >;
 /**
  * Create a trust relationship to a target member from the logged in member
@@ -304,13 +313,17 @@ export const trust = (
 };
 
 export type GiveApiCall = ApiCallDefinition<
-  ApiEndpoint.GIVE,
   { memberId: MemberId },
   { amount: string; memo?: string }
 >;
+export type GiveApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
 export type GiveApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.GIVE,
   GiveApiCall,
-  OperationApiResponse
+  GiveApiResponse
 >;
 
 /**
