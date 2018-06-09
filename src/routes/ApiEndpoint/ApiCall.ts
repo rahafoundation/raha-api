@@ -1,10 +1,4 @@
-import {
-  TrustMemberApiCall,
-  RequestInviteApiCall,
-  GiveApiCall
-} from "../members";
-import { ListOperationsApiCall } from "../operations";
-import { SendInviteApiCall, MintApiCall } from "../me";
+import ApiEndpoint from ".";
 
 /**
  * Definition for the arguments you need to call a particular API endpoint. Also
@@ -20,13 +14,5 @@ export interface ApiCallDefinition<
   authenticated: Authenticated;
 }
 
-/**
- * All API calls you can make, and the arguments you need to call them.
- */
-export type ApiCall =
-  | TrustMemberApiCall
-  | ListOperationsApiCall
-  | RequestInviteApiCall
-  | SendInviteApiCall
-  | MintApiCall
-  | GiveApiCall;
+type ApiCall = ApiEndpoint["call"];
+export default ApiCall;

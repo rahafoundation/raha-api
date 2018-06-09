@@ -1,11 +1,6 @@
 import { Operation } from "../../models/Operation";
-import { SendInviteApiResponse, MintApiResponse } from "../me";
-import {
-  TrustMemberApiResponse,
-  RequestInviteApiResponse,
-  GiveApiResponse
-} from "../members";
-import { ListOperationsApiResponse } from "../operations";
+import { HttpStatusCode } from "../../helpers/http";
+import ApiEndpoint from ".";
 
 export type OperationApiResponseBody = Operation;
 export type OperationsApiResponseBody = Operation[];
@@ -13,17 +8,10 @@ export interface MessageApiResponseBody {
   message: string;
 }
 
-export interface ApiResponseDefinition<Status extends number, Body> {
+export interface ApiResponseDefinition<Status extends HttpStatusCode, Body> {
   status: Status;
   body: Body;
 }
 
-// as more response types appear, expand this type
-export type ApiResponse =
-  | TrustMemberApiResponse
-  | ListOperationsApiResponse
-  | RequestInviteApiResponse
-  | SendInviteApiResponse
-  | MintApiResponse
-  | GiveApiResponse;
+type ApiResponse = ApiEndpoint["response"];
 export default ApiResponse;

@@ -1,8 +1,8 @@
 /**
  * Definitions of endpoints—how they are called and how they respond.
  */
-import { ApiCall } from "./ApiCall";
-import { ApiResponse } from "./ApiResponse";
+import ApiCall, { ApiCallDefinition } from "./ApiCall";
+import ApiResponse, { ApiResponseDefinition } from "./ApiResponse";
 
 import {
   GiveApiEndpoint,
@@ -40,15 +40,20 @@ export interface ApiEndpointDefinition<
   response: Resp;
 }
 
-export type ApiDefinition =
+/**
+ * The set of API endpoints defined in the application. If you add a new API
+ * endpoint, be sure to add it to this list.
+ */
+type ApiEndpoint =
   | TrustMemberApiEndpoint
   | ListOperationsApiEndpoint
   | RequestInviteApiEndpoint
   | SendInviteApiEndpoint
   | GiveApiEndpoint
   | MintApiEndpoint;
+export default ApiEndpoint;
 
-export type ApiHandler<Def extends ApiDefinition> = (
+export type ApiHandler<Def extends ApiEndpoint> = (
   call: {
     params: Def["call"]["params"];
     body: Def["call"]["body"];
@@ -64,7 +69,7 @@ export type ApiHandler<Def extends ApiDefinition> = (
  * @param endpoint Endpoint being hit
  * @param apiHandler Handler for that endpoint
  */
-export function createApiRoute<Def extends ApiDefinition>(
+export function createApiRoute<Def extends ApiEndpoint>(
   apiHandler: ApiHandler<Def>
 ): (ctx: RahaApiContext<Def["call"]["authenticated"]>) => Promise<void> {
   return async ctx => {
