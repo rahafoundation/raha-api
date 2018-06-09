@@ -40,8 +40,8 @@ function getPrivateVideoRef(
   storage: BucketStorage,
   memberUid: string
 ): Storage.File {
-  // TODO: this is a quick hack to make the types work out; created issue
-  // https://github.com/firebase/firebase-admin-node/issues/289
+  // TODO: this is a quick hack to make the types work out because test and prod
+  // use different storage backends; see the corresponding TODO in app.ts
   return (storage as Storage.Storage)
     .bucket(config.privateVideoBucket)
     .file(`private-video/${memberUid}/invite.mp4`);

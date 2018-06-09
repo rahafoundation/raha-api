@@ -35,6 +35,8 @@ const credentialsPath = credentialsPathArg
   : undefined;
 
 const admin = credentialsPath ? getAdmin(credentialsPath) : getAdmin();
+// TODO: explain why we have different storage backends for test, or
+// unify them.
 const storage = credentialsPath ? admin.storage() : Storage();
 
 const db: Firestore = admin.firestore();
