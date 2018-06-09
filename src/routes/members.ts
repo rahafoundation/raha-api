@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import * as httpStatus from "http-status";
 import { URL } from "url";
 
 import {
@@ -12,7 +13,7 @@ import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
 
-import BadRequestError from "../errors/BadRequestError";
+import ApiError from "../errors/ApiError";
 import {
   Operation,
   OperationToBeCreated,
@@ -149,7 +150,8 @@ export const uploadVideo = (
     ctx.state.toMember.id
   );
   if ((await publicVideoRef.exists())[0]) {
-    throw new BadRequestError(
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
       "Video already exists at intended storage destination. Cannot overwrite."
     );
   }
@@ -166,7 +168,8 @@ export const uploadVideo = (
     (file: any) => file.fieldname === "encoded_video"
   );
   if (encodedVideo.length !== 1) {
-    throw new BadRequestError(
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
       "Zero or multiple encoded videos supplied with request."
     );
   }
@@ -176,7 +179,8 @@ export const uploadVideo = (
 
   const hashMappingRef = uidToVideoHash.doc(ctx.state.toMember.id);
   if ((await hashMappingRef.get()).exists) {
-    throw new BadRequestError(
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
       "Invite video already exists for specified user."
     );
   }
@@ -230,7 +234,10 @@ export const requestInvite = (
       const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
       if ((await loggedInMemberRef.get()).exists) {
-        throw new BadRequestError("You have already requested an invite.");
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "You have already requested an invite."
+        );
       }
 
       const { username, fullName } = call.body;
@@ -370,7 +377,10 @@ export const give = (
       );
 
       if (donationRecipient === undefined) {
-        throw new BadRequestError("Donation recipient does not exist.");
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Donation recipient does not exist."
+        );
       }
 
       const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
@@ -389,7 +399,10 @@ export const give = (
 
       const newFromBalance = fromBalance.minus(bigAmount);
       if (newFromBalance.lt(0)) {
-        throw new BadRequestError("Amount exceeds account balance.");
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Amount exceeds account balance."
+        );
       }
 
       const transactionMemo: string = memo ? memo : "";

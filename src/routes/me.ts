@@ -2,9 +2,9 @@ import { URL } from "url";
 import Big from "big.js";
 import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
+import * as httpStatus from "http-status";
 import * as sgMailLib from "@sendgrid/mail";
 
-import BadRequestError from "../errors/BadRequestError";
 import {
   ApiEndpointDefinition,
   ApiCallDefinition,
@@ -17,6 +17,7 @@ import {
   MessageApiResponseBody
 } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
+import ApiError from "../errors/ApiError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
@@ -48,13 +49,17 @@ export const sendInvite = (
     const { inviteEmail } = call.body;
 
     if (!loggedInMember.exists) {
-      throw new BadRequestError(
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
         "You must yourself have been invited to Raha to send invites."
       );
     }
 
     if (!inviteEmail) {
-      throw new BadRequestError("No invite email included in request.");
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "No invite email included in request."
+      );
     }
 
     const loggedInFullName = loggedInMember.get("full_name");
@@ -126,7 +131,10 @@ export const mint = (
       const maxMintable =
         (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
       if (bigAmount.gt(maxMintable)) {
-        throw new BadRequestError("Mint amount exceeds the allowed amount.");
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Mint amount exceeds the allowed amount."
+        );
       }
 
       const newCreatorBalance = creatorBalance.plus(bigAmount);
