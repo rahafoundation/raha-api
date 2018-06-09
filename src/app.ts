@@ -62,18 +62,7 @@ export type RahaApiContext<
   Authenticated extends boolean
 > = Authenticated extends true ? LoggedInContext : Koa.Context;
 
-const validateMemberId: Router.IParamMiddleware = async (id, ctx, next) => {
-  const memberDoc = await membersCollection.doc(id).get();
-  if (!memberDoc.exists) {
-    ctx.throw(404, "This member does not exist!");
-    return;
-  }
-  ctx.state.toMember = memberDoc;
-  return next();
-};
-
 const publicRouter = new Router()
-  .param("memberId", validateMemberId)
   .get("/api/operations", operationsRoutes.listOperations(operationsCollection))
   /* These endpoints are consumed by coconut. */
   .post(
@@ -95,7 +84,6 @@ app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
 const authenticatedRouter = new Router()
-  .param("memberId", validateMemberId)
   .post(
     "/api/members/:memberId/request_invite",
     membersRoutes.requestInvite(

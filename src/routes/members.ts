@@ -30,6 +30,8 @@ import {
 import { OperationApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
 import { Readable as ReadableStream } from "stream";
+import { getMemberById } from "../models/Member";
+import { Context } from "koa";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -135,15 +137,26 @@ function getHashFromVideoBuffer(videoBuffer: Buffer): string {
   return hash.digest("hex");
 }
 
-export const notifyVideoEncoded = ctx => {
+/**
+ * Endpoint coconut calls to notify an uploaded video has been successfully
+ * encoded. Not intended to be called by a user, so doesn't go through the
+ * `createApiRoute` flow.
+ */
+export const notifyVideoEncoded = (ctx: Context) => {
   ctx.status = 200;
 };
 
+/**
+ * Endpoint to upload a user's invite video.
+ * Doesn't go through the `createApiRoute` flow.
+ *
+ * TODO: should it use `createApiRoute` and have documented types?
+ */
 export const uploadVideo = (
   config: Config,
   storage: BucketStorage,
   uidToVideoHash: CollectionReference
-) => async ctx => {
+) => async (ctx: Context) => {
   const publicVideoRef = getPublicVideoRef(
     config,
     storage,
@@ -241,8 +254,14 @@ export const requestInvite = (
       }
 
       const { username, fullName } = call.body;
-      const requestingInviteFromUsername = ctx.state.toMember.get("username");
-      const requestingInviteFromUid = ctx.state.toMember.id;
+      const requestingFromId = call.params.memberId;
+      const requestingFromMember = await getMemberById(
+        membersCollection,
+        requestingFromId
+      );
+      if (!requestingFromMember) {
+        throw new ApiError(httpStatus.NOT_FOUND);
+      }
 
       const newOperation: OperationToBeCreated = {
         creator_uid: loggedInUid,
@@ -250,7 +269,7 @@ export const requestInvite = (
         data: {
           username,
           full_name: fullName,
-          to_uid: requestingInviteFromUid
+          to_uid: requestingFromId
           // TODO: Eventually we need to extract file extension from this or a similar parameter.
           // Currently we only handle videos uploaded as invite.mp4.
           // video_url: ctx.request.body.videoUrl
@@ -260,7 +279,7 @@ export const requestInvite = (
       const newMember = {
         username,
         full_name: fullName,
-        request_invite_from_uid: requestingInviteFromUid,
+        request_invite_from_uid: requestingFromId,
         created_at: firestore.FieldValue.serverTimestamp(),
         request_invite_block_at: null,
         request_invite_block_seq: null,
@@ -309,22 +328,25 @@ export type TrustMemberApiEndpoint = ApiEndpointDefinition<
  * Create a trust relationship to a target member from the logged in member
  */
 export const trust = (
-  members: CollectionReference,
-  operations: CollectionReference
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference
 ) =>
   createApiRoute<TrustMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInUid = loggedInMemberToken.uid;
-    const loggedInMember = await members.doc(loggedInUid).get();
+    const memberToTrustId = call.params.memberId;
+    if (!(await getMemberById(membersCollection, memberToTrustId))) {
+      throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
+    }
 
     const newOperation: OperationToBeCreated = {
       creator_uid: loggedInUid,
       op_code: OperationType.TRUST,
       data: {
-        to_uid: ctx.state.toMember.id
+        to_uid: memberToTrustId
       },
       created_at: firestore.FieldValue.serverTimestamp()
     };
-    const newOperationDoc = await operations.add(newOperation);
+    const newOperationDoc = await operationsCollection.add(newOperation);
     return {
       body: {
         ...(await newOperationDoc.get()).data(),
@@ -354,25 +376,30 @@ export type GiveApiEndpoint = ApiEndpointDefinition<
  */
 export const give = (
   db: Firestore,
-  members: CollectionReference,
+  membersCollection: CollectionReference,
   operations: CollectionReference
 ) =>
   createApiRoute<GiveApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInMemberId = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(
-        members.doc(loggedInMemberId)
+        membersCollection.doc(loggedInMemberId)
       );
 
-      const toMember = await transaction.get(
-        (ctx.state.toMember as DocumentSnapshot).ref
+      const memberToGiveToId = call.params.memberId;
+      const memberToGiveTo = await getMemberById(
+        membersCollection,
+        memberToGiveToId
       );
+      if (!memberToGiveTo) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
+      }
+
       const { amount, memo } = call.body;
 
       const donationRecipient = await transaction.get(
-        members.doc(
-          ctx.state.toMember.get("donation_to") ||
-            DEFAULT_DONATION_RECIPIENT_UID
+        membersCollection.doc(
+          memberToGiveTo.get("donation_to") || DEFAULT_DONATION_RECIPIENT_UID
         )
       );
 
@@ -384,13 +411,13 @@ export const give = (
       }
 
       const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
-      const toBalance = new Big(toMember.get("raha_balance") || 0);
+      const toBalance = new Big(memberToGiveTo.get("raha_balance") || 0);
       const donationRecipientBalance = new Big(
         donationRecipient.get("raha_balance") || 0
       );
 
       const donationRate = new Big(
-        ctx.state.toMember.get("donation_rate") || DEFAULT_DONATION_RATE
+        memberToGiveTo.get("donation_rate") || DEFAULT_DONATION_RATE
       );
       const bigAmount = new Big(amount);
       // Round to 2 decimal places and using rounding mode 0 = round down.
@@ -411,7 +438,7 @@ export const give = (
         creator_uid: loggedInMemberId,
         op_code: OperationType.GIVE,
         data: {
-          to_uid: toMember.id,
+          to_uid: memberToGiveToId,
           amount: toAmount.toString(),
           memo: transactionMemo,
           donation_to: donationRecipient.id,
@@ -426,7 +453,7 @@ export const give = (
         .update(loggedInMember.ref, {
           raha_balance: newFromBalance.toString()
         })
-        .update(toMember.ref, {
+        .update(memberToGiveTo.ref, {
           raha_balance: toBalance.plus(bigAmount).toString()
         })
         .update(donationRecipient.ref, {
