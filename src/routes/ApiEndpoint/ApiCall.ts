@@ -1,8 +1,8 @@
-import ApiEndpoint from ".";
+import ApiEndpoint, { ApiEndpointUri } from ".";
 import { HttpVerb } from "../../helpers/http";
 
 export interface ApiLocationDefinition<
-  Uri extends string,
+  Uri extends ApiEndpointUri,
   Method extends HttpVerb,
   Authenticated extends boolean
 > {
