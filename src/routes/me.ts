@@ -3,7 +3,6 @@ import Big from "big.js";
 import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import * as httpStatus from "http-status";
-import * as sgMailLib from "@sendgrid/mail";
 
 import {
   ApiEndpointDefinition,
@@ -45,9 +44,16 @@ export type SendInviteApiEndpoint = ApiEndpointDefinition<
   SendInviteApiResponse
 >;
 
+interface EmailMessage {
+  to: string;
+  from: string;
+  subject: string;
+  text: string;
+  html: string;
+}
 export const sendInvite = (
   config: Config,
-  sgMail: typeof sgMailLib,
+  sgMail: { send: (message: EmailMessage) => void },
   members: CollectionReference
 ) =>
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
