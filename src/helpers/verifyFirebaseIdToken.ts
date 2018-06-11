@@ -1,5 +1,8 @@
 import * as adminLib from "firebase-admin";
 import { Middleware } from "koa";
+import * as httpStatus from "http-status";
+
+import ApiError from "../errors/ApiError";
 
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
 // The Firebase ID token needs to be passed as a Bearer token in the Authorization HTTP header like this:
@@ -14,10 +17,10 @@ const verifyFirebaseIdToken: (
   const { headers, cookies } = ctx;
 
   if (
-    !headers.authorization ||
-    !headers.authorization.startsWith("Bearer ")
+    (!headers.authorization || !headers.authorization.startsWith("Bearer ")) &&
     // TODO: determine if we should support session cookie as auth
-    // && !cookies.__session
+    // TODO: how is the __session member being filled in?
+    !(cookies as any).__session
   ) {
     // tslint:disable-next-line:no-console
     console.error(
@@ -26,19 +29,17 @@ const verifyFirebaseIdToken: (
       "Authorization: Bearer <Firebase ID Token>",
       'or by passing a "__session" cookie.'
     );
-    ctx.status = 403;
-    ctx.body = "Unauthorized.";
-    return;
+    throw new ApiError(httpStatus.UNAUTHORIZED);
   }
 
   const idToken =
     headers.authorization && headers.authorization.startsWith("Bearer ")
       ? // Read the ID Token from the Authorization header.
         headers.authorization.split("Bearer ")[1]
-      : undefined;
-  // TODO: determine if we should support session cookie as auth
-  // // Read the ID Token from cookie.
-  //   cookies.__session;
+      : // TODO: determine if we should support session cookie as auth
+        // TODO: how is the __session member being filled in?
+        // Read the ID Token from cookie.
+        (cookies as any).__session;
 
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
@@ -46,9 +47,7 @@ const verifyFirebaseIdToken: (
   } catch (error) {
     // tslint:disable-next-line:no-console
     console.error("Error while verifying Firebase ID token:", error);
-    ctx.status = 403;
-    ctx.body = "Unauthorized.";
-    return;
+    throw new ApiError(httpStatus.FORBIDDEN);
   }
   return next();
 };
