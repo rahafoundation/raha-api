@@ -21,7 +21,8 @@ import {
   ApiResponseDefinition,
   ApiEndpointName,
   ApiEndpointDefinition,
-  createApiRoute
+  createApiRoute,
+  ApiEndpointUri
 } from "./ApiEndpoint";
 import { OperationApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
@@ -29,7 +30,6 @@ import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../models/Member";
 import { Context } from "koa";
 import { HttpVerb } from "../helpers/http";
-import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -216,13 +216,17 @@ export const uploadVideo = (
   ctx.status = 201;
 };
 
-export type RequestInviteApiLocation = ApiLocationDefinition<
-  "members/:uid/request_invite",
-  HttpVerb.POST,
-  true
->;
+export const requestInviteApiLocation: {
+  uri: ApiEndpointUri.REQUEST_INVITE;
+  method: HttpVerb.POST;
+  authenticated: true;
+} = {
+  uri: ApiEndpointUri.REQUEST_INVITE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
 export type RequestInviteApiCall = ApiCallDefinition<
-  RequestInviteApiLocation,
+  typeof requestInviteApiLocation,
   { memberId: MemberId },
   { fullName: string; videoUrl: string; username: string }
 >;
@@ -308,13 +312,17 @@ export const requestInvite = (
     }
   );
 
-export type TrustMemberApiLocation = ApiLocationDefinition<
-  "members/:uid/trust",
-  HttpVerb.POST,
-  true
->;
+export const trustMemberApiLocation: {
+  uri: ApiEndpointUri.TRUST_MEMBER;
+  method: HttpVerb.POST;
+  authenticated: true;
+} = {
+  uri: ApiEndpointUri.TRUST_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
 export type TrustMemberApiCall = ApiCallDefinition<
-  TrustMemberApiLocation,
+  typeof trustMemberApiLocation,
   { memberId: MemberId },
   void
 >;
@@ -359,13 +367,17 @@ export const trust = (
     };
   });
 
-export type GiveApiLocation = ApiLocationDefinition<
-  "members/:uid/give",
-  HttpVerb.POST,
-  true
->;
+export const giveApiLocation: {
+  uri: ApiEndpointUri.GIVE;
+  method: HttpVerb.POST;
+  authenticated: true;
+} = {
+  uri: ApiEndpointUri.GIVE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
 export type GiveApiCall = ApiCallDefinition<
-  GiveApiLocation,
+  typeof giveApiLocation,
   { memberId: MemberId },
   { amount: string; memo?: string }
 >;

@@ -81,27 +81,15 @@ interface RouteHandler<Location extends ApiLocation> {
  */
 const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
-    location: {
-      uri: "operations",
-      method: HttpVerb.GET,
-      authenticated: false
-    },
+    location: operationsRoutes.listOperationsApiLocation,
     handler: operationsRoutes.listOperations(operationsCollection)
   },
   {
-    location: {
-      uri: "members/:uid/trust",
-      method: HttpVerb.POST,
-      authenticated: true
-    },
+    location: membersRoutes.trustMemberApiLocation,
     handler: membersRoutes.trust(membersCollection, operationsCollection)
   },
   {
-    location: {
-      uri: "members/:uid/request_invite",
-      method: HttpVerb.POST,
-      authenticated: true
-    },
+    location: membersRoutes.requestInviteApiLocation,
     handler: membersRoutes.requestInvite(
       config,
       storage,
@@ -111,27 +99,15 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     )
   },
   {
-    location: {
-      uri: "members/:uid/give",
-      method: HttpVerb.POST,
-      authenticated: true
-    },
+    location: membersRoutes.giveApiLocation,
     handler: membersRoutes.give(db, membersCollection, operationsCollection)
   },
   {
-    location: {
-      uri: "me/send_invite",
-      method: HttpVerb.POST,
-      authenticated: true
-    },
+    location: meRoutes.sendInviteApiLocation,
     handler: meRoutes.sendInvite(config, sgMail, membersCollection)
   },
   {
-    location: {
-      uri: "me/mint",
-      method: HttpVerb.POST,
-      authenticated: true
-    },
+    location: meRoutes.mintApiLocation,
     handler: meRoutes.mint(db, membersCollection, operationsCollection)
   }
 ];

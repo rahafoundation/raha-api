@@ -5,19 +5,23 @@ import {
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointDefinition,
-  createApiRoute
+  createApiRoute,
+  ApiEndpointUri
 } from "./ApiEndpoint";
 import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../helpers/http";
-import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
-export type ListOperationsApiLocation = ApiLocationDefinition<
-  "operations",
-  HttpVerb.GET,
-  false
->;
+export const listOperationsApiLocation: {
+  uri: ApiEndpointUri.GET_OPERATIONS;
+  method: HttpVerb.GET;
+  authenticated: false;
+} = {
+  uri: ApiEndpointUri.GET_OPERATIONS,
+  method: HttpVerb.GET,
+  authenticated: false
+};
 export type ListOperationsApiCall = ApiCallDefinition<
-  ListOperationsApiLocation,
+  typeof listOperationsApiLocation,
   void,
   void
 >;

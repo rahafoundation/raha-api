@@ -9,7 +9,8 @@ import {
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointName,
-  createApiRoute
+  createApiRoute,
+  ApiEndpointUri
 } from "./ApiEndpoint";
 import {
   OperationApiResponseBody,
@@ -19,18 +20,20 @@ import { Config } from "../config/prod.config";
 import ApiError from "../errors/ApiError";
 import { HttpVerb } from "../helpers/http";
 import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
-import { GiveApiLocation } from "./members";
-
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
-export type SendInviteApiLocation = ApiLocationDefinition<
-  "me/send_invite",
-  HttpVerb.POST,
-  true
->;
+export const sendInviteApiLocation: {
+  uri: ApiEndpointUri.SEND_INVITE;
+  method: HttpVerb.POST;
+  authenticated: true;
+} = {
+  uri: ApiEndpointUri.SEND_INVITE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
 export type SendInviteApiCall = ApiCallDefinition<
-  SendInviteApiLocation,
+  typeof sendInviteApiLocation,
   void,
   { inviteEmail: string }
 >;
@@ -110,13 +113,17 @@ export const sendInvite = (
     };
   });
 
-export type MintApiLocation = ApiLocationDefinition<
-  "me/mint",
-  HttpVerb.POST,
-  true
->;
+export const mintApiLocation: {
+  uri: ApiEndpointUri.MINT;
+  method: HttpVerb.POST;
+  authenticated: true;
+} = {
+  uri: ApiEndpointUri.MINT,
+  method: HttpVerb.POST,
+  authenticated: true
+};
 export type MintApiCall = ApiCallDefinition<
-  MintApiLocation,
+  typeof mintApiLocation,
   void,
   { amount: string }
 >;
