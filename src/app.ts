@@ -24,7 +24,7 @@ import {
 } from "./config/DO_NOT_COMMIT.secrets.config";
 import { createApiRoute } from "./routes/ApiEndpoint";
 import { HttpVerb } from "./helpers/http";
-import ApiCall, { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
+import { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const credentialsPathArg =
@@ -140,7 +140,7 @@ function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method } = location;
-    const fullUri = `/api/${uri}`;
+    const fullUri = path.join("/api/", uri);
     switch (method as HttpVerb) {
       case HttpVerb.GET:
         return router.get(fullUri, handler);
