@@ -54,11 +54,11 @@ type ApiEndpoint =
 export default ApiEndpoint;
 
 export type ApiHandler<Def extends ApiEndpoint> = (
-  call: {
-    params: Def["call"]["params"];
-    body: Def["call"]["body"];
+  request: {
+    params: Def["call"]["request"]["params"];
+    body: Def["call"]["request"]["body"];
   },
-  loggedInMemberToken: Def["call"]["authenticated"] extends true
+  loggedInMemberToken: Def["call"]["location"]["authenticated"] extends true
     ? LoggedInContext["state"]["loggedInMemberToken"]
     : undefined
 ) => Promise<Def["response"]>;
@@ -71,7 +71,9 @@ export type ApiHandler<Def extends ApiEndpoint> = (
  */
 export function createApiRoute<Def extends ApiEndpoint>(
   apiHandler: ApiHandler<Def>
-): (ctx: RahaApiContext<Def["call"]["authenticated"]>) => Promise<void> {
+): (
+  ctx: RahaApiContext<Def["call"]["location"]["authenticated"]>
+) => Promise<void> {
   return async ctx => {
     const { status, body } = await apiHandler(
       {
