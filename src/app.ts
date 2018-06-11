@@ -140,17 +140,18 @@ function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method } = location;
+    const fullUri = `/api/${uri}`;
     switch (method as HttpVerb) {
       case HttpVerb.GET:
-        return router.get(uri, handler);
+        return router.get(fullUri, handler);
       case HttpVerb.POST:
-        return router.post(uri, handler);
+        return router.post(fullUri, handler);
       case HttpVerb.PUT:
-        return router.put(uri, handler);
+        return router.put(fullUri, handler);
       case HttpVerb.PATCH:
-        return router.patch(uri, handler);
+        return router.patch(fullUri, handler);
       case HttpVerb.DELETE:
-        return router.delete(uri, handler);
+        return router.delete(fullUri, handler);
       default:
         // should be unreachable
         throw new Error("Invalid HTTP verb");
@@ -161,7 +162,8 @@ function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
 const publicRouter = createRouter(
   apiRoutes.filter(r => !r.location.authenticated)
 )
-  /* coconut endpoints are not in apiRoutes nor ApiEndpoint for now. */
+  // Coconut video encoding endpoints are not in apiRoutes nor ApiEndpoint for
+  // now. Note: these routes explicitly prefix /api/, unlike the rest of them.
   .post(
     "/api/members/:memberId/notify_video_encoded",
     membersRoutes.notifyVideoEncoded
@@ -171,10 +173,8 @@ const publicRouter = createRouter(
     membersRoutes.uploadVideo(config, storage, memberIdToVideoHashCollection)
   );
 
-// TODO: remove typecasts once the following is resolved:
-// https://github.com/DefinitelyTyped/DefinitelyTyped/issues/22568
 app.use(publicRouter.routes());
-app.use(publicRouter.allowedMethods() as any);
+app.use(publicRouter.allowedMethods());
 
 // Put endpoints that don't need the user to be authenticated above this.
 app.use(verifyFirebaseIdToken(admin));
