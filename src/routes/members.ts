@@ -15,7 +15,7 @@ import {
   OperationToBeCreated,
   OperationType
 } from "../models/Operation";
-import { MemberId, MemberUsername } from "../models/identifiers";
+import { MemberId } from "../models/identifiers";
 import {
   ApiCallDefinition,
   ApiResponseDefinition,
@@ -30,6 +30,7 @@ import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../models/Member";
 import { Context } from "koa";
 import { HttpVerb } from "../helpers/http";
+import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -216,17 +217,23 @@ export const uploadVideo = (
   ctx.status = 201;
 };
 
-export const requestInviteApiLocation: {
-  uri: ApiEndpointUri.REQUEST_INVITE;
-  method: HttpVerb.POST;
-  authenticated: true;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type RequestInviteApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.REQUEST_INVITE,
+  HttpVerb.POST,
+  true
+>;
+export const requestInviteApiLocation: RequestInviteApiLocation = {
   uri: ApiEndpointUri.REQUEST_INVITE,
   method: HttpVerb.POST,
   authenticated: true
 };
 export type RequestInviteApiCall = ApiCallDefinition<
-  typeof requestInviteApiLocation,
+  RequestInviteApiLocation["uri"],
+  RequestInviteApiLocation["method"],
+  RequestInviteApiLocation["authenticated"],
   { memberId: MemberId },
   { fullName: string; videoUrl: string; username: string }
 >;
@@ -312,17 +319,23 @@ export const requestInvite = (
     }
   );
 
-export const trustMemberApiLocation: {
-  uri: ApiEndpointUri.TRUST_MEMBER;
-  method: HttpVerb.POST;
-  authenticated: true;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type TrustMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.TRUST_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const trustMemberApiLocation: TrustMemberApiLocation = {
   uri: ApiEndpointUri.TRUST_MEMBER,
   method: HttpVerb.POST,
   authenticated: true
 };
 export type TrustMemberApiCall = ApiCallDefinition<
-  typeof trustMemberApiLocation,
+  TrustMemberApiLocation["uri"],
+  TrustMemberApiLocation["method"],
+  TrustMemberApiLocation["authenticated"],
   { memberId: MemberId },
   void
 >;
@@ -367,17 +380,23 @@ export const trust = (
     };
   });
 
-export const giveApiLocation: {
-  uri: ApiEndpointUri.GIVE;
-  method: HttpVerb.POST;
-  authenticated: true;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type GiveApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.GIVE,
+  HttpVerb.POST,
+  true
+>;
+export const giveApiLocation: GiveApiLocation = {
   uri: ApiEndpointUri.GIVE,
   method: HttpVerb.POST,
   authenticated: true
 };
 export type GiveApiCall = ApiCallDefinition<
-  typeof giveApiLocation,
+  GiveApiLocation["uri"],
+  GiveApiLocation["method"],
+  GiveApiLocation["authenticated"],
   { memberId: MemberId },
   { amount: string; memo?: string }
 >;

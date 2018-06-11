@@ -21,8 +21,14 @@ export interface ApiRequest<Params, Body> {
  * parameters and body. Also includes whether or not the user must be
  * authenticated when it's called.
  */
-export interface ApiCallDefinition<Location extends ApiLocation, Params, Body> {
-  location: Location;
+export interface ApiCallDefinition<
+  Uri extends ApiEndpointUri,
+  Method extends HttpVerb,
+  Authenticated extends boolean,
+  Params,
+  Body
+> {
+  location: ApiLocationDefinition<Uri, Method, Authenticated>;
   request: ApiRequest<Params, Body>;
 }
 

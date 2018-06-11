@@ -23,17 +23,23 @@ import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
-export const sendInviteApiLocation: {
-  uri: ApiEndpointUri.SEND_INVITE;
-  method: HttpVerb.POST;
-  authenticated: true;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type SendInviteApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.SEND_INVITE,
+  HttpVerb.POST,
+  true
+>;
+export const sendInviteApiLocation: SendInviteApiLocation = {
   uri: ApiEndpointUri.SEND_INVITE,
   method: HttpVerb.POST,
   authenticated: true
 };
 export type SendInviteApiCall = ApiCallDefinition<
-  typeof sendInviteApiLocation,
+  SendInviteApiLocation["uri"],
+  SendInviteApiLocation["method"],
+  SendInviteApiLocation["authenticated"],
   void,
   { inviteEmail: string }
 >;
@@ -113,17 +119,23 @@ export const sendInvite = (
     };
   });
 
-export const mintApiLocation: {
-  uri: ApiEndpointUri.MINT;
-  method: HttpVerb.POST;
-  authenticated: true;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type MintApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.MINT,
+  HttpVerb.POST,
+  true
+>;
+export const mintApiLocation: MintApiLocation = {
   uri: ApiEndpointUri.MINT,
   method: HttpVerb.POST,
   authenticated: true
 };
 export type MintApiCall = ApiCallDefinition<
-  typeof mintApiLocation,
+  MintApiLocation["uri"],
+  MintApiLocation["method"],
+  MintApiLocation["authenticated"],
   void,
   { amount: string }
 >;

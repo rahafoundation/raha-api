@@ -10,18 +10,25 @@ import {
 } from "./ApiEndpoint";
 import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../helpers/http";
+import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
-export const listOperationsApiLocation: {
-  uri: ApiEndpointUri.GET_OPERATIONS;
-  method: HttpVerb.GET;
-  authenticated: false;
-} = {
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
+export type ListOperationsApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.GET_OPERATIONS,
+  HttpVerb.GET,
+  false
+>;
+export const listOperationsApiLocation: ListOperationsApiLocation = {
   uri: ApiEndpointUri.GET_OPERATIONS,
   method: HttpVerb.GET,
   authenticated: false
 };
 export type ListOperationsApiCall = ApiCallDefinition<
-  typeof listOperationsApiLocation,
+  ListOperationsApiLocation["uri"],
+  ListOperationsApiLocation["method"],
+  ListOperationsApiLocation["authenticated"],
   void,
   void
 >;
