@@ -8,11 +8,22 @@ import {
   createApiRoute
 } from "./ApiEndpoint";
 import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
+import { HttpVerb } from "../helpers/http";
+import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
 /**
  * Defines how to call the ListOperations endpoint
  */
-export type ListOperationsApiCall = ApiCallDefinition<void, void, false>;
+export type ListOperationsApiLocation = ApiLocationDefinition<
+  "operations",
+  HttpVerb.GET,
+  false
+>;
+export type ListOperationsApiCall = ApiCallDefinition<
+  ListOperationsApiLocation,
+  void,
+  void
+>;
 export type ListOperationsApiResponse = ApiResponseDefinition<
   200,
   OperationsApiResponseBody

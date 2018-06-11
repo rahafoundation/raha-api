@@ -2,11 +2,7 @@ import * as crypto from "crypto";
 import * as httpStatus from "http-status";
 import { URL } from "url";
 
-import {
-  CollectionReference,
-  DocumentSnapshot,
-  Firestore
-} from "@google-cloud/firestore";
+import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import * as Storage from "@google-cloud/storage";
 import * as asyncBusboy from "async-busboy";
 import Big from "big.js";
@@ -32,6 +28,8 @@ import { Config } from "../config/prod.config";
 import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../models/Member";
 import { Context } from "koa";
+import { HttpVerb } from "../helpers/http";
+import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -218,10 +216,15 @@ export const uploadVideo = (
   ctx.status = 201;
 };
 
-export type RequestInviteApiCall = ApiCallDefinition<
-  { memberId: MemberId },
-  { fullName: string; videoUrl: string; username: string },
+export type RequestInviteApiLocation = ApiLocationDefinition<
+  "members/:uid/request_invite",
+  HttpVerb.POST,
   true
+>;
+export type RequestInviteApiCall = ApiCallDefinition<
+  RequestInviteApiLocation,
+  { memberId: MemberId },
+  { fullName: string; videoUrl: string; username: string }
 >;
 export type RequestInviteApiResponse = ApiResponseDefinition<
   201,
@@ -305,15 +308,15 @@ export const requestInvite = (
     }
   );
 
-// type UnauthenticatedEndpoint<Def extends ApiDefinition> = (params: Def["request"]["params"], body: Def["request"]["body"]) => Def["response"]["body"];
-// function trustEndpoint(params: TrustRequestParams, body: TrustRequestBody): TrustResponseBody {
-
-// }
-
-export type TrustMemberApiCall = ApiCallDefinition<
-  { memberId: MemberId },
-  void,
+export type TrustMemberApiLocation = ApiLocationDefinition<
+  "members/:uid/trust",
+  HttpVerb.POST,
   true
+>;
+export type TrustMemberApiCall = ApiCallDefinition<
+  TrustMemberApiLocation,
+  { memberId: MemberId },
+  void
 >;
 export type TrustMemberApiResponse = ApiResponseDefinition<
   201,
@@ -356,10 +359,15 @@ export const trust = (
     };
   });
 
-export type GiveApiCall = ApiCallDefinition<
-  { memberId: MemberId },
-  { amount: string; memo?: string },
+export type GiveApiLocation = ApiLocationDefinition<
+  "members/:uid/give",
+  HttpVerb.POST,
   true
+>;
+export type GiveApiCall = ApiCallDefinition<
+  GiveApiLocation,
+  { memberId: MemberId },
+  { amount: string; memo?: string }
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,

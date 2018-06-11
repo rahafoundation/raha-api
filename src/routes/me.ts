@@ -18,14 +18,22 @@ import {
 } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
 import ApiError from "../errors/ApiError";
+import { HttpVerb } from "../helpers/http";
+import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
+import { GiveApiLocation } from "./members";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
-export type SendInviteApiCall = ApiCallDefinition<
-  void,
-  { inviteEmail: string },
+export type SendInviteApiLocation = ApiLocationDefinition<
+  "me/send_invite",
+  HttpVerb.POST,
   true
+>;
+export type SendInviteApiCall = ApiCallDefinition<
+  SendInviteApiLocation,
+  void,
+  { inviteEmail: string }
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
@@ -96,7 +104,16 @@ export const sendInvite = (
     };
   });
 
-export type MintApiCall = ApiCallDefinition<void, { amount: string }, true>;
+export type MintApiLocation = ApiLocationDefinition<
+  "me/mint",
+  HttpVerb.POST,
+  true
+>;
+export type MintApiCall = ApiCallDefinition<
+  MintApiLocation,
+  void,
+  { amount: string }
+>;
 export type MintApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
