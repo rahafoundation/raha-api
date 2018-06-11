@@ -11,9 +11,6 @@ import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../helpers/http";
 import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
 
-/**
- * Defines how to call the ListOperations endpoint
- */
 export type ListOperationsApiLocation = ApiLocationDefinition<
   "operations",
   HttpVerb.GET,
@@ -29,9 +26,6 @@ export type ListOperationsApiResponse = ApiResponseDefinition<
   OperationsApiResponseBody
 >;
 
-/**
- * Fully defines the ListOperations endpoint
- */
 export type ListOperationsApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.GET_OPERATIONS,
   ListOperationsApiCall,
@@ -44,7 +38,7 @@ export type ListOperationsApiEndpoint = ApiEndpointDefinition<
  * TODO: allow filtering of operations.
  */
 export const listOperations = (operations: CollectionReference) =>
-  createApiRoute<ListOperationsApiEndpoint>(async call => {
+  createApiRoute<ListOperationsApiEndpoint>(async () => {
     // TODO: Do we need to paginate?
     const ops = await operations.orderBy("created_at").get();
     const parsedOps: Operation[] = [];
