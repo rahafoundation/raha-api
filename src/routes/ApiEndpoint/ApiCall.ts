@@ -1,18 +1,31 @@
 import ApiEndpoint from ".";
+import { HttpVerb } from "../../helpers/http";
 
-/**
- * Definition for the arguments you need to call a particular API endpoint. Also
- * includes whether or not the user must be authenticated when it's called.
- */
-export interface ApiCallDefinition<
-  Params,
-  Body,
+export interface ApiLocationDefinition<
+  Uri extends string,
+  Method extends HttpVerb,
   Authenticated extends boolean
 > {
-  params: Params;
-  body: Body;
+  uri: Uri;
+  method: Method;
   authenticated: Authenticated;
 }
 
+export interface ApiRequest<Params, Body> {
+  params: Params;
+  body: Body;
+}
+
+/**
+ * Definition for how to call a particular API endpoint, including its location,
+ * parameters and body. Also includes whether or not the user must be
+ * authenticated when it's called.
+ */
+export interface ApiCallDefinition<Location extends ApiLocation, Params, Body> {
+  location: Location;
+  request: ApiRequest<Params, Body>;
+}
+
 type ApiCall = ApiEndpoint["call"];
+export type ApiLocation = ApiCall["location"];
 export default ApiCall;
