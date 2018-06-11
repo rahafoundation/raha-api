@@ -1395,6 +1395,10 @@ http-signature@~1.2.0:
     jsprim "^1.2.2"
     sshpk "^1.7.0"
 
+http-status@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.npmjs.org/http-status/-/http-status-1.2.0.tgz#05f2a54c94f94d32d877b3a31ae08479772ba9f1"
+
 iconv-lite@0.4.23, iconv-lite@^0.4.4:
   version "0.4.23"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.23.tgz#297871f63be507adcfbfca715d0cd0eed84e9a63"
