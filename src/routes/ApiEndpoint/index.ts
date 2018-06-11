@@ -1,8 +1,8 @@
 /**
  * Definitions of endpoints—how they are called and how they respond.
  */
-import ApiCall, { ApiCallDefinition } from "./ApiCall";
-import ApiResponse, { ApiResponseDefinition } from "./ApiResponse";
+import ApiCall from "./ApiCall";
+import ApiResponse from "./ApiResponse";
 
 import {
   GiveApiEndpoint,
@@ -11,7 +11,7 @@ import {
 } from "../members";
 import { MintApiEndpoint, SendInviteApiEndpoint } from "../me";
 import { ListOperationsApiEndpoint } from "../operations";
-import { RahaApiContext, LoggedInContext } from "../../app";
+import { RahaApiContext, AuthenticatedContext } from "../../app";
 
 /**
  * Canonical name of an endpoint you can query.
@@ -70,7 +70,7 @@ export type ApiHandler<Def extends ApiEndpoint> = (
     body: Def["call"]["request"]["body"];
   },
   loggedInMemberToken: Def["call"]["location"]["authenticated"] extends true
-    ? LoggedInContext["state"]["loggedInMemberToken"]
+    ? AuthenticatedContext["state"]["loggedInMemberToken"]
     : undefined
 ) => Promise<Def["response"]>;
 

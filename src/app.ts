@@ -54,14 +54,15 @@ app.use(cors());
 app.use(bodyParser());
 app.use(handleErrors);
 
-export interface LoggedInContext extends Koa.Context {
+export interface UnauthenticatedContext extends Koa.Context {}
+export interface AuthenticatedContext extends Koa.Context {
   state: {
     loggedInMemberToken: adminLib.auth.DecodedIdToken;
   };
 }
 export type RahaApiContext<
   Authenticated extends boolean
-> = Authenticated extends true ? LoggedInContext : Koa.Context;
+> = Authenticated extends true ? AuthenticatedContext : UnauthenticatedContext;
 
 /**
  * The location of an API endpoint. Uri may contain wildcards that must be
