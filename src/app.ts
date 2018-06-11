@@ -187,4 +187,8 @@ const authenticatedRouter = createRouter(
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
 
-app.listen(process.env.PORT || 4000);
+const port = process.env.PORT || 4000;
+app.listen(port);
+
+// tslint:disable-next-line:no-console
+console.info(`Listening at localhost:${port}`);
