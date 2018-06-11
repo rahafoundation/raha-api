@@ -1,10 +1,10 @@
 {
-  "name": "@raha/api",
+  "name": "@raha/api-server",
   "version": "0.0.1",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
   "files": [
-    "src/**/*"
+    "dist/**/*"
   ],
   "author": "Raha",
   "license": "Apache-2.0",
