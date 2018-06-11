@@ -25,6 +25,15 @@ export const enum ApiEndpointName {
   GIVE = "GIVE"
 }
 
+export const enum ApiEndpointUri {
+  TRUST_MEMBER = "members/:memberId/trust",
+  GET_OPERATIONS = "operations",
+  REQUEST_INVITE = "members/:memberId/request_invite",
+  SEND_INVITE = "me/send_invite",
+  MINT = "me/mint",
+  GIVE = "members/:memberId/give"
+}
+
 /**
  * Full definition of how to use an API endpoint:
  * - how it is called
