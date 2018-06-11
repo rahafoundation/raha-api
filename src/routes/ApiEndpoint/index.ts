@@ -41,8 +41,10 @@ export interface ApiEndpointDefinition<
 }
 
 /**
- * The set of API endpoints defined in the application. If you add a new API
- * endpoint, be sure to add it to this list.
+ * The set of API endpoints defined in the application.
+ *
+ * If you add a new API endpoint, be sure to add it to this list, and to make
+ * the server respond to it, add it to apiRoutes in app.ts as well.
  */
 type ApiEndpoint =
   | TrustMemberApiEndpoint

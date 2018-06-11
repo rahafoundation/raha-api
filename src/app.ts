@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import * as path from "path";
-import { URL } from "url";
 import * as Storage from "@google-cloud/storage";
 import * as Koa from "koa";
 import * as bodyParser from "koa-bodyparser";
 import * as cors from "@koa/cors";
 import * as Router from "koa-router";
 import * as sgMail from "@sendgrid/mail";
-import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
+import { Firestore } from "@google-cloud/firestore";
 import * as adminLib from "firebase-admin";
 
 import { getAdmin } from "./firebaseAdmin";
@@ -23,7 +22,9 @@ import {
   coconutApiKey,
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
-import { MemberId } from "./models/identifiers";
+import { createApiRoute } from "./routes/ApiEndpoint";
+import { HttpVerb } from "./helpers/http";
+import ApiCall, { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const credentialsPathArg =
@@ -62,9 +63,105 @@ export type RahaApiContext<
   Authenticated extends boolean
 > = Authenticated extends true ? LoggedInContext : Koa.Context;
 
-const publicRouter = new Router()
-  .get("/api/operations", operationsRoutes.listOperations(operationsCollection))
-  /* These endpoints are consumed by coconut. */
+/**
+ * The location of an API endpoint. Uri may contain wildcards that must be
+ * resolved, and only represents a path without a domain to send the request to.
+ */
+interface RouteHandler<Location extends ApiLocation> {
+  location: Location;
+  handler: ReturnType<typeof createApiRoute>;
+}
+
+/**
+ * List of API endpoints the server can respond to.
+ *
+ * If you add a new route or modify an existing one's signature, edit it here.
+ * Also ensure you add routes to the ApiEndpoint type in
+ * routes/ApiEndpoint/index.ts.
+ */
+const apiRoutes: Array<RouteHandler<ApiLocation>> = [
+  {
+    location: {
+      uri: "operations",
+      method: HttpVerb.GET,
+      authenticated: false
+    },
+    handler: operationsRoutes.listOperations(operationsCollection)
+  },
+  {
+    location: {
+      uri: "members/:uid/trust",
+      method: HttpVerb.POST,
+      authenticated: true
+    },
+    handler: membersRoutes.trust(membersCollection, operationsCollection)
+  },
+  {
+    location: {
+      uri: "members/:uid/request_invite",
+      method: HttpVerb.POST,
+      authenticated: true
+    },
+    handler: membersRoutes.requestInvite(
+      config,
+      storage,
+      coconutApiKey,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  {
+    location: {
+      uri: "members/:uid/give",
+      method: HttpVerb.POST,
+      authenticated: true
+    },
+    handler: membersRoutes.give(db, membersCollection, operationsCollection)
+  },
+  {
+    location: {
+      uri: "me/send_invite",
+      method: HttpVerb.POST,
+      authenticated: true
+    },
+    handler: meRoutes.sendInvite(config, sgMail, membersCollection)
+  },
+  {
+    location: {
+      uri: "me/mint",
+      method: HttpVerb.POST,
+      authenticated: true
+    },
+    handler: meRoutes.mint(db, membersCollection, operationsCollection)
+  }
+];
+
+function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
+  return routes.reduce((router, route) => {
+    const { handler, location } = route;
+    const { uri, method } = location;
+    switch (method as HttpVerb) {
+      case HttpVerb.GET:
+        return router.get(uri, handler);
+      case HttpVerb.POST:
+        return router.post(uri, handler);
+      case HttpVerb.PUT:
+        return router.put(uri, handler);
+      case HttpVerb.PATCH:
+        return router.patch(uri, handler);
+      case HttpVerb.DELETE:
+        return router.delete(uri, handler);
+      default:
+        // should be unreachable
+        throw new Error("Invalid HTTP verb");
+    }
+  }, new Router());
+}
+
+const publicRouter = createRouter(
+  apiRoutes.filter(r => !r.location.authenticated)
+)
+  /* coconut endpoints are not in apiRoutes nor ApiEndpoint for now. */
   .post(
     "/api/members/:memberId/notify_video_encoded",
     membersRoutes.notifyVideoEncoded
@@ -83,33 +180,9 @@ app.use(publicRouter.allowedMethods() as any);
 app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
-const authenticatedRouter = new Router()
-  .post(
-    "/api/members/:memberId/request_invite",
-    membersRoutes.requestInvite(
-      config,
-      storage,
-      coconutApiKey,
-      membersCollection,
-      operationsCollection
-    )
-  )
-  .post(
-    "/api/members/:memberId/trust",
-    membersRoutes.trust(membersCollection, operationsCollection)
-  )
-  .post(
-    "/api/members/:memberId/give",
-    membersRoutes.give(db, membersCollection, operationsCollection)
-  )
-  .post(
-    "/api/me/mint",
-    meRoutes.mint(db, membersCollection, operationsCollection)
-  )
-  .post(
-    "/api/me/send_invite",
-    meRoutes.sendInvite(config, sgMail, membersCollection)
-  );
+const authenticatedRouter = createRouter(
+  apiRoutes.filter(r => r.location.authenticated)
+);
 
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
