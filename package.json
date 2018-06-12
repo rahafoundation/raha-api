@@ -26,7 +26,7 @@
   "scripts": {
     "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
     "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
-    "build": "rm -rf dist && tsc && cp src/config/config.ts dist/config/config.ts",
+    "build": "rm -rf dist && tsc",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
