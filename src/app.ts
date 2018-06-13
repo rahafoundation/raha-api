@@ -13,9 +13,9 @@ import * as adminLib from "firebase-admin";
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
 import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
-import * as meRoutes from "./routes/me";
+import * as meRoutes from "./routes/me/index";
 import * as membersRoutes from "./routes/members";
-import * as operationsRoutes from "./routes/operations";
+import * as operationsRoutes from "./routes/operations/index";
 
 import config from "./config/config";
 import {
@@ -25,6 +25,16 @@ import {
 import { createApiRoute } from "./routes";
 import { HttpVerb } from "./helpers/http";
 import { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
+import { listOperationsApiLocation } from "./routes/operations/definitions";
+import {
+  trustMemberApiLocation,
+  requestInviteApiLocation,
+  giveApiLocation
+} from "./routes/members/definitions";
+import {
+  sendInviteApiLocation,
+  mintApiLocation
+} from "./routes/me/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const credentialsPathArg =
@@ -82,15 +92,15 @@ interface RouteHandler<Location extends ApiLocation> {
  */
 const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
-    location: operationsRoutes.listOperationsApiLocation,
+    location: listOperationsApiLocation,
     handler: operationsRoutes.listOperations(operationsCollection)
   },
   {
-    location: membersRoutes.trustMemberApiLocation,
+    location: trustMemberApiLocation,
     handler: membersRoutes.trust(membersCollection, operationsCollection)
   },
   {
-    location: membersRoutes.requestInviteApiLocation,
+    location: requestInviteApiLocation,
     handler: membersRoutes.requestInvite(
       config,
       storage,
@@ -100,15 +110,15 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     )
   },
   {
-    location: membersRoutes.giveApiLocation,
+    location: giveApiLocation,
     handler: membersRoutes.give(db, membersCollection, operationsCollection)
   },
   {
-    location: meRoutes.sendInviteApiLocation,
+    location: sendInviteApiLocation,
     handler: meRoutes.sendInvite(config, sgMail, membersCollection)
   },
   {
-    location: meRoutes.mintApiLocation,
+    location: mintApiLocation,
     handler: meRoutes.mint(db, membersCollection, operationsCollection)
   }
 ];

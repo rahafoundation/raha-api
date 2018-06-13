@@ -8,10 +8,9 @@ import {
   GiveApiEndpoint,
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
-} from "../members";
-import { MintApiEndpoint, SendInviteApiEndpoint } from "../me";
-import { ListOperationsApiEndpoint } from "../operations";
-import { RahaApiContext, AuthenticatedContext } from "../../app";
+} from "../members/definitions";
+import { MintApiEndpoint, SendInviteApiEndpoint } from "../me/definitions";
+import { ListOperationsApiEndpoint } from "../operations/definitions";
 
 /**
  * Canonical name of an endpoint you can query.

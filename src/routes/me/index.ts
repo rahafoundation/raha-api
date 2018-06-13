@@ -10,48 +10,19 @@ import {
   ApiResponseDefinition,
   ApiEndpointName,
   ApiEndpointUri
-} from "./ApiEndpoint";
-import { createApiRoute } from "./";
+} from "../ApiEndpoint";
+import { createApiRoute } from "../";
 import {
   OperationApiResponseBody,
   MessageApiResponseBody
-} from "./ApiEndpoint/ApiResponse";
-import { Config } from "../config/prod.config";
-import ApiError from "../errors/ApiError";
-import { HttpVerb } from "../helpers/http";
-import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";
+} from "../ApiEndpoint/ApiResponse";
+import { Config } from "../../config/prod.config";
+import ApiError from "../../errors/ApiError";
+import { HttpVerb } from "../../helpers/http";
+import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+import { SendInviteApiEndpoint, MintApiEndpoint } from "./definitions";
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
-
-/*
- * TODO: find a better way to narrow the types precisely than this repetitive type declaration
- */
-export type SendInviteApiLocation = ApiLocationDefinition<
-  ApiEndpointUri.SEND_INVITE,
-  HttpVerb.POST,
-  true
->;
-export const sendInviteApiLocation: SendInviteApiLocation = {
-  uri: ApiEndpointUri.SEND_INVITE,
-  method: HttpVerb.POST,
-  authenticated: true
-};
-export type SendInviteApiCall = ApiCallDefinition<
-  SendInviteApiLocation["uri"],
-  SendInviteApiLocation["method"],
-  SendInviteApiLocation["authenticated"],
-  void,
-  { inviteEmail: string }
->;
-export type SendInviteApiResponse = ApiResponseDefinition<
-  201,
-  MessageApiResponseBody
->;
-export type SendInviteApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.SEND_INVITE,
-  SendInviteApiCall,
-  SendInviteApiResponse
->;
 
 interface EmailMessage {
   to: string;
@@ -118,36 +89,6 @@ export const sendInvite = (
       }
     };
   });
-
-/*
- * TODO: find a better way to narrow the types precisely than this repetitive type declaration
- */
-export type MintApiLocation = ApiLocationDefinition<
-  ApiEndpointUri.MINT,
-  HttpVerb.POST,
-  true
->;
-export const mintApiLocation: MintApiLocation = {
-  uri: ApiEndpointUri.MINT,
-  method: HttpVerb.POST,
-  authenticated: true
-};
-export type MintApiCall = ApiCallDefinition<
-  MintApiLocation["uri"],
-  MintApiLocation["method"],
-  MintApiLocation["authenticated"],
-  void,
-  { amount: string }
->;
-export type MintApiResponse = ApiResponseDefinition<
-  201,
-  OperationApiResponseBody
->;
-export type MintApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.MINT,
-  MintApiCall,
-  MintApiResponse
->;
 
 export const mint = (
   db: Firestore,
