@@ -1,5 +1,5 @@
 {
-  "name": "@raha/api-server",
+  "name": "@raha.app/api-server",
   "version": "0.0.1",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
