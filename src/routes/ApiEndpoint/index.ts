@@ -15,7 +15,7 @@ import { ListOperationsApiEndpoint } from "../operations/definitions";
 /**
  * Canonical name of an endpoint you can query.
  */
-export const enum ApiEndpointName {
+export enum ApiEndpointName {
   TRUST_MEMBER = "TRUST_MEMBER",
   GET_OPERATIONS = "GET_OPERATIONS",
   REQUEST_INVITE = "REQUEST_INVITE",
@@ -24,7 +24,7 @@ export const enum ApiEndpointName {
   GIVE = "GIVE"
 }
 
-export const enum ApiEndpointUri {
+export enum ApiEndpointUri {
   TRUST_MEMBER = "members/:memberId/trust",
   GET_OPERATIONS = "operations",
   REQUEST_INVITE = "members/:memberId/request_invite",
