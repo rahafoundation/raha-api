@@ -5,9 +5,9 @@ import {
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointDefinition,
-  createApiRoute,
   ApiEndpointUri
 } from "./ApiEndpoint";
+import { createApiRoute } from "./";
 import { OperationsApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../helpers/http";
 import { ApiLocationDefinition } from "./ApiEndpoint/ApiCall";

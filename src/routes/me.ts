@@ -9,9 +9,9 @@ import {
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointName,
-  createApiRoute,
   ApiEndpointUri
 } from "./ApiEndpoint";
+import { createApiRoute } from "./";
 import {
   OperationApiResponseBody,
   MessageApiResponseBody

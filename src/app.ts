@@ -22,7 +22,7 @@ import {
   coconutApiKey,
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
-import { createApiRoute } from "./routes/ApiEndpoint";
+import { createApiRoute } from "./routes";
 import { HttpVerb } from "./helpers/http";
 import { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
 

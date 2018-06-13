@@ -21,9 +21,9 @@ import {
   ApiResponseDefinition,
   ApiEndpointName,
   ApiEndpointDefinition,
-  createApiRoute,
   ApiEndpointUri
 } from "./ApiEndpoint";
+import { createApiRoute } from "./";
 import { OperationApiResponseBody } from "./ApiEndpoint/ApiResponse";
 import { Config } from "../config/prod.config";
 import { Readable as ReadableStream } from "stream";
