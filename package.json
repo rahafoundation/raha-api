@@ -1,6 +1,6 @@
 {
   "name": "@raha.app/api-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
   "files": [
