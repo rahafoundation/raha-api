@@ -1,4 +1,4 @@
-import ApplicationError from "./ApplicationError";
+import { ApplicationError } from "./ApplicationError";
 import { HttpStatusCode, getHttpStatusText } from "../helpers/http";
 
 function generateErrorMessage(statusCode: HttpStatusCode, message?: string) {
@@ -9,7 +9,7 @@ function generateErrorMessage(statusCode: HttpStatusCode, message?: string) {
 /**
  * An error that the API can convert into an error API response
  */
-export default class ApiError extends ApplicationError {
+export class ApiError extends ApplicationError {
   public readonly statusCode: HttpStatusCode;
   public readonly errorMessage: string;
 

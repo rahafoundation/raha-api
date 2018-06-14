@@ -1,6 +1,6 @@
 import { Config } from "./prod.config";
 
-const config: Config = {
+export const config: Config = {
   apiBase: "https://raha-test.appspot.com/api/",
   appBase: "https://next.raha.app",
   privateVideoBucket: "raha-test.appspot.com",
@@ -14,5 +14,3 @@ const config: Config = {
     messagingSenderId: "148482003030"
   }
 };
-
-export default config;

@@ -9,7 +9,7 @@ import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
 
-import ApiError from "../../errors/ApiError";
+import { ApiError } from "../../errors/ApiError";
 import {
   Operation,
   OperationToBeCreated,

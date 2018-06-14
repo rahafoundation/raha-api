@@ -17,7 +17,7 @@ import * as meRoutes from "./routes/me/index";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations/index";
 
-import config from "./config/config";
+import { config } from "./config/config";
 import {
   coconutApiKey,
   sendgridApiKey

@@ -1,4 +1,4 @@
-import ApiEndpoint, { ApiEndpointUri } from ".";
+import { ApiEndpoint, ApiEndpointUri } from ".";
 import { HttpVerb } from "../../helpers/http";
 
 export interface ApiLocationDefinition<
@@ -32,6 +32,5 @@ export interface ApiCallDefinition<
   request: ApiRequest<Params, Body>;
 }
 
-type ApiCall = ApiEndpoint["call"];
+export type ApiCall = ApiEndpoint["call"];
 export type ApiLocation = ApiCall["location"];
-export default ApiCall;

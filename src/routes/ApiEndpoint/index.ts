@@ -1,8 +1,8 @@
 /**
  * Definitions of endpoints—how they are called and how they respond.
  */
-import ApiCall from "./ApiCall";
-import ApiResponse from "./ApiResponse";
+import { ApiCall } from "./ApiCall";
+import { ApiResponse } from "./ApiResponse";
 
 import {
   GiveApiEndpoint,
@@ -54,14 +54,13 @@ export interface ApiEndpointDefinition<
  * If you add a new API endpoint, be sure to add it to this list, and to make
  * the server respond to it, add it to apiRoutes in app.ts as well.
  */
-type ApiEndpoint =
+export type ApiEndpoint =
   | TrustMemberApiEndpoint
   | ListOperationsApiEndpoint
   | RequestInviteApiEndpoint
   | SendInviteApiEndpoint
   | GiveApiEndpoint
   | MintApiEndpoint;
-export default ApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";

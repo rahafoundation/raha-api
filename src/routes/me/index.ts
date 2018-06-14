@@ -17,7 +17,7 @@ import {
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
 import { Config } from "../../config/prod.config";
-import ApiError from "../../errors/ApiError";
+import { ApiError } from "../../errors/ApiError";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import { SendInviteApiEndpoint, MintApiEndpoint } from "./definitions";
