@@ -1,6 +1,4 @@
 dist/
 node_modules/
 
-DO_NOT_COMMIT.secrets.config.ts
-config.json
 yarn-error.log

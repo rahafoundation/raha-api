@@ -1,51 +1,60 @@
 #!/usr/bin/env node
 
-import path from "path";
-import { URL } from "url";
-import Storage from "@google-cloud/storage";
-import Koa from "koa";
-import bodyParser from "koa-bodyparser";
-import cors from "@koa/cors";
-import Router from "koa-router";
-import sgMail from "@sendgrid/mail";
-import { DocumentSnapshot, Firestore } from "@google-cloud/firestore";
+import * as path from "path";
+import * as Storage from "@google-cloud/storage";
+import * as Koa from "koa";
+import * as bodyParser from "koa-bodyparser";
+import * as cors from "@koa/cors";
+import * as Router from "koa-router";
+import * as sgMail from "@sendgrid/mail";
+import { Firestore } from "@google-cloud/firestore";
+import * as adminLib from "firebase-admin";
 
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
-import { verifyFirebaseIdToken } from "./verifyFirebaseIdToken";
-import * as meRoutes from "./routes/me";
+import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
+import * as meRoutes from "./routes/me/index";
 import * as membersRoutes from "./routes/members";
-import * as operationsRoutes from "./routes/operations";
+import * as operationsRoutes from "./routes/operations/index";
 
-// tslint:disable-next-line:no-var-requires
-const config = require("./config/config.json");
+import { config } from "./config/config";
 import {
   coconutApiKey,
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
+import { createApiRoute } from "./routes";
+import { HttpVerb } from "./helpers/http";
+import { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
+import { listOperationsApiLocation } from "./routes/operations/definitions";
+import {
+  trustMemberApiLocation,
+  requestInviteApiLocation,
+  giveApiLocation
+} from "./routes/members/definitions";
+import {
+  sendInviteApiLocation,
+  mintApiLocation
+} from "./routes/me/definitions";
 
-let admin;
-let storage: Storage.Storage;
-if (process.env.NODE_ENV === "test" && process.argv.length > 2) {
-  const credentialsPathArg = process.argv[2];
-  if (path.isAbsolute(credentialsPathArg)) {
-    admin = getAdmin(credentialsPathArg);
-  } else {
-    // Resolve the path relative to the cwd.
-    admin = getAdmin(
-      path.resolve(path.join(process.cwd(), credentialsPathArg))
-    );
-  }
-  storage = admin.storage();
-} else {
-  admin = getAdmin();
-  storage = Storage();
-}
+const isTestEnv = process.env.NODE_ENV === "test";
+const credentialsPathArg =
+  isTestEnv && process.argv.length > 2 ? process.argv[2] : undefined;
+const credentialsPath = credentialsPathArg
+  ? path.isAbsolute(credentialsPathArg)
+    ? credentialsPathArg
+    : path.join(process.cwd(), credentialsPathArg)
+  : undefined;
+
+const admin = credentialsPath ? getAdmin(credentialsPath) : getAdmin();
+// TODO: explain why we have different storage backends for test, or
+// unify them.
+const storage = credentialsPath ? admin.storage() : Storage();
 
 const db: Firestore = admin.firestore();
-const members = db.collection("members");
-const operations = db.collection("operations");
-const uidToVideoHash = db.collection("uidToVideoHashMap");
+const membersCollection = db.collection("members");
+const operationsCollection = db.collection("operations");
+// TODO: rename uid to memberId in collection name
+const memberIdToVideoHashCollection = db.collection("uidToVideoHashMap");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -55,27 +64,100 @@ app.use(cors());
 app.use(bodyParser());
 app.use(handleErrors);
 
-async function validateUid(uid, ctx, next) {
-  const uidDoc = await members.doc(uid).get();
-  if (!uidDoc.exists) {
-    ctx.throw(404, "This member does not exist!");
-    return;
-  }
-  ctx.state.toMember = uidDoc;
-  return next();
+export interface UnauthenticatedContext extends Koa.Context {}
+export interface AuthenticatedContext extends Koa.Context {
+  state: {
+    loggedInMemberToken: adminLib.auth.DecodedIdToken;
+  };
+}
+export type RahaApiContext<
+  Authenticated extends boolean
+> = Authenticated extends true ? AuthenticatedContext : UnauthenticatedContext;
+
+/**
+ * The location of an API endpoint. Uri may contain wildcards that must be
+ * resolved, and only represents a path without a domain to send the request to.
+ */
+interface RouteHandler<Location extends ApiLocation> {
+  location: Location;
+  handler: ReturnType<typeof createApiRoute>;
 }
 
-const publicRouter = new Router()
-  .param("uid", validateUid)
-  .get("/api/operations", operationsRoutes.index(operations))
-  /* These endpoints are consumed by coconut. */
+/**
+ * List of API endpoints the server can respond to.
+ *
+ * If you add a new route or modify an existing one's signature, edit it here.
+ * Also ensure you add routes to the ApiEndpoint type in
+ * routes/ApiEndpoint/index.ts.
+ */
+const apiRoutes: Array<RouteHandler<ApiLocation>> = [
+  {
+    location: listOperationsApiLocation,
+    handler: operationsRoutes.listOperations(operationsCollection)
+  },
+  {
+    location: trustMemberApiLocation,
+    handler: membersRoutes.trust(membersCollection, operationsCollection)
+  },
+  {
+    location: requestInviteApiLocation,
+    handler: membersRoutes.requestInvite(
+      config,
+      storage,
+      coconutApiKey,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  {
+    location: giveApiLocation,
+    handler: membersRoutes.give(db, membersCollection, operationsCollection)
+  },
+  {
+    location: sendInviteApiLocation,
+    handler: meRoutes.sendInvite(config, sgMail, membersCollection)
+  },
+  {
+    location: mintApiLocation,
+    handler: meRoutes.mint(db, membersCollection, operationsCollection)
+  }
+];
+
+function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
+  return routes.reduce((router, route) => {
+    const { handler, location } = route;
+    const { uri, method } = location;
+    const fullUri = path.join("/api/", uri);
+    switch (method as HttpVerb) {
+      case HttpVerb.GET:
+        return router.get(fullUri, handler);
+      case HttpVerb.POST:
+        return router.post(fullUri, handler);
+      case HttpVerb.PUT:
+        return router.put(fullUri, handler);
+      case HttpVerb.PATCH:
+        return router.patch(fullUri, handler);
+      case HttpVerb.DELETE:
+        return router.delete(fullUri, handler);
+      default:
+        // should be unreachable
+        throw new Error("Invalid HTTP verb");
+    }
+  }, new Router());
+}
+
+const publicRouter = createRouter(
+  apiRoutes.filter(r => !r.location.authenticated)
+)
+  // Coconut video encoding endpoints are not in apiRoutes nor ApiEndpoint for
+  // now. Note: these routes explicitly prefix /api/, unlike the rest of them.
   .post(
-    "/api/members/:uid/notify_video_encoded",
+    "/api/members/:memberId/notify_video_encoded",
     membersRoutes.notifyVideoEncoded
   )
   .post(
-    "/api/members/:uid/upload_video",
-    membersRoutes.uploadVideo(config, storage, uidToVideoHash)
+    "/api/members/:memberId/upload_video",
+    membersRoutes.uploadVideo(config, storage, memberIdToVideoHashCollection)
   );
 
 app.use(publicRouter.routes());
@@ -85,24 +167,15 @@ app.use(publicRouter.allowedMethods());
 app.use(verifyFirebaseIdToken(admin));
 // Put endpoints that do need the user to be authenticated below this.
 
-const authenticatedRouter = new Router()
-  .param("uid", validateUid)
-  .post(
-    "/api/members/:uid/request_invite",
-    membersRoutes.requestInvite(
-      config,
-      storage,
-      coconutApiKey,
-      members,
-      operations
-    )
-  )
-  .post("/api/members/:uid/trust", membersRoutes.trust(members, operations))
-  .post("/api/members/:uid/give", membersRoutes.give(db, members, operations))
-  .post("/api/me/mint", meRoutes.mint(db, members, operations))
-  .post("/api/me/send_invite", meRoutes.sendInvite(config, sgMail, members));
+const authenticatedRouter = createRouter(
+  apiRoutes.filter(r => r.location.authenticated)
+);
 
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
 
-app.listen(process.env.PORT || 4000);
+const port = process.env.PORT || 4000;
+app.listen(port);
+
+// tslint:disable-next-line:no-console
+console.info(`Listening at localhost:${port}`);

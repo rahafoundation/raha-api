@@ -1,19 +1,16 @@
-import admin from "firebase-admin";
+import * as admin from "firebase-admin";
+import { config } from "./config/config";
 
-// tslint:disable-next-line:no-var-requires
-const config = require("./config/config.json");
-
-function getAdmin(credentialsPath?: string) {
+export function getAdmin(credentialsPath?: string) {
   if (process.env.NODE_ENV === "test" && credentialsPath) {
     const serviceAccount = require(credentialsPath);
-    admin.initializeApp({
+    const adminConfig = {
       credential: admin.credential.cert(serviceAccount),
       ...config.firebase
-    });
+    };
+    admin.initializeApp(adminConfig);
   } else {
     admin.initializeApp(config.firebase);
   }
   return admin;
 }
-
-export { getAdmin };

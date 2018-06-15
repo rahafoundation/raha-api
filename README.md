@@ -5,7 +5,7 @@
 
 # Running locally
 
-1.  Run server: `yarn test <path to service account credentials>`
+1.  Run server: `yarn build && yarn test <path to service account credentials>`
 1.  If you don't have service account credentials, follow the instructions at:
     https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app. DO NOT
     COMMIT THESE CREDENTIALS.
@@ -15,7 +15,7 @@
 # Acquiring Coconut API key
 
 We use [Coconut](https://app.coconut.co) to handle encoding our videos. Coconut
-requires an API key which we include in the `./src/data/DO_NOT_COMMIT.secrets.config.json`
+requires an API key which we include in the `./src/data/DO_NOT_COMMIT.secrets.config.ts`
 file with the following structure:
 
 ```
