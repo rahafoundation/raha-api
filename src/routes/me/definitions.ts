@@ -1,3 +1,5 @@
+import { MemberId, OperationId } from "../../models/identifiers";
+import { HttpVerb } from "../../helpers/http";
 import {
   ApiEndpointDefinition,
   ApiCallDefinition,
@@ -9,8 +11,8 @@ import {
   OperationApiResponseBody,
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
-import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+import { MintPayload } from "../../models/Operation";
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration
@@ -60,7 +62,7 @@ export type MintApiCall = ApiCallDefinition<
   MintApiLocation["method"],
   MintApiLocation["authenticated"],
   void,
-  { amount: string }
+  MintPayload
 >;
 export type MintApiResponse = ApiResponseDefinition<
   201,
