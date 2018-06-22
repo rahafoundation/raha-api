@@ -257,7 +257,7 @@ export const requestInvite = (
         username,
         full_name: fullName,
         request_invite_from_uid: requestingFromId,
-        is_invite_confirmed: false,
+        invite_confirmed: false,
         created_at: firestore.FieldValue.serverTimestamp(),
         request_invite_block_at: null,
         request_invite_block_seq: null,
@@ -303,11 +303,12 @@ export const trust = (
         throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
       }
       if (
-        !(await operationsCollection
-          .where("creator_uid", "==", loggedInUid)
-          .where("op_code", "==", OperationType.TRUST)
-          .where("data.to_uid", "==", memberToTrustId)
-          .get()).empty
+        !(await transaction.get(
+          operationsCollection
+            .where("creator_uid", "==", loggedInUid)
+            .where("op_code", "==", OperationType.TRUST)
+            .where("data.to_uid", "==", memberToTrustId)
+        )).empty
       ) {
         throw new ApiError(
           httpStatus.BAD_REQUEST,
@@ -326,7 +327,7 @@ export const trust = (
       const newOperationRef = operationsCollection.doc();
       if (memberToTrust.get("request_invite_from_uid") === loggedInUid) {
         transaction.update(memberToTrust.ref, {
-          isInviteConfirmed: true
+          invite_confirmed: true
         });
       }
       transaction.set(newOperationRef, newOperation);
