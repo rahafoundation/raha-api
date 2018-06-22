@@ -176,7 +176,9 @@ async function mintReferralBonus(
   ) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid trust operation.");
   }
-  if (!(invitedMember.get("request_invite_from") === loggedInMember.id)) {
+  if (
+    !(invitedMember.get("request_invite_from_member_id") === loggedInMember.id)
+  ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Member was not invited by you."
