@@ -97,7 +97,7 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: trustMemberApiLocation,
-    handler: membersRoutes.trust(membersCollection, operationsCollection)
+    handler: membersRoutes.trust(db, membersCollection, operationsCollection)
   },
   {
     location: requestInviteApiLocation,
