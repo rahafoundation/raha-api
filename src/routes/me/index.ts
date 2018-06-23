@@ -129,30 +129,10 @@ async function mintReferralBonus(
   members: FirebaseFirestore.CollectionReference,
   loggedInMember: firestore.DocumentSnapshot,
   bigAmount: Big,
-  inviteOperationId: OperationId,
-  trustOperationId: OperationId,
   invitedMemberId: MemberId
 ): Promise<MintReferralBonusPayload> {
-  const inviteOperation = await transaction.get(
-    operations.doc(inviteOperationId)
-  );
-  const trustOperation = await transaction.get(
-    operations.doc(trustOperationId)
-  );
   const invitedMember = await transaction.get(members.doc(invitedMemberId));
 
-  if (!inviteOperation.exists) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "RequestInvite operation does not exist."
-    );
-  }
-  if (!trustOperation.exists) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Trust operation does not exist."
-    );
-  }
   if (!invitedMember.exists) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -161,27 +141,18 @@ async function mintReferralBonus(
   }
 
   if (
-    !(
-      inviteOperation.get("creator_uid") === invitedMember.id &&
-      inviteOperation.get("data.to_uid") === loggedInMember.id
-    )
-  ) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid invite operation.");
-  }
-  if (
-    !(
-      trustOperation.get("creator_uid") === loggedInMember.id &&
-      trustOperation.get("data.to_uid") === invitedMember.id
-    )
-  ) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid trust operation.");
-  }
-  if (
     !(invitedMember.get("request_invite_from_member_id") === loggedInMember.id)
   ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Member was not invited by you."
+    );
+  }
+
+  if (!invitedMember.get("invite_confirmed")) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You have not trusted this member."
     );
   }
 
@@ -211,8 +182,6 @@ async function mintReferralBonus(
   return {
     type: MintType.REFERRAL_BONUS,
     amount: bigAmount.toString(),
-    invite_operation_id: inviteOperation.id,
-    trust_operation_id: trustOperation.id,
     invited_member_id: invitedMember.id
   };
 }
@@ -235,19 +204,13 @@ export const mint = (
       if (call.body.type === MintType.BASIC_INCOME) {
         mintData = mintBasicIncome(loggedInMember, bigAmount);
       } else if (call.body.type === MintType.REFERRAL_BONUS) {
-        const {
-          invite_operation_id,
-          trust_operation_id,
-          invited_member_id
-        } = call.body;
+        const { invited_member_id } = call.body;
         mintData = await mintReferralBonus(
           transaction,
           operations,
           members,
           loggedInMember,
           bigAmount,
-          invite_operation_id,
-          trust_operation_id,
           invited_member_id
         );
       } else {
