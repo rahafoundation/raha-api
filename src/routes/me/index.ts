@@ -193,7 +193,7 @@ export const mint = (
 ) =>
   createApiRoute<MintApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
-      const loggedInUid = loggedInMemberToken.user.uid;
+      const loggedInUid = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(members.doc(loggedInUid));
 
       const { type, amount } = call.body;
