@@ -1,15 +1,3 @@
-import * as crypto from "crypto";
-import * as httpStatus from "http-status";
-import { URL } from "url";
-
-import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import * as Storage from "@google-cloud/storage";
-import * as asyncBusboy from "async-busboy";
-import Big from "big.js";
-import * as coconut from "coconutjs";
-import { firestore, storage as adminStorage } from "firebase-admin";
-
-import { ApiError } from "../../errors/ApiError";
 import {
   Operation,
   OperationToBeCreated,
@@ -23,12 +11,7 @@ import {
   ApiEndpointDefinition,
   ApiEndpointUri
 } from "./../ApiEndpoint";
-import { createApiRoute } from "../";
 import { OperationApiResponseBody } from "../ApiEndpoint/ApiResponse";
-import { Config } from "../../config/prod.config";
-import { Readable as ReadableStream } from "stream";
-import { getMemberById } from "../../models/Member";
-import { Context } from "koa";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 
