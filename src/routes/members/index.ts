@@ -150,11 +150,9 @@ export const uploadVideo = (
   storage: BucketStorage,
   uidToVideoHash: CollectionReference
 ) => async (ctx: Context) => {
-  const publicVideoRef = getPublicVideoRef(
-    config,
-    storage,
-    ctx.state.toMember.id
-  );
+  const videoForUid = ctx.params.memberId;
+
+  const publicVideoRef = getPublicVideoRef(config, storage, videoForUid);
   if ((await publicVideoRef.exists())[0]) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -183,7 +181,7 @@ export const uploadVideo = (
   const videoBuf = await getVideoBufferFromStream(encodedVideo[0]);
   const hash = getHashFromVideoBuffer(videoBuf);
 
-  const hashMappingRef = uidToVideoHash.doc(ctx.state.toMember.id);
+  const hashMappingRef = uidToVideoHash.doc(videoForUid);
   if ((await hashMappingRef.get()).exists) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -196,11 +194,7 @@ export const uploadVideo = (
 
   await publicVideoRef.save(videoBuf);
 
-  const privateVideoRef = getPrivateVideoRef(
-    config,
-    storage,
-    ctx.state.toMember.id
-  );
+  const privateVideoRef = getPrivateVideoRef(config, storage, videoForUid);
   if ((await privateVideoRef.exists())[0]) {
     await privateVideoRef.delete();
   } else {
