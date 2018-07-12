@@ -27,8 +27,8 @@
     "url-join": "^4.0.0"
   },
   "scripts": {
-    "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
-    "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
+    "use-prod-config": "cp src/server/config/prod.config.ts src/server/config/config.ts",
+    "use-test-config": "cp src/server/config/test.config.ts src/server/config/config.ts",
     "build": "rm -rf dist && tsc && echo DO_NOT_COMMIT* > ./dist/.npmignore",
     "start": "node dist/app.js",
     "test": "NODE_ENV=test node dist/app.js",
