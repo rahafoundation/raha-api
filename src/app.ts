@@ -33,7 +33,8 @@ import {
 } from "./routes/members/definitions";
 import {
   sendInviteApiLocation,
-  mintApiLocation
+  mintApiLocation,
+  migrateApiLocation
 } from "./routes/me/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
@@ -120,6 +121,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: mintApiLocation,
     handler: meRoutes.mint(db, membersCollection, operationsCollection)
+  },
+  {
+    location: migrateApiLocation,
+    handler: meRoutes.migrate(db, membersCollection)
   }
 ];
 

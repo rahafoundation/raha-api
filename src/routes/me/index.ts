@@ -6,28 +6,21 @@ import * as httpStatus from "http-status";
 
 import { Config } from "../../config/prod.config";
 import { ApiError } from "../../errors/ApiError";
-import { HttpVerb } from "../../helpers/http";
-import { OperationId, MemberId } from "../../models/identifiers";
+import { MemberId } from "../../models/identifiers";
 import {
   MintBasicIncomePayload,
   MintType,
   MintReferralBonusPayload,
   OperationType
 } from "../../models/Operation";
-import {
-  ApiEndpointDefinition,
-  ApiCallDefinition,
-  ApiResponseDefinition,
-  ApiEndpointName,
-  ApiEndpointUri
-} from "../ApiEndpoint";
 import { createApiRoute } from "../";
+import { OperationApiResponseBody } from "../ApiEndpoint/ApiResponse";
 import {
-  OperationApiResponseBody,
-  MessageApiResponseBody
-} from "../ApiEndpoint/ApiResponse";
-import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
-import { SendInviteApiEndpoint, MintApiEndpoint } from "./definitions";
+  SendInviteApiEndpoint,
+  MintApiEndpoint,
+  MigrateApiEndpoint
+} from "./definitions";
+import { twilioClient } from "../../twilio";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -249,4 +242,55 @@ export const mint = (
       } as OperationApiResponseBody,
       status: 201
     };
+  });
+
+export const migrate = (db: Firestore, members: CollectionReference) =>
+  createApiRoute<MigrateApiEndpoint>(async (call, loggedInMemberToken) => {
+    const { mobileNumber } = call.body;
+
+    if (!mobileNumber) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "You must supply a mobile number."
+      );
+    }
+
+    let phoneNumberLookup: any;
+    try {
+      phoneNumberLookup = await twilioClient.lookups
+        .phoneNumbers(mobileNumber)
+        .fetch();
+    } catch (e) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "The supplied mobile number could not be validated."
+      );
+    }
+
+    if (!phoneNumberLookup || !phoneNumberLookup.phoneNumber) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        "We ran into an error trying to extract your phone number."
+      );
+    }
+
+    await db.runTransaction(async transaction => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMember = await transaction.get(members.doc(loggedInUid));
+
+      if (loggedInMember.get("mobile_number") !== undefined) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "You have already associated a mobile number with your account."
+        );
+      }
+
+      const memberUpdate = {
+        mobile_number: phoneNumberLookup.phoneNumber
+      };
+
+      transaction.update(loggedInMember.ref, memberUpdate);
+    });
+
+    return { body: { message: "Success!" }, status: 200 };
   });

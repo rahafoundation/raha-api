@@ -9,7 +9,11 @@ import {
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
 } from "../members/definitions";
-import { MintApiEndpoint, SendInviteApiEndpoint } from "../me/definitions";
+import {
+  MintApiEndpoint,
+  SendInviteApiEndpoint,
+  MigrateApiEndpoint
+} from "../me/definitions";
 import { ListOperationsApiEndpoint } from "../operations/definitions";
 
 /**
@@ -21,7 +25,8 @@ export enum ApiEndpointName {
   REQUEST_INVITE = "REQUEST_INVITE",
   SEND_INVITE = "SEND_INVITE",
   MINT = "MINT",
-  GIVE = "GIVE"
+  GIVE = "GIVE",
+  MIGRATE = "MIGRATE"
 }
 
 export enum ApiEndpointUri {
@@ -30,7 +35,8 @@ export enum ApiEndpointUri {
   REQUEST_INVITE = "members/:memberId/request_invite",
   SEND_INVITE = "me/send_invite",
   MINT = "me/mint",
-  GIVE = "members/:memberId/give"
+  GIVE = "members/:memberId/give",
+  MIGRATE = "me/migrate"
 }
 
 /**
@@ -60,7 +66,8 @@ export type ApiEndpoint =
   | RequestInviteApiEndpoint
   | SendInviteApiEndpoint
   | GiveApiEndpoint
-  | MintApiEndpoint;
+  | MintApiEndpoint
+  | MigrateApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";

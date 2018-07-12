@@ -1,4 +1,3 @@
-import { MemberId, OperationId } from "../../models/identifiers";
 import { HttpVerb } from "../../helpers/http";
 import {
   ApiEndpointDefinition,
@@ -72,4 +71,34 @@ export type MintApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.MINT,
   MintApiCall,
   MintApiResponse
+>;
+
+export interface MigratePayload {
+  mobileNumber: string;
+}
+export type MigrateApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.MIGRATE,
+  HttpVerb.POST,
+  true
+>;
+export const migrateApiLocation: MigrateApiLocation = {
+  uri: ApiEndpointUri.MIGRATE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type MigrateApiCall = ApiCallDefinition<
+  MigrateApiLocation["uri"],
+  MigrateApiLocation["method"],
+  MigrateApiLocation["authenticated"],
+  void,
+  MigratePayload
+>;
+export type MigrateApiResponse = ApiResponseDefinition<
+  200,
+  MessageApiResponseBody
+>;
+export type MigrateApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.MIGRATE,
+  MigrateApiCall,
+  MigrateApiResponse
 >;
