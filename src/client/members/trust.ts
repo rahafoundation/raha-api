@@ -1,9 +1,9 @@
-import { MemberId } from "../../models/identifiers";
+import { MemberId } from "../../server/models/identifiers";
 import {
   TrustMemberApiEndpoint,
   TrustMemberApiCall,
   trustMemberApiLocation
-} from "../../routes/members/definitions";
+} from "../../server/routes/members/definitions";
 
 import { callApi } from "../callApi";
 

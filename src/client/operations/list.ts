@@ -2,7 +2,7 @@ import {
   ListOperationsApiEndpoint,
   listOperationsApiLocation,
   ListOperationsApiCall
-} from "../../routes/operations/definitions";
+} from "../../server/routes/operations/definitions";
 
 import { callApi } from "../callApi";
 

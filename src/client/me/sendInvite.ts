@@ -2,7 +2,7 @@ import {
   SendInviteApiEndpoint,
   SendInviteApiCall,
   sendInviteApiLocation
-} from "../../routes/me/definitions";
+} from "../../server/routes/me/definitions";
 
 import { callApi } from "../callApi";
 

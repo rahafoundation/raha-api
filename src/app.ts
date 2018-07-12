@@ -12,29 +12,29 @@ import * as adminLib from "firebase-admin";
 
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
-import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
-import * as meRoutes from "./routes/me/index";
-import * as membersRoutes from "./routes/members";
-import * as operationsRoutes from "./routes/operations/index";
+import { verifyFirebaseIdToken } from "./server/helpers/verifyFirebaseIdToken";
+import * as meRoutes from "./server/routes/me/index";
+import * as membersRoutes from "./server/routes/members";
+import * as operationsRoutes from "./server/routes/operations/index";
 
-import { config } from "./config/config";
+import { config } from "./server/config/config";
 import {
   coconutApiKey,
   sendgridApiKey
-} from "./config/DO_NOT_COMMIT.secrets.config";
-import { createApiRoute } from "./routes";
-import { HttpVerb } from "./helpers/http";
-import { ApiLocation } from "./routes/ApiEndpoint/ApiCall";
-import { listOperationsApiLocation } from "./routes/operations/definitions";
+} from "./server/config/DO_NOT_COMMIT.secrets.config";
+import { createApiRoute } from "./server/routes";
+import { HttpVerb } from "./server/helpers/http";
+import { ApiLocation } from "./server/routes/ApiEndpoint/ApiCall";
+import { listOperationsApiLocation } from "./server/routes/operations/definitions";
 import {
   trustMemberApiLocation,
   requestInviteApiLocation,
   giveApiLocation
-} from "./routes/members/definitions";
+} from "./server/routes/members/definitions";
 import {
   sendInviteApiLocation,
   mintApiLocation
-} from "./routes/me/definitions";
+} from "./server/routes/me/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const credentialsPathArg =

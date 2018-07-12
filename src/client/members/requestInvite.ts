@@ -1,9 +1,9 @@
-import { MemberId } from "../../models/identifiers";
+import { MemberId } from "../../server/models/identifiers";
 import {
   RequestInviteApiEndpoint,
   RequestInviteApiCall,
   requestInviteApiLocation
-} from "../../routes/members/definitions";
+} from "../../server/routes/members/definitions";
 
 import { callApi } from "../callApi";
 
