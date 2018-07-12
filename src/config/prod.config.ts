@@ -10,6 +10,7 @@ export const config = {
     projectId: "raha-5395e",
     storageBucket: "raha-5395e.appspot.com",
     messagingSenderId: "677137485282"
-  }
+  },
+  twilioSid: "ACbc19d0bd410b8850b3172e3230ade426"
 };
 export type Config = typeof config;

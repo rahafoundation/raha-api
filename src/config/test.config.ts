@@ -12,5 +12,6 @@ export const config: Config = {
     projectId: "raha-test",
     storageBucket: "raha-test.appspot.com",
     messagingSenderId: "148482003030"
-  }
+  },
+  twilioSid: "ACbc19d0bd410b8850b3172e3230ade426"
 };
