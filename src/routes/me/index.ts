@@ -49,7 +49,7 @@ export const sendInvite = (
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
 
-    const { inviteEmail } = call.body;
+    const { inviteEmail, videoToken } = call.body;
 
     if (!loggedInMember.exists) {
       throw new ApiError(
@@ -67,10 +67,14 @@ export const sendInvite = (
 
     const loggedInFullName = loggedInMember.get("full_name");
     const loggedInUsername = loggedInMember.get("username");
-    const inviteLink = new URL(
-      `/m/${loggedInUsername}/invite`,
-      config.appBase
-    ).toString();
+
+    // If there is already a videoToken, give them the deeplink format.
+    const inviteLink = videoToken
+      ? new URL(
+          `/invite/referrer=${loggedInUsername}&token=${videoToken}`,
+          `https://raha.app`
+        ).toString()
+      : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
 
     const msg = {
       to: inviteEmail,
