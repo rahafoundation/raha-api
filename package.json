@@ -15,6 +15,7 @@
     "@koa/cors": "2",
     "@sendgrid/mail": "^6.2.1",
     "@types/big.js": "^4.0.4",
+    "@types/url-join": "^0.8.2",
     "async-busboy": "^0.6.2",
     "big.js": "^5.0.3",
     "coconutjs": "^2.2.0",
@@ -22,7 +23,8 @@
     "http-status": "^1.2.0",
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
-    "koa-router": "^7.4.0"
+    "koa-router": "^7.4.0",
+    "url-join": "^4.0.0"
   },
   "scripts": {
     "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
@@ -42,6 +44,6 @@
     "prettier": "^1.12.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.10.0",
-    "typescript": "^2.9.2"
+    "typescript": "^3.0.0-dev.20180711"
   }
 }
