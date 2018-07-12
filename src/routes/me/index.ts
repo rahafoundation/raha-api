@@ -244,6 +244,10 @@ export const mint = (
     };
   });
 
+/**
+ * An endpoint to associate phone numbers with G/FB auth-associated member accounts.
+ * TODO: Remove this endpoint and all associated resources when all users are using OTP.
+ */
 export const migrate = (db: Firestore, members: CollectionReference) =>
   createApiRoute<MigrateApiEndpoint>(async (call, loggedInMemberToken) => {
     const { mobileNumber } = call.body;
