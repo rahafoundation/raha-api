@@ -259,7 +259,7 @@ export const migrate = (db: Firestore, members: CollectionReference) =>
     try {
       phoneNumberLookup = await twilioClient.lookups
         .phoneNumbers(mobileNumber)
-        .fetch();
+        .fetch({ type: "carrier" });
     } catch (e) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
@@ -267,10 +267,29 @@ export const migrate = (db: Firestore, members: CollectionReference) =>
       );
     }
 
-    if (!phoneNumberLookup || !phoneNumberLookup.phoneNumber) {
+    if (
+      !phoneNumberLookup ||
+      !phoneNumberLookup.phoneNumber ||
+      !phoneNumberLookup.carrier ||
+      !phoneNumberLookup.carrier.type
+    ) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
         "We ran into an error trying to extract your phone number."
+      );
+    }
+
+    if (phoneNumberLookup.carrier.type === "voip") {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "We cannot accept VOIP numbers. Please supply a mobile number."
+      );
+    }
+
+    if (phoneNumberLookup.carrier.type === "landline") {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "We cannot accept landline numbers. Please supply a mobile number."
       );
     }
 
