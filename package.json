@@ -22,7 +22,8 @@
     "http-status": "^1.2.0",
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
-    "koa-router": "^7.4.0"
+    "koa-router": "^7.4.0",
+    "twilio": "^3.17.6"
   },
   "scripts": {
     "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
