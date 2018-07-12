@@ -32,7 +32,7 @@ export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string }
+  { inviteEmail: string; videoToken?: string }
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
