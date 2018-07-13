@@ -7,14 +7,38 @@ import {
 } from "../../server/routes/me/definitions";
 
 import { callApi } from "../callApi";
+import {
+  MintPayload,
+  MintBasicIncomePayload,
+  MintReferralBonusPayload
+} from "../../server/models/Operation";
 
-export async function mint(apiBase: string, authToken: string, amount: Big) {
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+
+type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
+  amount: Big;
+};
+type MintReferralBonusParams = Omit<MintReferralBonusPayload, "amount"> & {
+  amount: Big;
+};
+
+type MintArgs = MintBasicIncomeParams | MintReferralBonusParams;
+
+export async function mint(
+  apiBase: string,
+  authToken: string,
+  params: MintArgs
+) {
+  const body: MintPayload = {
+    ...params,
+    amount: params.amount.toFixed(2)
+  };
+
   const apiCall: MintApiCall = {
     location: mintApiLocation,
     request: {
       params: undefined,
-      // TODO: should this be rounded to a precision?
-      body: { amount: amount.toString() }
+      body
     }
   };
   return callApi<MintApiEndpoint>(apiBase, apiCall, authToken);
