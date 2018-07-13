@@ -1,6 +1,6 @@
 {
-  "name": "@raha.app/api-server",
-  "version": "0.0.6",
+  "name": "@raha/api",
+  "version": "0.0.3",
   "description": "Backend services for Raha.",
   "main": "dist/app.js",
   "files": [
@@ -15,6 +15,7 @@
     "@koa/cors": "2",
     "@sendgrid/mail": "^6.2.1",
     "@types/big.js": "^4.0.4",
+    "@types/url-join": "^0.8.2",
     "async-busboy": "^0.6.2",
     "big.js": "^5.0.3",
     "coconutjs": "^2.2.0",
@@ -23,14 +24,15 @@
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.4.0",
-    "twilio": "^3.17.6"
+    "twilio": "^3.17.6",
+    "url-join": "^4.0.0"
   },
   "scripts": {
-    "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
-    "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
-    "build": "rm -rf dist && tsc",
-    "start": "node dist/app.js",
-    "test": "NODE_ENV=test node dist/app.js",
+    "use-prod-config": "cp src/server/config/prod.config.ts src/server/config/config.ts",
+    "use-test-config": "cp src/server/config/test.config.ts src/server/config/config.ts",
+    "build": "rm -rf dist && tsc && echo DO_NOT_COMMIT* > ./dist/.npmignore",
+    "start": "node dist/server/app.js",
+    "test": "NODE_ENV=test node dist/server/app.js",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
     "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
   },
@@ -43,6 +45,6 @@
     "prettier": "^1.12.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.10.0",
-    "typescript": "^2.8.1"
+    "typescript": "^3.0.0-dev.20180711"
   }
 }
