@@ -12,8 +12,7 @@ import {
   MintBasicIncomePayload,
   MintReferralBonusPayload
 } from "../../server/models/Operation";
-
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+import { Omit } from "../../shared/typeHelpers/Omit";
 
 type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
   amount: Big;
