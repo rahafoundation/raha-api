@@ -1,4 +1,4 @@
-# @raha/api
+# `@raha/api`
 
 This contains the server that runs the Raha API, and a JavaScript client library
 to interact with it.
