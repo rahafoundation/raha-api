@@ -51,23 +51,47 @@ export interface SavedOperationBase {
   created_at: Date;
 }
 
-type OperationPayload =
-  | {
-      op_code: OperationType.REQUEST_INVITE;
-      data: RequestInvitePayload;
-    }
-  | {
-      op_code: OperationType.TRUST;
-      data: TrustPayload;
-    }
-  | {
-      op_code: OperationType.MINT;
-      data: MintPayload;
-    }
-  | {
-      op_code: OperationType.GIVE;
-      data: GivePayload;
-    };
+interface RequestInviteOperationMetadata {
+  op_code: OperationType.REQUEST_INVITE;
+  data: RequestInvitePayload;
+}
+export type RequestInviteOperation = SavedOperationBase &
+  RequestInviteOperationMetadata;
+export type RequestInviteOperationToBeCreated = ToSaveOperationBase &
+  RequestInviteOperationMetadata;
 
-export type Operation = SavedOperationBase & OperationPayload;
-export type OperationToBeCreated = ToSaveOperationBase & OperationPayload;
+export interface TrustOperationMetadata {
+  op_code: OperationType.TRUST;
+  data: TrustPayload;
+}
+export type TrustOperation = SavedOperationBase & TrustOperationMetadata;
+export type TrustOperationToBeCreated = ToSaveOperationBase &
+  TrustOperationMetadata;
+
+export interface MintOperationMetadata {
+  op_code: OperationType.MINT;
+  data: MintPayload;
+}
+export type MintOperation = SavedOperationBase & MintOperationMetadata;
+export type MintOperationToBeCreated = ToSaveOperationBase &
+  MintOperationMetadata;
+
+export interface GiveOperationMetadata {
+  op_code: OperationType.GIVE;
+  data: GivePayload;
+}
+export type GiveOperation = SavedOperationBase & GiveOperationMetadata;
+export type GiveOperationToBeCreated = ToSaveOperationBase &
+  GiveOperationMetadata;
+
+export type Operation =
+  | RequestInviteOperation
+  | TrustOperation
+  | MintOperation
+  | GiveOperation;
+
+export type OperationToBeCreated =
+  | RequestInviteOperationToBeCreated
+  | TrustOperationToBeCreated
+  | MintOperationToBeCreated
+  | GiveOperationToBeCreated;
