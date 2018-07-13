@@ -150,11 +150,9 @@ export const uploadVideo = (
   storage: BucketStorage,
   uidToVideoHash: CollectionReference
 ) => async (ctx: Context) => {
-  const publicVideoRef = getPublicVideoRef(
-    config,
-    storage,
-    ctx.state.toMember.id
-  );
+  const videoForUid = ctx.params.memberId;
+
+  const publicVideoRef = getPublicVideoRef(config, storage, videoForUid);
   if ((await publicVideoRef.exists())[0]) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -183,7 +181,7 @@ export const uploadVideo = (
   const videoBuf = await getVideoBufferFromStream(encodedVideo[0]);
   const hash = getHashFromVideoBuffer(videoBuf);
 
-  const hashMappingRef = uidToVideoHash.doc(ctx.state.toMember.id);
+  const hashMappingRef = uidToVideoHash.doc(videoForUid);
   if ((await hashMappingRef.get()).exists) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -196,11 +194,7 @@ export const uploadVideo = (
 
   await publicVideoRef.save(videoBuf);
 
-  const privateVideoRef = getPrivateVideoRef(
-    config,
-    storage,
-    ctx.state.toMember.id
-  );
+  const privateVideoRef = getPrivateVideoRef(config, storage, videoForUid);
   if ((await privateVideoRef.exists())[0]) {
     await privateVideoRef.delete();
   } else {
@@ -257,6 +251,7 @@ export const requestInvite = (
         username,
         full_name: fullName,
         request_invite_from_uid: requestingFromId,
+        invite_confirmed: false,
         created_at: firestore.FieldValue.serverTimestamp(),
         request_invite_block_at: null,
         request_invite_block_seq: null,
@@ -286,29 +281,58 @@ export const requestInvite = (
  * Create a trust relationship to a target member from the logged in member
  */
 export const trust = (
+  db: Firestore,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
   createApiRoute<TrustMemberApiEndpoint>(async (call, loggedInMemberToken) => {
-    const loggedInUid = loggedInMemberToken.uid;
-    const memberToTrustId = call.params.memberId;
-    if (!(await getMemberById(membersCollection, memberToTrustId))) {
-      throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
-    }
+    const newOperationReference = await db.runTransaction(async transaction => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const memberToTrustId = call.params.memberId;
+      const memberToTrust = await transaction.get(
+        membersCollection.doc(memberToTrustId)
+      );
 
-    const newOperation: OperationToBeCreated = {
-      creator_uid: loggedInUid,
-      op_code: OperationType.TRUST,
-      data: {
-        to_uid: memberToTrustId
-      },
-      created_at: firestore.FieldValue.serverTimestamp()
-    };
-    const newOperationDoc = await operationsCollection.add(newOperation);
+      if (!memberToTrust) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
+      }
+      if (
+        !(await transaction.get(
+          operationsCollection
+            .where("creator_uid", "==", loggedInUid)
+            .where("op_code", "==", OperationType.TRUST)
+            .where("data.to_uid", "==", memberToTrustId)
+        )).empty
+      ) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "You have already trusted this member."
+        );
+      }
+
+      const newOperation: OperationToBeCreated = {
+        creator_uid: loggedInUid,
+        op_code: OperationType.TRUST,
+        data: {
+          to_uid: memberToTrustId
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newOperationRef = operationsCollection.doc();
+      if (memberToTrust.get("request_invite_from_uid") === loggedInUid) {
+        transaction.update(memberToTrust.ref, {
+          invite_confirmed: true
+        });
+      }
+      transaction.set(newOperationRef, newOperation);
+
+      return newOperationRef;
+    });
+
     return {
       body: {
-        ...(await newOperationDoc.get()).data(),
-        id: newOperationDoc.id
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
       } as Operation,
       status: 201
     };

@@ -17,9 +17,20 @@ export interface RequestInvitePayload {
 export interface TrustPayload {
   to_uid: MemberId;
 }
-export interface MintPayload {
+export enum MintType {
+  BASIC_INCOME = "BASIC_INCOME",
+  REFERRAL_BONUS = "REFERRAL_BONUS"
+}
+export interface MintBasicIncomePayload {
+  type: MintType.BASIC_INCOME;
   amount: string;
 }
+export interface MintReferralBonusPayload {
+  type: MintType.REFERRAL_BONUS;
+  amount: string;
+  invited_member_id: MemberId;
+}
+export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;

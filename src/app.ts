@@ -33,7 +33,8 @@ import {
 } from "./server/routes/members/definitions";
 import {
   sendInviteApiLocation,
-  mintApiLocation
+  mintApiLocation,
+  migrateApiLocation
 } from "./server/routes/me/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
@@ -97,7 +98,7 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: trustMemberApiLocation,
-    handler: membersRoutes.trust(membersCollection, operationsCollection)
+    handler: membersRoutes.trust(db, membersCollection, operationsCollection)
   },
   {
     location: requestInviteApiLocation,
@@ -120,6 +121,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: mintApiLocation,
     handler: meRoutes.mint(db, membersCollection, operationsCollection)
+  },
+  {
+    location: migrateApiLocation,
+    handler: meRoutes.migrate(db, membersCollection)
   }
 ];
 

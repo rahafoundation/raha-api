@@ -1,3 +1,4 @@
+import { HttpVerb } from "../../helpers/http";
 import {
   ApiEndpointDefinition,
   ApiCallDefinition,
@@ -9,8 +10,8 @@ import {
   OperationApiResponseBody,
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
-import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+import { MintPayload } from "../../models/Operation";
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration
@@ -30,7 +31,7 @@ export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string }
+  { inviteEmail: string; videoToken?: string }
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
@@ -60,7 +61,7 @@ export type MintApiCall = ApiCallDefinition<
   MintApiLocation["method"],
   MintApiLocation["authenticated"],
   void,
-  { amount: string }
+  MintPayload
 >;
 export type MintApiResponse = ApiResponseDefinition<
   201,
@@ -70,4 +71,34 @@ export type MintApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.MINT,
   MintApiCall,
   MintApiResponse
+>;
+
+export interface MigratePayload {
+  mobileNumber: string;
+}
+export type MigrateApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.MIGRATE,
+  HttpVerb.POST,
+  true
+>;
+export const migrateApiLocation: MigrateApiLocation = {
+  uri: ApiEndpointUri.MIGRATE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type MigrateApiCall = ApiCallDefinition<
+  MigrateApiLocation["uri"],
+  MigrateApiLocation["method"],
+  MigrateApiLocation["authenticated"],
+  void,
+  MigratePayload
+>;
+export type MigrateApiResponse = ApiResponseDefinition<
+  200,
+  MessageApiResponseBody
+>;
+export type MigrateApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.MIGRATE,
+  MigrateApiCall,
+  MigrateApiResponse
 >;
