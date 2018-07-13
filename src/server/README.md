@@ -1,4 +1,4 @@
-# server/
+# `server/`
 
 API server. Entry point is `app.ts`.
 
