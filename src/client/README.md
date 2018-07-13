@@ -1,4 +1,4 @@
-# client/
+# `client/`
 
 API REST client. Has full and very complete TypeScript definitions.
 
