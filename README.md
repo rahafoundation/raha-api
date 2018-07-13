@@ -5,5 +5,5 @@ to interact with it.
 
 Docs are at:
 
-- Server: [`server/README.md](src/server/README.md)
-- Client: [`client/README.md](src/client/README.md)
+- Server: [`server/README.md`](src/server/README.md)
+- Client: [`client/README.md`](src/client/README.md)
