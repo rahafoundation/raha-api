@@ -1,1 +1,1 @@
-export { ApiEndpointName } from "../server/routes/ApiEndpoint";
+export { ApiEndpointName } from "../shared/types/ApiEndpoint";

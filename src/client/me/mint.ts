@@ -4,15 +4,15 @@ import {
   MintApiEndpoint,
   MintApiCall,
   mintApiLocation
-} from "../../server/routes/me/definitions";
+} from "../../shared/routes/me/definitions";
 
 import { callApi } from "../callApi";
 import {
   MintPayload,
   MintBasicIncomePayload,
   MintReferralBonusPayload
-} from "../../server/models/Operation";
-import { Omit } from "../../shared/typeHelpers/Omit";
+} from "../../shared/models/Operation";
+import { Omit } from "../../shared/types/helpers/Omit";
 
 type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
   amount: Big;

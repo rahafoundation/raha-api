@@ -1,5 +1,5 @@
-import { ApiCallError } from "./";
-import { ApiCall } from "../../server/routes/ApiEndpoint/ApiCall";
+import { ApiCallError } from ".";
+import { ApiCall } from "../../shared/types/ApiEndpoint/ApiCall";
 import * as urlJoin from "url-join";
 
 function apiCallToString(apiBase: string, apiCall: ApiCall) {

@@ -1,5 +1,5 @@
 import { Operation } from "../../models/Operation";
-import { HttpStatusCode } from "../../helpers/http";
+import { HttpStatusCode } from "../helpers/http";
 import { ApiEndpoint } from ".";
 
 export type OperationApiResponseBody = Operation;

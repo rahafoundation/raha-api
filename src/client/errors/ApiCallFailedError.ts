@@ -1,4 +1,4 @@
-import { ApiCallError } from "./";
+import { ApiCallError } from ".";
 
 function requestMethod(requestOptions?: RequestInit) {
   return requestOptions && requestOptions.method

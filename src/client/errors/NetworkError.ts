@@ -1,4 +1,4 @@
-import { ApiCallError } from "./";
+import { ApiCallError } from ".";
 
 /**
  * If the network request failed (i.e. fetch threw), this error wraps it

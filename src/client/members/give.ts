@@ -1,11 +1,11 @@
 import { Big } from "big.js";
 
-import { MemberId } from "../../server/models/identifiers";
+import { MemberId } from "../../shared/models/identifiers";
 import {
   GiveApiEndpoint,
   GiveApiCall,
   giveApiLocation
-} from "../../server/routes/members/definitions";
+} from "../../shared/routes/members/definitions";
 
 import { callApi } from "../callApi";
 

@@ -1,16 +1,16 @@
-import { HttpVerb } from "../../helpers/http";
+import { HttpVerb } from "../../types/helpers/http";
 import {
   ApiEndpointDefinition,
   ApiCallDefinition,
   ApiResponseDefinition,
   ApiEndpointName,
   ApiEndpointUri
-} from "../ApiEndpoint";
+} from "../../types/ApiEndpoint";
 import {
   OperationApiResponseBody,
   MessageApiResponseBody
-} from "../ApiEndpoint/ApiResponse";
-import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+} from "../../types/ApiEndpoint/ApiResponse";
+import { ApiLocationDefinition } from "../../types/ApiEndpoint/ApiCall";
 import { MintPayload } from "../../models/Operation";
 
 /*

@@ -14,17 +14,17 @@ import {
   Operation,
   OperationToBeCreated,
   OperationType
-} from "../../models/Operation";
-import { createApiRoute } from "../";
+} from "../../../shared/models/Operation";
+import { createApiRoute } from "..";
 import { Config } from "../../config/prod.config";
 import { Readable as ReadableStream } from "stream";
-import { getMemberById } from "../../models/Member";
+import { getMemberById } from "../../../shared/models/Member";
 import { Context } from "koa";
 import {
   GiveApiEndpoint,
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
-} from "./definitions";
+} from "../../../shared/routes/members/definitions";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";

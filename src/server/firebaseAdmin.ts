@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { config } from "./server/config/config";
+import { config } from "./config/config";
 
 export function getAdmin(credentialsPath?: string) {
   if (process.env.NODE_ENV === "test" && credentialsPath) {

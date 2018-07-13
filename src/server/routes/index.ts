@@ -1,5 +1,5 @@
-import { ApiEndpoint } from "./ApiEndpoint";
-import { AuthenticatedContext, RahaApiContext } from "../../app";
+import { ApiEndpoint } from "../../shared/types/ApiEndpoint";
+import { AuthenticatedContext, RahaApiContext } from "../app";
 
 export type ApiHandler<Def extends ApiEndpoint> = (
   request: {

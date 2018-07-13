@@ -1,5 +1,8 @@
 import { ApplicationError } from "./ApplicationError";
-import { HttpStatusCode, getHttpStatusText } from "../helpers/http";
+import {
+  HttpStatusCode,
+  getHttpStatusText
+} from "../../shared/types/helpers/http";
 
 function generateErrorMessage(statusCode: HttpStatusCode, message?: string) {
   const baseMessage = `${statusCode} ${getHttpStatusText(statusCode)}`;

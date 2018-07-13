@@ -10,10 +10,10 @@ import {
   ApiEndpointName,
   ApiEndpointDefinition,
   ApiEndpointUri
-} from "./../ApiEndpoint";
-import { OperationApiResponseBody } from "../ApiEndpoint/ApiResponse";
-import { HttpVerb } from "../../helpers/http";
-import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+} from "../../types/ApiEndpoint";
+import { OperationApiResponseBody } from "../../types/ApiEndpoint/ApiResponse";
+import { HttpVerb } from "../../types/helpers/http";
+import { ApiLocationDefinition } from "../../types/ApiEndpoint/ApiCall";
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration

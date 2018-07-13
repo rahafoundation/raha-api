@@ -1,7 +1,7 @@
 import * as urlJoin from "url-join";
 
-import { HttpVerb } from "../server/helpers/http";
-import { ApiEndpoint } from "../server/routes/ApiEndpoint";
+import { HttpVerb } from "../shared/types/helpers/http";
+import { ApiEndpoint } from "../shared/types/ApiEndpoint";
 import { InvalidApiRequestError } from "./errors/InvalidApiRequestError";
 import { NetworkError } from "./errors/NetworkError";
 import { UnauthenticatedError } from "./errors/UnauthenticatedError";

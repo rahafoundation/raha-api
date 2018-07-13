@@ -8,13 +8,13 @@ import {
   GiveApiEndpoint,
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
-} from "../members/definitions";
+} from "../../routes/members/definitions";
 import {
   MintApiEndpoint,
   SendInviteApiEndpoint,
   MigrateApiEndpoint
-} from "../me/definitions";
-import { ListOperationsApiEndpoint } from "../operations/definitions";
+} from "../../routes/me/definitions";
+import { ListOperationsApiEndpoint } from "../../routes/operations/definitions";
 
 /**
  * Canonical name of an endpoint you can query.

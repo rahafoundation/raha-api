@@ -1,5 +1,5 @@
 import { ApiEndpoint, ApiEndpointUri } from ".";
-import { HttpVerb } from "../../helpers/http";
+import { HttpVerb } from "../helpers/http";
 
 export interface ApiLocationDefinition<
   Uri extends ApiEndpointUri,

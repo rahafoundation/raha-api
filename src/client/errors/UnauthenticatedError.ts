@@ -1,4 +1,4 @@
-import { ApiCallError } from "./";
+import { ApiCallError } from ".";
 
 /**
  * Represents a related to making an API call.

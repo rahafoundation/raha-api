@@ -6,21 +6,21 @@ import * as httpStatus from "http-status";
 
 import { Config } from "../../config/prod.config";
 import { ApiError } from "../../errors/ApiError";
-import { MemberId } from "../../models/identifiers";
+import { MemberId } from "../../../shared/models/identifiers";
 import {
   MintBasicIncomePayload,
   MintType,
   MintReferralBonusPayload,
   OperationType
-} from "../../models/Operation";
-import { createApiRoute } from "../";
-import { OperationApiResponseBody } from "../ApiEndpoint/ApiResponse";
+} from "../../../shared/models/Operation";
+import { createApiRoute } from "..";
+import { OperationApiResponseBody } from "../../../shared/types/ApiEndpoint/ApiResponse";
 import {
   SendInviteApiEndpoint,
   MintApiEndpoint,
   MigrateApiEndpoint
-} from "./definitions";
-import { twilioClient } from "../../../twilio";
+} from "../../../shared/routes/me/definitions";
+import { twilioClient } from "../../twilio";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
