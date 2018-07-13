@@ -24,3 +24,8 @@ list(API_BASE).then(({ status, body }) => {
   body.map(operation => console.log(JSON.stringify(operation))); // or do something else.
 });
 ```
+
+## Page weight
+
+You probably want to use some tree-shaking so that you don't include unnecessary
+code like the server in your frontend.
