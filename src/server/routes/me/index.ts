@@ -254,9 +254,7 @@ export const mint = (
  * VOIP or landline number.
  */
 export const validateMobileNumber = (
-  config: Config,
-  db: Firestore,
-  members: CollectionReference
+  config: Config
 ) =>
   createApiRoute<ValidateMobileNumberApiEndpoint>(
     async (call, loggedInMemberToken) => {

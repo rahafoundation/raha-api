@@ -124,7 +124,7 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: validateMobileNumberApiLocation,
-    handler: meRoutes.validateMobileNumber(config, db, membersCollection)
+    handler: meRoutes.validateMobileNumber(config)
   }
 ];
 
