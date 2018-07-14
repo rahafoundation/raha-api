@@ -73,32 +73,32 @@ export type MintApiEndpoint = ApiEndpointDefinition<
   MintApiResponse
 >;
 
-export interface MigratePayload {
+export interface ValidateMobileNumberPayload {
   mobileNumber: string;
 }
-export type MigrateApiLocation = ApiLocationDefinition<
-  ApiEndpointUri.MIGRATE,
+export type ValidateMobileNumberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.VALIDATE_MOBILE_NUMBER,
   HttpVerb.POST,
   true
 >;
-export const migrateApiLocation: MigrateApiLocation = {
-  uri: ApiEndpointUri.MIGRATE,
+export const validateMobileNumberApiLocation: ValidateMobileNumberApiLocation = {
+  uri: ApiEndpointUri.VALIDATE_MOBILE_NUMBER,
   method: HttpVerb.POST,
   authenticated: true
 };
-export type MigrateApiCall = ApiCallDefinition<
-  MigrateApiLocation["uri"],
-  MigrateApiLocation["method"],
-  MigrateApiLocation["authenticated"],
+export type ValidateMobileNumberApiCall = ApiCallDefinition<
+  ValidateMobileNumberApiLocation["uri"],
+  ValidateMobileNumberApiLocation["method"],
+  ValidateMobileNumberApiLocation["authenticated"],
   void,
-  MigratePayload
+  ValidateMobileNumberPayload
 >;
-export type MigrateApiResponse = ApiResponseDefinition<
+export type ValidateMobileNumberApiResponse = ApiResponseDefinition<
   200,
   MessageApiResponseBody
 >;
-export type MigrateApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.MIGRATE,
-  MigrateApiCall,
-  MigrateApiResponse
+export type ValidateMobileNumberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.VALIDATE_MOBILE_NUMBER,
+  ValidateMobileNumberApiCall,
+  ValidateMobileNumberApiResponse
 >;

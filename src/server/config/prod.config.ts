@@ -11,6 +11,7 @@ export const config = {
     storageBucket: "raha-5395e.appspot.com",
     messagingSenderId: "677137485282"
   },
-  twilioSid: "ACbc19d0bd410b8850b3172e3230ade426"
+  twilioSid: "ACbc19d0bd410b8850b3172e3230ade426",
+  debugNumbers: ["+14255555555"]
 };
 export type Config = typeof config;
