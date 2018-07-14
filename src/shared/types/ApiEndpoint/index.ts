@@ -12,7 +12,7 @@ import {
 import {
   MintApiEndpoint,
   SendInviteApiEndpoint,
-  MigrateApiEndpoint
+  ValidateMobileNumberApiEndpoint
 } from "../../routes/me/definitions";
 import { ListOperationsApiEndpoint } from "../../routes/operations/definitions";
 
@@ -26,7 +26,7 @@ export enum ApiEndpointName {
   SEND_INVITE = "SEND_INVITE",
   MINT = "MINT",
   GIVE = "GIVE",
-  MIGRATE = "MIGRATE"
+  VALIDATE_MOBILE_NUMBER = "VALIDATE_MOBILE_NUMBER"
 }
 
 export enum ApiEndpointUri {
@@ -36,7 +36,7 @@ export enum ApiEndpointUri {
   SEND_INVITE = "me/send_invite",
   MINT = "me/mint",
   GIVE = "members/:memberId/give",
-  MIGRATE = "me/migrate"
+  VALIDATE_MOBILE_NUMBER = "me/validateMobileNumber"
 }
 
 /**
@@ -67,7 +67,7 @@ export type ApiEndpoint =
   | SendInviteApiEndpoint
   | GiveApiEndpoint
   | MintApiEndpoint
-  | MigrateApiEndpoint;
+  | ValidateMobileNumberApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";
