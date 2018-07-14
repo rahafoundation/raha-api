@@ -9,13 +9,14 @@ import { callApi } from "../callApi";
 export function sendInvite(
   apiBase: string,
   authToken: string,
-  inviteEmail: string
+  inviteEmail: string,
+  videoToken?: string
 ) {
   const apiCall: SendInviteApiCall = {
     location: sendInviteApiLocation,
     request: {
       params: undefined,
-      body: { inviteEmail }
+      body: { inviteEmail, ...(videoToken ? { videoToken } : {}) }
     }
   };
   return callApi<SendInviteApiEndpoint>(apiBase, apiCall, authToken);

@@ -1,7 +1,7 @@
 /**
  * Methods relating to getting and updating member documents.
  *
- * TODO: create a proper Member type
+ * TODO: create a proper Member type, preferably from the one in mobile.
  */
 import { CollectionReference, DocumentSnapshot } from "@google-cloud/firestore";
 import { MemberId } from "./identifiers";
