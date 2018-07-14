@@ -16,7 +16,7 @@ export function sendInvite(
     location: sendInviteApiLocation,
     request: {
       params: undefined,
-      body: { inviteEmail, videoToken }
+      body: { inviteEmail, ...(videoToken ? { videoToken } : {}) }
     }
   };
   return callApi<SendInviteApiEndpoint>(apiBase, apiCall, authToken);
