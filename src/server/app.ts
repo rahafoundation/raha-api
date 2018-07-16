@@ -34,7 +34,8 @@ import {
 import {
   sendInviteApiLocation,
   mintApiLocation,
-  validateMobileNumberApiLocation
+  validateMobileNumberApiLocation,
+  sendAppInstallApiTextLocation
 } from "../shared/routes/me/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
@@ -125,6 +126,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: validateMobileNumberApiLocation,
     handler: meRoutes.validateMobileNumber(config)
+  },
+  {
+    location: sendAppInstallApiTextLocation,
+    handler: meRoutes.sendAppInstallText(config)
   }
 ];
 
