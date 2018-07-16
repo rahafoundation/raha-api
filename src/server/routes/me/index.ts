@@ -253,63 +253,59 @@ export const mint = (
  * Checks if it meets our requirements, notably that the number is not a
  * VOIP or landline number.
  */
-export const validateMobileNumber = (
-  config: Config
-) =>
-  createApiRoute<ValidateMobileNumberApiEndpoint>(
-    async (call, loggedInMemberToken) => {
-      const { mobileNumber } = call.body;
+export const validateMobileNumber = (config: Config) =>
+  createApiRoute<ValidateMobileNumberApiEndpoint>(async call => {
+    const { mobileNumber } = call.body;
 
-      if (!mobileNumber) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "You must supply a mobile number."
-        );
-      }
-
-      let phoneNumberLookup: any;
-      try {
-        phoneNumberLookup = await twilioClient.lookups
-          .phoneNumbers(mobileNumber)
-          .fetch({ type: "carrier" });
-      } catch (e) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "The supplied mobile number could not be validated."
-        );
-      }
-
-      // Skip these checks if the number is a known debug number.
-      // This is a preliminary mechanism that may be useful for iOS acceptance testing
-      // down the line as well.
-      if (config.debugNumbers.indexOf(mobileNumber) < 0) {
-        if (
-          !phoneNumberLookup ||
-          !phoneNumberLookup.phoneNumber ||
-          !phoneNumberLookup.carrier ||
-          !phoneNumberLookup.carrier.type
-        ) {
-          throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Your number does not appear to be a real number."
-          );
-        }
-
-        if (phoneNumberLookup.carrier.type === "voip") {
-          throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "We cannot accept VOIP numbers. Please supply a mobile number."
-          );
-        }
-
-        if (phoneNumberLookup.carrier.type === "landline") {
-          throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "We cannot accept landline numbers. Please supply a mobile number."
-          );
-        }
-      }
-
-      return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };
+    if (!mobileNumber) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "You must supply a mobile number."
+      );
     }
-  );
+
+    let phoneNumberLookup: any;
+    try {
+      phoneNumberLookup = await twilioClient.lookups
+        .phoneNumbers(mobileNumber)
+        .fetch({ type: "carrier" });
+    } catch (e) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "The supplied mobile number could not be validated."
+      );
+    }
+
+    // Skip these checks if the number is a known debug number.
+    // This is a preliminary mechanism that may be useful for iOS acceptance testing
+    // down the line as well.
+    if (config.debugNumbers.indexOf(mobileNumber) < 0) {
+      if (
+        !phoneNumberLookup ||
+        !phoneNumberLookup.phoneNumber ||
+        !phoneNumberLookup.carrier ||
+        !phoneNumberLookup.carrier.type
+      ) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Your number does not appear to be a real number."
+        );
+      }
+
+      if (phoneNumberLookup.carrier.type === "voip") {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "We cannot accept VOIP numbers. Please supply a mobile number."
+        );
+      }
+
+      if (phoneNumberLookup.carrier.type === "landline") {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "We cannot accept landline numbers. Please supply a mobile number."
+        );
+      }
+    }
+
+    return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };
+  });
