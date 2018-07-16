@@ -102,3 +102,33 @@ export type ValidateMobileNumberApiEndpoint = ApiEndpointDefinition<
   ValidateMobileNumberApiCall,
   ValidateMobileNumberApiResponse
 >;
+
+export interface SendTextPayload {
+  mobileNumber: string;
+}
+export type SendAppInstallTextApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.SEND_APP_INSTALL_TEXT,
+  HttpVerb.POST,
+  false
+>;
+export const sendAppInstallApiTextLocation: SendAppInstallTextApiLocation = {
+  uri: ApiEndpointUri.SEND_APP_INSTALL_TEXT,
+  method: HttpVerb.POST,
+  authenticated: false
+};
+export type SendAppInstallTextApiCall = ApiCallDefinition<
+  SendAppInstallTextApiLocation["uri"],
+  SendAppInstallTextApiLocation["method"],
+  SendAppInstallTextApiLocation["authenticated"],
+  void,
+  SendTextPayload
+>;
+export type SendAppInstallTextApiResponse = ApiResponseDefinition<
+  200,
+  MessageApiResponseBody
+>;
+export type SendAppInstallTextApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.SEND_APP_INSTALL_TEXT,
+  SendAppInstallTextApiCall,
+  SendAppInstallTextApiResponse
+>;

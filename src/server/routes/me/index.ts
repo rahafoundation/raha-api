@@ -18,7 +18,8 @@ import { OperationApiResponseBody } from "../../../shared/types/ApiEndpoint/ApiR
 import {
   SendInviteApiEndpoint,
   MintApiEndpoint,
-  ValidateMobileNumberApiEndpoint
+  ValidateMobileNumberApiEndpoint,
+  SendAppInstallTextApiEndpoint
 } from "../../../shared/routes/me/definitions";
 import { twilioClient } from "../../twilio";
 
@@ -308,4 +309,43 @@ export const validateMobileNumber = (config: Config) =>
     }
 
     return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };
+  });
+
+export const sendAppInstallText = (config: Config) =>
+  createApiRoute<SendAppInstallTextApiEndpoint>(async call => {
+    const { mobileNumber } = call.body;
+
+    if (!mobileNumber) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "You must supply a mobile number."
+      );
+    }
+
+    // Skip sending text if the number is a known debug number.
+    // This is a preliminary mechanism that may be useful for iOS acceptance testing
+    // down the line as well.
+    if (config.debugNumbers.indexOf(mobileNumber) < 0) {
+      try {
+        await twilioClient.messages.create({
+          body:
+            "Hi! You can download the Raha apps at the following links.\nfor Android: <PLACEHOLDER>\nfor iOS: <PLACEHOLDER>",
+          to: mobileNumber,
+          from: "+16572377242",
+          // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
+          // Once we add multiple numbers that we'd like Twilio to use for localized text
+          // messages, we should look into just making the REST API call directly.
+          MessagingServiceSid: "MG90714479d4b405a524a4a6ccd2f9bf7d"
+        });
+      } catch (e) {
+        // tslint:disable-next-line:no-console
+        console.error(e);
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "There was an error sending the install text."
+        );
+      }
+    }
+
+    return { body: { message: "Install link sent!" }, status: 200 };
   });
