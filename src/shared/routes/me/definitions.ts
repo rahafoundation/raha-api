@@ -79,12 +79,12 @@ export interface ValidateMobileNumberPayload {
 export type ValidateMobileNumberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.VALIDATE_MOBILE_NUMBER,
   HttpVerb.POST,
-  true
+  false
 >;
 export const validateMobileNumberApiLocation: ValidateMobileNumberApiLocation = {
   uri: ApiEndpointUri.VALIDATE_MOBILE_NUMBER,
   method: HttpVerb.POST,
-  authenticated: true
+  authenticated: false
 };
 export type ValidateMobileNumberApiCall = ApiCallDefinition<
   ValidateMobileNumberApiLocation["uri"],
