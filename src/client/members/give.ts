@@ -9,6 +9,12 @@ import {
 
 import { callApi } from "../callApi";
 
+/**
+ * API call to give Raha from the logged in member to another member.
+ * @param memberId ID of member to give Raha to
+ * @param amount Amount of Raha to give
+ * @param memo Optional reason explaining why Raha was given
+ */
 export function give(
   apiBase: string,
   authToken: string,

@@ -23,6 +23,11 @@ type MintReferralBonusParams = Omit<MintReferralBonusPayload, "amount"> & {
 
 type MintArgs = MintBasicIncomeParams | MintReferralBonusParams;
 
+/**
+ * API call that issues a request to mint Raha.
+ * @param params Identify what the source of the funds are (basic
+ * income/referral bonus) and the amount
+ */
 export async function mint(
   apiBase: string,
   authToken: string,
