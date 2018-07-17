@@ -9,6 +9,8 @@ import { MemberId } from "../../shared/models/identifiers";
 import { MintType } from "../../shared/models/Operation";
 
 export enum ErrorCode {
+  SERVER_ERROR = "serverError",
+
   INVALID_AUTHORIZATION = "invalidAuthorization",
   UNAUTHORIZED = "unauthorized",
   MISSING_PARAMS = "missingParams",
@@ -34,6 +36,7 @@ export enum ErrorCode {
 }
 
 const errorCodeToStatusCode: { [K in ErrorCode]: HttpStatusCode } = {
+  [ErrorCode.SERVER_ERROR]: httpStatus.INTERNAL_SERVER_ERROR,
   [ErrorCode.INVALID_AUTHORIZATION]: httpStatus.FORBIDDEN,
   [ErrorCode.UNAUTHORIZED]: httpStatus.UNAUTHORIZED,
   [ErrorCode.MISSING_PARAMS]: httpStatus.BAD_REQUEST,
@@ -59,6 +62,7 @@ const errorCodeToStatusCode: { [K in ErrorCode]: HttpStatusCode } = {
 };
 
 const errorCodeToMessage: { [K in ErrorCode]: string } = {
+  [ErrorCode.SERVER_ERROR]: getHttpStatusText(httpStatus.INTERNAL_SERVER_ERROR),
   [ErrorCode.INVALID_AUTHORIZATION]: getHttpStatusText(httpStatus.FORBIDDEN),
   [ErrorCode.UNAUTHORIZED]: getHttpStatusText(httpStatus.UNAUTHORIZED),
   [ErrorCode.MISSING_PARAMS]: "Missing required params.",
@@ -90,6 +94,7 @@ const errorCodeToMessage: { [K in ErrorCode]: string } = {
 };
 
 type ErrorData =
+  | { errorCode: ErrorCode.SERVER_ERROR; description: string }
   | { errorCode: ErrorCode.INVALID_AUTHORIZATION }
   | { errorCode: ErrorCode.UNAUTHORIZED }
   | { errorCode: ErrorCode.MISSING_PARAMS; missingParams: string[] }
