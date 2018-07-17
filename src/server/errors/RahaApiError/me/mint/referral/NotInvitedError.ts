@@ -3,15 +3,23 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
+const ERROR_CODE = "mint.referral.notInvited";
 export interface NotInvitedErrorBody {
-  errorCode: "mint.referral.notInvited";
+  errorCode: typeof ERROR_CODE;
   memberId: MemberId;
 }
 
 /**
  * Member tries to redeem referral bonus for a member they didn't invite
  */
-export class NotInvitedError extends RahaApiError<NotInvitedErrorBody> {
+export class NotInvitedError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotInvitedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(memberId: MemberId) {
     super(httpStatus.FORBIDDEN, "You have not invited this member.", {
       errorCode: "mint.referral.notInvited",

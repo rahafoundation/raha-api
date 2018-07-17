@@ -3,8 +3,9 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
+const ERROR_CODE = "notFound";
 export interface NotFoundErrorBody {
-  errorCode: "notFound";
+  errorCode: typeof ERROR_CODE;
   id: string;
   description?: string;
 }
@@ -12,7 +13,14 @@ export interface NotFoundErrorBody {
 /**
  * Entity required to fulfill an API request not found.
  */
-export class NotFoundError extends RahaApiError<NotFoundErrorBody> {
+export class NotFoundError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotFoundErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(id: string, description?: string) {
     super(httpStatus.NOT_FOUND, getHttpStatusText(httpStatus.NOT_FOUND), {
       errorCode: "notFound",

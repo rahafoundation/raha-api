@@ -2,8 +2,9 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "trust.alreadyTrusted";
 export interface AlreadyTrustedErrorBody {
-  errorCode: "trust.alreadyTrusted";
+  errorCode: typeof ERROR_CODE;
   memberId: string;
 }
 
@@ -12,7 +13,14 @@ export interface AlreadyTrustedErrorBody {
  *
  * TODO: should this be an idempotent operation/this not be an error?
  */
-export class AlreadyTrustedError extends RahaApiError<AlreadyTrustedErrorBody> {
+export class AlreadyTrustedError extends RahaApiError<
+  typeof ERROR_CODE,
+  AlreadyTrustedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(memberId: string) {
     super(httpStatus.FORBIDDEN, "You have already trusted this member.", {
       errorCode: "trust.alreadyTrusted",

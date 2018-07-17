@@ -2,8 +2,9 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "sendInvite.inviterMustBeInvited";
 export interface InviterMustBeInvitedErrorBody {
-  errorCode: "sendInvite.inviterMustBeInvited";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
@@ -11,8 +12,13 @@ export interface InviterMustBeInvitedErrorBody {
  * invited.
  */
 export class InviterMustBeInvitedError extends RahaApiError<
+  typeof ERROR_CODE,
   InviterMustBeInvitedErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(
       httpStatus.FORBIDDEN,

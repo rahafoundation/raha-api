@@ -2,15 +2,23 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "validateMobileNumber.notReal";
 export interface NotRealErrorBody {
-  errorCode: "validateMobileNumber.notReal";
+  errorCode: typeof ERROR_CODE;
   mobileNumber: string;
 }
 
 /**
  * Phone number is valid but doesn't appear to correspond to a real phone number
  */
-export class NotRealError extends RahaApiError<NotRealErrorBody> {
+export class NotRealError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotRealErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(mobileNumber: string) {
     super(
       httpStatus.BAD_REQUEST,

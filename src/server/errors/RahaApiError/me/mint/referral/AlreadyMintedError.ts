@@ -3,15 +3,23 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
+const ERROR_CODE = "mint.referral.alreadyMinted";
 export interface AlreadyMintedErrorBody {
-  errorCode: "mint.referral.alreadyMinted";
+  errorCode: typeof ERROR_CODE;
   memberId: MemberId;
 }
 
 /**
  * Member tries to redeem referral bonus they have already redeemed
  */
-export class AlreadyMintedError extends RahaApiError<AlreadyMintedErrorBody> {
+export class AlreadyMintedError extends RahaApiError<
+  typeof ERROR_CODE,
+  AlreadyMintedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(memberId: MemberId) {
     super(httpStatus.FORBIDDEN, "You have not invited this member.", {
       errorCode: "mint.referral.alreadyMinted",

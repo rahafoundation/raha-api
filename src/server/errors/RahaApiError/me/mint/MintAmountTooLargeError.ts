@@ -2,16 +2,22 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "mint.amountTooLarge";
 export interface MintAmountTooLargeErrorBody {
-  errorCode: "mint.amountTooLarge";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
  * Member attempts to give more Raha than they have available.
  */
 export class MintAmountTooLargeError extends RahaApiError<
+  typeof ERROR_CODE,
   MintAmountTooLargeErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(httpStatus.FORBIDDEN, "Mint amount exceeds the allowed amount.", {
       errorCode: "mint.amountTooLarge"

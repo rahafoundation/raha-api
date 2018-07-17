@@ -2,16 +2,22 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "give.insufficientBalance";
 export interface InsufficientBalanceErrorBody {
-  errorCode: "give.insufficientBalance";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
  * Member attempts to give more Raha than they have available.
  */
 export class InsufficientBalanceError extends RahaApiError<
+  typeof ERROR_CODE,
   InsufficientBalanceErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(httpStatus.FORBIDDEN, "Amount exceeds account balance.", {
       errorCode: "give.insufficientBalance"

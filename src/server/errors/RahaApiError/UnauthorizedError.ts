@@ -3,14 +3,22 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
+const ERROR_CODE = "unauthorized";
 export interface UnauthorizedErrorBody {
-  errorCode: "unauthorized";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
  * Authentication required to take the action requested via the API.
  */
-export class UnauthorizedError extends RahaApiError<UnauthorizedErrorBody> {
+export class UnauthorizedError extends RahaApiError<
+  typeof ERROR_CODE,
+  UnauthorizedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(httpStatus.UNAUTHORIZED, getHttpStatusText(httpStatus.UNAUTHORIZED), {
       errorCode: "unauthorized"

@@ -2,15 +2,23 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "validateMobileNumber.invalidNumber";
 export interface InvalidNumberErrorBody {
-  errorCode: "validateMobileNumber.invalidNumber";
+  errorCode: typeof ERROR_CODE;
   mobileNumber: string;
 }
 
 /**
  * Phone number is invalid
  */
-export class InvalidNumberError extends RahaApiError<InvalidNumberErrorBody> {
+export class InvalidNumberError extends RahaApiError<
+  typeof ERROR_CODE,
+  InvalidNumberErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(mobileNumber: string) {
     super(
       httpStatus.BAD_REQUEST,

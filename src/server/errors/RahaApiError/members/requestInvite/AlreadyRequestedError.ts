@@ -2,16 +2,22 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+const ERROR_CODE = "requestInvite.alreadyRequested";
 export interface AlreadyRequestedErrorBody {
-  errorCode: "requestInvite.alreadyRequested";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
  * Member requests invite after already having done so before.
  */
 export class AlreadyRequestedError extends RahaApiError<
+  typeof ERROR_CODE,
   AlreadyRequestedErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(httpStatus.FORBIDDEN, "You have already requested an invite.", {
       errorCode: "requestInvite.alreadyRequested"

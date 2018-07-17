@@ -2,16 +2,22 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from ".";
 
+const ERROR_CODE = "invalidAuthorization";
 export interface InvalidAuthorizationErrorBody {
-  errorCode: "invalidAuthorization";
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
  * Unable to validate the credentials sent with an API request.
  */
 export class InvalidAuthorizationError extends RahaApiError<
+  typeof ERROR_CODE,
   InvalidAuthorizationErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(
       httpStatus.FORBIDDEN,

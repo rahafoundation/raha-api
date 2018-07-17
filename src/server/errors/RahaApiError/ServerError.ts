@@ -3,15 +3,23 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
+const ERROR_CODE = "serverError";
 export interface ServerErrorBody {
-  errorCode: "serverError";
+  errorCode: typeof ERROR_CODE;
   description: string;
 }
 
 /**
  * Internal error in processing an API request.
  */
-export class ServerError extends RahaApiError<ServerErrorBody> {
+export class ServerError extends RahaApiError<
+  typeof ERROR_CODE,
+  ServerErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(description: string) {
     super(
       httpStatus.INTERNAL_SERVER_ERROR,

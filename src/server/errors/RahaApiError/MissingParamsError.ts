@@ -3,15 +3,23 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
+const ERROR_CODE = "notFound";
 export interface MissingParamsErrorBody {
-  errorCode: "notFound";
+  errorCode: typeof ERROR_CODE;
   missingParams: string[];
 }
 
 /**
  * Represents missing parameters in the body of an API request.
  */
-export class MissingParamsError extends RahaApiError<MissingParamsErrorBody> {
+export class MissingParamsError extends RahaApiError<
+  typeof ERROR_CODE,
+  MissingParamsErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(missingParams: string[]) {
     super(httpStatus.NOT_FOUND, getHttpStatusText(httpStatus.NOT_FOUND), {
       errorCode: "notFound",
