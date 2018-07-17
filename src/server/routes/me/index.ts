@@ -317,10 +317,10 @@ export const sendAppInstallText = (config: Config) =>
     const { mobileNumber } = call.body;
 
     if (!mobileNumber) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must supply a mobile number."
-      );
+      throw new RahaApiError({
+        errorCode: ErrorCode.MISSING_PARAMS,
+        missingParams: ["mobileNumber"]
+      });
     }
 
     // Skip sending text if the number is a known debug number.
@@ -341,10 +341,10 @@ export const sendAppInstallText = (config: Config) =>
       } catch (e) {
         // tslint:disable-next-line:no-console
         console.error(e);
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "There was an error sending the install text."
-        );
+        throw new RahaApiError({
+          errorCode: ErrorCode.SERVER_ERROR,
+          description: "There was an error sending the install text."
+        });
       }
     }
 
