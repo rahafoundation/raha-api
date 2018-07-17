@@ -1,11 +1,12 @@
 import { URL } from "url";
 import Big from "big.js";
+import { EnumValues } from "enum-values";
 import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import * as httpStatus from "http-status";
 
 import { Config } from "../../config/prod.config";
-import { ApiError } from "../../errors/ApiError";
+import { RahaApiError, ErrorCode } from "../../errors/RahaApiError";
 import { MemberId } from "../../../shared/models/identifiers";
 import {
   MintBasicIncomePayload,
@@ -34,6 +35,7 @@ interface EmailMessage {
   text: string;
   html: string;
 }
+
 export const sendInvite = (
   config: Config,
   sgMail: { send: (message: EmailMessage) => void },
@@ -46,17 +48,16 @@ export const sendInvite = (
     const { inviteEmail, videoToken } = call.body;
 
     if (!loggedInMember.exists) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must yourself have been invited to Raha to send invites."
-      );
+      throw new RahaApiError({
+        errorCode: ErrorCode.SEND_INVITE__INVITER_MUST_BE_INVITED
+      });
     }
 
     if (!inviteEmail) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "No invite email included in request."
-      );
+      throw new RahaApiError({
+        errorCode: ErrorCode.MISSING_PARAMS,
+        missingParams: ["inviteEmail"]
+      });
     }
 
     const loggedInFullName = loggedInMember.get("full_name");
@@ -109,12 +110,11 @@ function mintBasicIncome(
   const sinceLastMinted = now - lastMinted;
   const maxMintable =
     (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
+
   if (bigAmount.gt(maxMintable)) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Mint amount exceeds the allowed amount."
-    );
+    throw new RahaApiError({ errorCode: ErrorCode.MINT__AMOUNT_TOO_LARGE });
   }
+
   return {
     type: MintType.BASIC_INCOME,
     amount: bigAmount.toString()
@@ -132,33 +132,30 @@ async function mintReferralBonus(
   const invitedMember = await transaction.get(members.doc(invitedMemberId));
 
   if (!invitedMember.exists) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Invited member does not exist."
-    );
+    throw new RahaApiError({
+      errorCode: ErrorCode.NOT_FOUND,
+      id: invitedMemberId
+    });
   }
 
   if (
     !(invitedMember.get("request_invite_from_member_id") === loggedInMember.id)
   ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Member was not invited by you."
-    );
+    throw new RahaApiError({
+      errorCode: ErrorCode.MINT__REFERRAL__NOT_INVITED,
+      invitedMemberId
+    });
   }
 
   if (!invitedMember.get("invite_confirmed")) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "You have not trusted this member."
-    );
+    throw new RahaApiError({
+      errorCode: ErrorCode.MINT__REFERRAL__NOT_TRUSTED,
+      invitedMemberId
+    });
   }
 
   if (bigAmount.gt(RAHA_REFERRAL_BONUS)) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Mint amount exceeds current Raha Referral bonus."
-    );
+    throw new RahaApiError({ errorCode: ErrorCode.MINT__AMOUNT_TOO_LARGE });
   }
 
   // Verify that bonus hasn't already been claimed.
@@ -171,10 +168,10 @@ async function mintReferralBonus(
         .where("data.invited_member_id", "==", invitedMemberId)
     )).empty
   ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Bonus has already been minted for this referral."
-    );
+    throw new RahaApiError({
+      errorCode: ErrorCode.MINT__REFERRAL__ALREADY_MINTED,
+      invitedMemberId
+    });
   }
 
   return {
@@ -212,7 +209,11 @@ export const mint = (
           invited_member_id
         );
       } else {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid mint type.");
+        throw new RahaApiError({
+          errorCode: ErrorCode.MINT__INVALID_TYPE,
+          inputtedType: type,
+          validTypes: EnumValues.getValues(MintType)
+        });
       }
 
       const creatorBalance = new Big(loggedInMember.get("raha_balance") || 0);
@@ -259,10 +260,12 @@ export const validateMobileNumber = (config: Config) =>
     const { mobileNumber } = call.body;
 
     if (!mobileNumber) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must supply a mobile number."
-      );
+      throw new RahaApiError({
+        // TODO: automatically check for required params so that endpoints don't
+        // have to check by hand
+        errorCode: ErrorCode.MISSING_PARAMS,
+        missingParams: ["mobileNumber"]
+      });
     }
 
     let phoneNumberLookup: any;
@@ -271,41 +274,39 @@ export const validateMobileNumber = (config: Config) =>
         .phoneNumbers(mobileNumber)
         .fetch({ type: "carrier" });
     } catch (e) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "The supplied mobile number could not be validated."
-      );
+      throw new RahaApiError({
+        errorCode: ErrorCode.VALIDATE_MOBILE_NUMBER__INVALID_NUMBER,
+        mobileNumber
+      });
     }
 
     // Skip these checks if the number is a known debug number.
     // This is a preliminary mechanism that may be useful for iOS acceptance testing
     // down the line as well.
-    if (config.debugNumbers.indexOf(mobileNumber) < 0) {
-      if (
-        !phoneNumberLookup ||
-        !phoneNumberLookup.phoneNumber ||
-        !phoneNumberLookup.carrier ||
-        !phoneNumberLookup.carrier.type
-      ) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Your number does not appear to be a real number."
-        );
-      }
+    if (config.debugNumbers.indexOf(mobileNumber) !== -1) {
+      return { body: { message: mobileNumber }, status: 200 };
+    }
 
-      if (phoneNumberLookup.carrier.type === "voip") {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "We cannot accept VOIP numbers. Please supply a mobile number."
-        );
-      }
+    const allowedPhoneTypes = ["mobile"];
 
-      if (phoneNumberLookup.carrier.type === "landline") {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "We cannot accept landline numbers. Please supply a mobile number."
-        );
-      }
+    if (
+      !phoneNumberLookup ||
+      !phoneNumberLookup.phoneNumber ||
+      !phoneNumberLookup.carrier ||
+      !phoneNumberLookup.carrier.type
+    ) {
+      throw new RahaApiError({
+        errorCode: ErrorCode.VALIDATE_MOBILE_NUMBER__NOT_REAL_NUMBER,
+        mobileNumber
+      });
+    }
+
+    if (!allowedPhoneTypes.includes(phoneNumberLookup.carrier.type)) {
+      throw new RahaApiError({
+        errorCode: ErrorCode.VALIDATE_MOBILE_NUMBER__DISALLOWED_TYPE,
+        mobileNumber,
+        phoneType: phoneNumberLookup.carrier.type as string
+      });
     }
 
     return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };

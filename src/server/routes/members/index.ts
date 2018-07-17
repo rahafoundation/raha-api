@@ -9,7 +9,7 @@ import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
 
-import { ApiError } from "../../errors/ApiError";
+import { RahaApiError, ErrorCode } from "../../errors/RahaApiError";
 import {
   Operation,
   OperationToBeCreated,
@@ -25,6 +25,7 @@ import {
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
 } from "../../../shared/routes/members/definitions";
+import { HttpApiError } from "../../errors/HttpApiError";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -144,6 +145,7 @@ export const notifyVideoEncoded = (ctx: Context) => {
  * Doesn't go through the `createApiRoute` flow.
  *
  * TODO: should it use `createApiRoute` and have documented types?
+ * TODO: if do above, should also use the RahaApiError class for structured response
  */
 export const uploadVideo = (
   config: Config,
@@ -154,9 +156,10 @@ export const uploadVideo = (
 
   const publicVideoRef = getPublicVideoRef(config, storage, videoForUid);
   if ((await publicVideoRef.exists())[0]) {
-    throw new ApiError(
+    throw new HttpApiError(
       httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite."
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
     );
   }
 
@@ -172,9 +175,10 @@ export const uploadVideo = (
     (file: any) => file.fieldname === "encoded_video"
   );
   if (encodedVideo.length !== 1) {
-    throw new ApiError(
+    throw new HttpApiError(
       httpStatus.BAD_REQUEST,
-      "Zero or multiple encoded videos supplied with request."
+      "Zero or multiple encoded videos supplied with request.",
+      {}
     );
   }
 
@@ -183,9 +187,10 @@ export const uploadVideo = (
 
   const hashMappingRef = uidToVideoHash.doc(videoForUid);
   if ((await hashMappingRef.get()).exists) {
-    throw new ApiError(
+    throw new HttpApiError(
       httpStatus.BAD_REQUEST,
-      "Invite video already exists for specified user."
+      "Invite video already exists for specified user.",
+      {}
     );
   }
   await hashMappingRef.create({
@@ -218,10 +223,9 @@ export const requestInvite = (
       const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
       if ((await loggedInMemberRef.get()).exists) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "You have already requested an invite."
-        );
+        throw new RahaApiError({
+          errorCode: ErrorCode.REQUEST_INVITE__ALREADY_REQUESTED
+        });
       }
 
       const { username, fullName } = call.body;
@@ -231,7 +235,10 @@ export const requestInvite = (
         requestingFromId
       );
       if (!requestingFromMember) {
-        throw new ApiError(httpStatus.NOT_FOUND);
+        throw new RahaApiError({
+          errorCode: ErrorCode.NOT_FOUND,
+          id: requestingFromId
+        });
       }
 
       const newOperation: OperationToBeCreated = {
@@ -294,7 +301,10 @@ export const trust = (
       );
 
       if (!memberToTrust) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
+        throw new RahaApiError({
+          errorCode: ErrorCode.NOT_FOUND,
+          id: memberToTrustId
+        });
       }
       if (
         !(await transaction.get(
@@ -304,10 +314,10 @@ export const trust = (
             .where("data.to_uid", "==", memberToTrustId)
         )).empty
       ) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "You have already trusted this member."
-        );
+        throw new RahaApiError({
+          errorCode: ErrorCode.TRUST__ALREADY_TRUSTED,
+          memberId: memberToTrustId
+        });
       }
 
       const newOperation: OperationToBeCreated = {
@@ -359,22 +369,26 @@ export const give = (
         memberToGiveToId
       );
       if (!memberToGiveTo) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Member to trust not found.");
+        throw new RahaApiError({
+          errorCode: ErrorCode.NOT_FOUND,
+          id: memberToGiveToId
+        });
       }
 
       const { amount, memo } = call.body;
 
+      const donationRecipientId =
+        memberToGiveTo.get("donation_to") || DEFAULT_DONATION_RECIPIENT_UID;
       const donationRecipient = await transaction.get(
-        membersCollection.doc(
-          memberToGiveTo.get("donation_to") || DEFAULT_DONATION_RECIPIENT_UID
-        )
+        membersCollection.doc(donationRecipientId)
       );
 
       if (donationRecipient === undefined) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Donation recipient does not exist."
-        );
+        throw new RahaApiError({
+          errorCode: ErrorCode.NOT_FOUND,
+          id: donationRecipientId,
+          description: "Donation recipient not found"
+        });
       }
 
       const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
@@ -393,10 +407,9 @@ export const give = (
 
       const newFromBalance = fromBalance.minus(bigAmount);
       if (newFromBalance.lt(0)) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Amount exceeds account balance."
-        );
+        throw new RahaApiError({
+          errorCode: ErrorCode.GIVE__INSUFFICIENT_BALANCE
+        });
       }
 
       const transactionMemo: string = memo ? memo : "";
