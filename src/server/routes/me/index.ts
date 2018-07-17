@@ -285,7 +285,7 @@ export const validateMobileNumber = (config: Config) =>
     // Skip these checks if the number is a known debug number.
     // This is a preliminary mechanism that may be useful for iOS acceptance testing
     // down the line as well.
-    if (config.debugNumbers.indexOf(mobileNumber) !== -1) {
+    if (config.debugNumbers.includes(mobileNumber)) {
       return { body: { message: mobileNumber }, status: 200 };
     }
 
