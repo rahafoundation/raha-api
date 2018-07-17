@@ -274,6 +274,8 @@ export const validateMobileNumber = (config: Config) =>
         .phoneNumbers(mobileNumber)
         .fetch({ type: "carrier" });
     } catch (e) {
+      // TODO: this isn't always a user error, can be an internal server error.
+      // Change to reflect that in API responses
       throw new RahaApiError({
         errorCode: ErrorCode.VALIDATE_MOBILE_NUMBER__INVALID_NUMBER,
         mobileNumber
