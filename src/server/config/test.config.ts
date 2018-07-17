@@ -13,6 +13,10 @@ export const config: Config = {
     storageBucket: "raha-test.appspot.com",
     messagingSenderId: "148482003030"
   },
-  twilioSid: "ACbc19d0bd410b8850b3172e3230ade426",
+  twilio: {
+    accountSid: "ACbc19d0bd410b8850b3172e3230ade426",
+    messagingServiceSid: "MG90714479d4b405a524a4a6ccd2f9bf7d",
+    fromNumber: "+16572377242"
+  },
   debugNumbers: []
 };

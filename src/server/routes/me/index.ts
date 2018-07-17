@@ -331,11 +331,11 @@ export const sendAppInstallText = (config: Config) =>
           body:
             "Hi! You can download the Raha apps at the following links.\nfor Android: <PLACEHOLDER>\nfor iOS: <PLACEHOLDER>",
           to: mobileNumber,
-          from: "+16572377242",
+          from: config.twilio.fromNumber,
           // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
           // Once we add multiple numbers that we'd like Twilio to use for localized text
           // messages, we should look into just making the REST API call directly.
-          MessagingServiceSid: "MG90714479d4b405a524a4a6ccd2f9bf7d"
+          MessagingServiceSid: config.twilio.messagingServiceSid
         });
       } catch (e) {
         // tslint:disable-next-line:no-console
