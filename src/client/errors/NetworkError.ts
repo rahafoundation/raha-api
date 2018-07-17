@@ -6,7 +6,7 @@ import { ApiCallError } from ".";
 export class NetworkError extends ApiCallError {
   public readonly error: Error;
   constructor(error: Error) {
-    super("Network request failed");
+    super("NetworkError: Network request failed");
     this.error = error;
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
