@@ -3,7 +3,7 @@
  */
 
 import { Middleware } from "koa";
-import { ApiError } from "./errors/ApiError";
+import { HttpApiError } from "./errors/HttpApiError";
 
 // TODO: Logging
 
@@ -16,9 +16,10 @@ export const handleErrors: Middleware = async (ctx, next) => {
   } catch (error) {
     // tslint:disable-next-line:no-console
     console.error(error);
-    if (error instanceof ApiError) {
-      const { statusCode, errorMessage } = error;
-      ctx.throw(error.statusCode, errorMessage);
+    if (error instanceof HttpApiError) {
+      const { statusCode, errorMessage, data } = error;
+      ctx.status = statusCode;
+      ctx.body = JSON.stringify({ message: errorMessage, data });
     } else {
       throw error;
     }

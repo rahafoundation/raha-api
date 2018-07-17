@@ -13,7 +13,7 @@ export class InvalidApiRequestError extends ApiCallError {
 
   constructor(apiBase: string, failedApiCall: ApiCall) {
     super(
-      `${apiCallToString(apiBase, failedApiCall)} ${
+      `InvalidApiRequestError: ${apiCallToString(apiBase, failedApiCall)} ${
         failedApiCall.request.params
           ? `with params ${JSON.stringify(failedApiCall.request.params)}`
           : ""

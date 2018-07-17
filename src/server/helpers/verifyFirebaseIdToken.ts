@@ -1,8 +1,8 @@
 import * as adminLib from "firebase-admin";
 import { Middleware } from "koa";
-import * as httpStatus from "http-status";
 
-import { ApiError } from "../errors/ApiError";
+import { InvalidAuthorizationError } from "../errors/RahaApiError/InvalidAuthorizationError";
+import { UnauthorizedError } from "../errors/RahaApiError/UnauthorizedError";
 
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
 // The Firebase ID token needs to be passed as a Bearer token in the Authorization HTTP header like this:
@@ -29,7 +29,7 @@ const verifyFirebaseIdToken: (
       "Authorization: Bearer <Firebase ID Token>",
       'or by passing a "__session" cookie.'
     );
-    throw new ApiError(httpStatus.UNAUTHORIZED);
+    throw new UnauthorizedError();
   }
 
   const idToken =
@@ -47,7 +47,7 @@ const verifyFirebaseIdToken: (
   } catch (error) {
     // tslint:disable-next-line:no-console
     console.error("Error while verifying Firebase ID token:", error);
-    throw new ApiError(httpStatus.FORBIDDEN);
+    throw new InvalidAuthorizationError();
   }
   return next();
 };

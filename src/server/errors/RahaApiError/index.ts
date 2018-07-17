@@ -1,13 +1,15 @@
-import { ApiCallError } from ".";
+import { HttpApiError } from "../HttpApiError";
+import { HttpStatusCode } from "../../../shared/types/helpers/http";
 
 /**
- * If the network request failed (i.e. fetch threw), this error wraps it
+ * Error that corresponds to a particular Raha API error code and response
+ * structure.
  */
-export class NetworkError extends ApiCallError {
-  public readonly error: Error;
-  constructor(error: Error) {
-    super("NetworkError: Network request failed");
-    this.error = error;
+export abstract class RahaApiError<
+  Data extends { errorCode: string }
+> extends HttpApiError<Data> {
+  constructor(statusCode: HttpStatusCode, message: string, data: Data) {
+    super(statusCode, message, data);
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
     // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
@@ -15,6 +17,6 @@ export class NetworkError extends ApiCallError {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, NetworkError.prototype);
+    Object.setPrototypeOf(this, RahaApiError.prototype);
   }
 }

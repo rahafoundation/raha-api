@@ -16,9 +16,9 @@ export class ApiCallFailedError extends ApiCallError {
 
   constructor(url: string, requestOptions: RequestInit, response: Response) {
     super(
-      `${requestMethod(requestOptions)} to url '${url}' failed with status ${
-        response.status
-      }`
+      `ApiCallFailedError: ${requestMethod(
+        requestOptions
+      )} to url '${url}' failed with status ${response.status}`
     );
 
     this.response = response;

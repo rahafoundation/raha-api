@@ -1,11 +1,10 @@
 import { URL } from "url";
 import Big from "big.js";
+import { EnumValues } from "enum-values";
 import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import * as httpStatus from "http-status";
 
 import { Config } from "../../config/prod.config";
-import { ApiError } from "../../errors/ApiError";
 import { MemberId } from "../../../shared/models/identifiers";
 import {
   MintBasicIncomePayload,
@@ -22,6 +21,18 @@ import {
   SendAppInstallTextApiEndpoint
 } from "../../../shared/routes/me/definitions";
 import { twilioClient } from "../../twilio";
+import { InviterMustBeInvitedError } from "../../errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
+import { MissingParamsError } from "../../errors/RahaApiError/MissingParamsError";
+import { MintAmountTooLargeError } from "../../errors/RahaApiError/me/mint/MintAmountTooLargeError";
+import { NotFoundError } from "../../errors/RahaApiError/NotFoundError";
+import { NotInvitedError } from "../../errors/RahaApiError/me/mint/referral/NotInvitedError";
+import { NotTrustedError } from "../../errors/RahaApiError/me/mint/referral/NotTrustedError";
+import { AlreadyMintedError } from "../../errors/RahaApiError/me/mint/referral/AlreadyMintedError";
+import { MintInvalidTypeError } from "../../errors/RahaApiError/me/mint/MintInvalidTypeError";
+import { InvalidNumberError } from "../../errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
+import { NotRealError } from "../../errors/RahaApiError/me/validateMobileNumber/NotRealError";
+import { DisallowedTypeError } from "../../errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
+import { ServerError } from "../../errors/RahaApiError/ServerError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -34,6 +45,7 @@ interface EmailMessage {
   text: string;
   html: string;
 }
+
 export const sendInvite = (
   config: Config,
   sgMail: { send: (message: EmailMessage) => void },
@@ -46,17 +58,11 @@ export const sendInvite = (
     const { inviteEmail, videoToken } = call.body;
 
     if (!loggedInMember.exists) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must yourself have been invited to Raha to send invites."
-      );
+      throw new InviterMustBeInvitedError();
     }
 
     if (!inviteEmail) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "No invite email included in request."
-      );
+      throw new MissingParamsError(["inviteEmail"]);
     }
 
     const loggedInFullName = loggedInMember.get("full_name");
@@ -109,12 +115,11 @@ function mintBasicIncome(
   const sinceLastMinted = now - lastMinted;
   const maxMintable =
     (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
+
   if (bigAmount.gt(maxMintable)) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Mint amount exceeds the allowed amount."
-    );
+    throw new MintAmountTooLargeError();
   }
+
   return {
     type: MintType.BASIC_INCOME,
     amount: bigAmount.toString()
@@ -132,33 +137,21 @@ async function mintReferralBonus(
   const invitedMember = await transaction.get(members.doc(invitedMemberId));
 
   if (!invitedMember.exists) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Invited member does not exist."
-    );
+    throw new NotFoundError(invitedMemberId);
   }
 
   if (
     !(invitedMember.get("request_invite_from_member_id") === loggedInMember.id)
   ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Member was not invited by you."
-    );
+    throw new NotInvitedError(invitedMemberId);
   }
 
   if (!invitedMember.get("invite_confirmed")) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "You have not trusted this member."
-    );
+    throw new NotTrustedError(invitedMemberId);
   }
 
   if (bigAmount.gt(RAHA_REFERRAL_BONUS)) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Mint amount exceeds current Raha Referral bonus."
-    );
+    throw new MintAmountTooLargeError();
   }
 
   // Verify that bonus hasn't already been claimed.
@@ -171,10 +164,7 @@ async function mintReferralBonus(
         .where("data.invited_member_id", "==", invitedMemberId)
     )).empty
   ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Bonus has already been minted for this referral."
-    );
+    throw new AlreadyMintedError(invitedMemberId);
   }
 
   return {
@@ -212,7 +202,7 @@ export const mint = (
           invited_member_id
         );
       } else {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid mint type.");
+        throw new MintInvalidTypeError(type);
       }
 
       const creatorBalance = new Big(loggedInMember.get("raha_balance") || 0);
@@ -259,10 +249,7 @@ export const validateMobileNumber = (config: Config) =>
     const { mobileNumber } = call.body;
 
     if (!mobileNumber) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must supply a mobile number."
-      );
+      throw new MissingParamsError(["mobileNumber"]);
     }
 
     let phoneNumberLookup: any;
@@ -271,41 +258,34 @@ export const validateMobileNumber = (config: Config) =>
         .phoneNumbers(mobileNumber)
         .fetch({ type: "carrier" });
     } catch (e) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "The supplied mobile number could not be validated."
-      );
+      // TODO: this isn't always a user error, can be an internal server error.
+      // Change to reflect that in API responses
+      throw new InvalidNumberError(mobileNumber);
     }
 
     // Skip these checks if the number is a known debug number.
     // This is a preliminary mechanism that may be useful for iOS acceptance testing
     // down the line as well.
-    if (config.debugNumbers.indexOf(mobileNumber) < 0) {
-      if (
-        !phoneNumberLookup ||
-        !phoneNumberLookup.phoneNumber ||
-        !phoneNumberLookup.carrier ||
-        !phoneNumberLookup.carrier.type
-      ) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "Your number does not appear to be a real number."
-        );
-      }
+    if (config.debugNumbers.includes(mobileNumber)) {
+      return { body: { message: mobileNumber }, status: 200 };
+    }
 
-      if (phoneNumberLookup.carrier.type === "voip") {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "We cannot accept VOIP numbers. Please supply a mobile number."
-        );
-      }
+    const allowedPhoneTypes = ["mobile"];
 
-      if (phoneNumberLookup.carrier.type === "landline") {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "We cannot accept landline numbers. Please supply a mobile number."
-        );
-      }
+    if (
+      !phoneNumberLookup ||
+      !phoneNumberLookup.phoneNumber ||
+      !phoneNumberLookup.carrier ||
+      !phoneNumberLookup.carrier.type
+    ) {
+      throw new NotRealError(mobileNumber);
+    }
+
+    if (!allowedPhoneTypes.includes(phoneNumberLookup.carrier.type)) {
+      throw new DisallowedTypeError(
+        mobileNumber,
+        phoneNumberLookup.carrier.type
+      );
     }
 
     return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };
@@ -316,35 +296,30 @@ export const sendAppInstallText = (config: Config) =>
     const { mobileNumber } = call.body;
 
     if (!mobileNumber) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "You must supply a mobile number."
-      );
+      throw new MissingParamsError(["mobileNumber"]);
     }
 
     // Skip sending text if the number is a known debug number.
     // This is a preliminary mechanism that may be useful for iOS acceptance testing
     // down the line as well.
-    if (config.debugNumbers.indexOf(mobileNumber) < 0) {
-      try {
-        await twilioClient.messages.create({
-          body:
-            "Hi! You can download the Raha apps at the following links.\nfor Android: <PLACEHOLDER>\nfor iOS: <PLACEHOLDER>",
-          to: mobileNumber,
-          from: config.twilio.fromNumber,
-          // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
-          // Once we add multiple numbers that we'd like Twilio to use for localized text
-          // messages, we should look into just making the REST API call directly.
-          MessagingServiceSid: config.twilio.messagingServiceSid
-        });
-      } catch (e) {
-        // tslint:disable-next-line:no-console
-        console.error(e);
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "There was an error sending the install text."
-        );
-      }
+    if (config.debugNumbers.includes(mobileNumber)) {
+      return { body: { message: "Install link sent!" }, status: 200 };
+    }
+    try {
+      await twilioClient.messages.create({
+        body:
+          "Hi! You can download the Raha apps at the following links.\nfor Android: <PLACEHOLDER>\nfor iOS: <PLACEHOLDER>",
+        to: mobileNumber,
+        from: config.twilio.fromNumber,
+        // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
+        // Once we add multiple numbers that we'd like Twilio to use for localized text
+        // messages, we should look into just making the REST API call directly.
+        MessagingServiceSid: config.twilio.messagingServiceSid
+      });
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error(e);
+      throw new ServerError("There was a nerror sending the install text.");
     }
 
     return { body: { message: "Install link sent!" }, status: 200 };

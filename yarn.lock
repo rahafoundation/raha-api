@@ -984,6 +984,10 @@ ent@^2.2.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/ent/-/ent-2.2.0.tgz#e964219325a21d05f44466a2f686ed6ce5f5dd1d"
 
+enum-values@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/enum-values/-/enum-values-1.2.1.tgz#c74c7f076fe63c15dee2e4af0f51fd6cd0ce2f62"
+
 error-inject@~1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/error-inject/-/error-inject-1.0.0.tgz#e2b3d91b54aed672f309d950d154850fa11d4f37"

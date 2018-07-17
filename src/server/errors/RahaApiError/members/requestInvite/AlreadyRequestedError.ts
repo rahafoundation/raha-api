@@ -1,13 +1,21 @@
-import { ApiCallError } from ".";
+import * as httpStatus from "http-status";
+
+import { RahaApiError } from "../..";
+
+export interface AlreadyRequestedErrorBody {
+  errorCode: "requestInvite.alreadyRequested";
+}
 
 /**
- * If the network request failed (i.e. fetch threw), this error wraps it
+ * Member requests invite after already having done so before.
  */
-export class NetworkError extends ApiCallError {
-  public readonly error: Error;
-  constructor(error: Error) {
-    super("NetworkError: Network request failed");
-    this.error = error;
+export class AlreadyRequestedError extends RahaApiError<
+  AlreadyRequestedErrorBody
+> {
+  constructor() {
+    super(httpStatus.FORBIDDEN, "You have already requested an invite.", {
+      errorCode: "requestInvite.alreadyRequested"
+    });
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
     // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
@@ -15,6 +23,6 @@ export class NetworkError extends ApiCallError {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, NetworkError.prototype);
+    Object.setPrototypeOf(this, AlreadyRequestedError.prototype);
   }
 }

@@ -1,11 +1,25 @@
-import { ApiCallError } from ".";
+import * as httpStatus from "http-status";
+
+import { RahaApiError } from ".";
+
+export interface InvalidAuthorizationErrorBody {
+  errorCode: "invalidAuthorization";
+}
 
 /**
- * Represents a related to making an API call.
+ * Unable to validate the credentials sent with an API request.
  */
-export class UnauthenticatedError extends ApiCallError {
+export class InvalidAuthorizationError extends RahaApiError<
+  InvalidAuthorizationErrorBody
+> {
   constructor() {
-    super("UnauthenticatedError: User must first be authenticated.");
+    super(
+      httpStatus.FORBIDDEN,
+      "Unable to authorize the member with supplied credentials",
+      {
+        errorCode: "invalidAuthorization"
+      }
+    );
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
     // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
@@ -13,6 +27,6 @@ export class UnauthenticatedError extends ApiCallError {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, UnauthenticatedError.prototype);
+    Object.setPrototypeOf(this, InvalidAuthorizationError.prototype);
   }
 }
