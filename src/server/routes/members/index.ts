@@ -9,7 +9,6 @@ import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
 
-import { RahaApiError, ErrorCode } from "../../errors/RahaApiError";
 import {
   Operation,
   OperationToBeCreated,
@@ -26,6 +25,10 @@ import {
   TrustMemberApiEndpoint
 } from "../../../shared/routes/members/definitions";
 import { HttpApiError } from "../../errors/HttpApiError";
+import { AlreadyRequestedError } from "../../errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
+import { NotFoundError } from "../../errors/RahaApiError/NotFoundError";
+import { AlreadyTrustedError } from "../../errors/RahaApiError/members/trust/AlreadyTrustedError";
+import { InsufficientBalanceError } from "../../errors/RahaApiError/members/give/InsufficientBalanceError";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
@@ -223,9 +226,7 @@ export const requestInvite = (
       const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
       if ((await loggedInMemberRef.get()).exists) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.REQUEST_INVITE__ALREADY_REQUESTED
-        });
+        throw new AlreadyRequestedError();
       }
 
       const { username, fullName } = call.body;
@@ -235,10 +236,7 @@ export const requestInvite = (
         requestingFromId
       );
       if (!requestingFromMember) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.NOT_FOUND,
-          id: requestingFromId
-        });
+        throw new NotFoundError(requestingFromId);
       }
 
       const newOperation: OperationToBeCreated = {
@@ -301,10 +299,7 @@ export const trust = (
       );
 
       if (!memberToTrust) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.NOT_FOUND,
-          id: memberToTrustId
-        });
+        throw new NotFoundError(memberToTrustId);
       }
       if (
         !(await transaction.get(
@@ -314,10 +309,7 @@ export const trust = (
             .where("data.to_uid", "==", memberToTrustId)
         )).empty
       ) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.TRUST__ALREADY_TRUSTED,
-          memberId: memberToTrustId
-        });
+        throw new AlreadyTrustedError(memberToTrustId);
       }
 
       const newOperation: OperationToBeCreated = {
@@ -369,10 +361,7 @@ export const give = (
         memberToGiveToId
       );
       if (!memberToGiveTo) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.NOT_FOUND,
-          id: memberToGiveToId
-        });
+        throw new NotFoundError(memberToGiveToId);
       }
 
       const { amount, memo } = call.body;
@@ -384,11 +373,10 @@ export const give = (
       );
 
       if (donationRecipient === undefined) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.NOT_FOUND,
-          id: donationRecipientId,
-          description: "Donation recipient not found"
-        });
+        throw new NotFoundError(
+          donationRecipientId,
+          "Donation recipient not found."
+        );
       }
 
       const fromBalance = new Big(loggedInMember.get("raha_balance") || 0);
@@ -407,9 +395,7 @@ export const give = (
 
       const newFromBalance = fromBalance.minus(bigAmount);
       if (newFromBalance.lt(0)) {
-        throw new RahaApiError({
-          errorCode: ErrorCode.GIVE__INSUFFICIENT_BALANCE
-        });
+        throw new InsufficientBalanceError();
       }
 
       const transactionMemo: string = memo ? memo : "";
