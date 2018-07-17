@@ -3,7 +3,7 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
-const ERROR_CODE = "mint.referral.alreadyMinted";
+export const ERROR_CODE = "mint.referral.alreadyMinted";
 export interface AlreadyMintedErrorBody {
   errorCode: typeof ERROR_CODE;
   memberId: MemberId;

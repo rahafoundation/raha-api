@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from ".";
 
-const ERROR_CODE = "invalidAuthorization";
+export const ERROR_CODE = "invalidAuthorization";
 export interface InvalidAuthorizationErrorBody {
   errorCode: typeof ERROR_CODE;
 }

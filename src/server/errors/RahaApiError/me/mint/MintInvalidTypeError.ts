@@ -4,7 +4,7 @@ import { RahaApiError } from "../..";
 import { MintType } from "../../../../../shared/models/Operation";
 import { EnumValues } from "../../../../../../node_modules/enum-values";
 
-const ERROR_CODE = "mint.invalidType";
+export const ERROR_CODE = "mint.invalidType";
 export interface MintInvalidTypeErrorBody {
   errorCode: typeof ERROR_CODE;
   inputtedType: string;

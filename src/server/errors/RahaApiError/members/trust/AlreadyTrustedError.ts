@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-const ERROR_CODE = "trust.alreadyTrusted";
+export const ERROR_CODE = "trust.alreadyTrusted";
 export interface AlreadyTrustedErrorBody {
   errorCode: typeof ERROR_CODE;
   memberId: string;

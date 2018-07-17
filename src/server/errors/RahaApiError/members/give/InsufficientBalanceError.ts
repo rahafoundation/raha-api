@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-const ERROR_CODE = "give.insufficientBalance";
+export const ERROR_CODE = "give.insufficientBalance";
 export interface InsufficientBalanceErrorBody {
   errorCode: typeof ERROR_CODE;
 }

@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-const ERROR_CODE = "mint.amountTooLarge";
+export const ERROR_CODE = "mint.amountTooLarge";
 export interface MintAmountTooLargeErrorBody {
   errorCode: typeof ERROR_CODE;
 }

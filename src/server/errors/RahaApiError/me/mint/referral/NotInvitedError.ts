@@ -3,7 +3,7 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
-const ERROR_CODE = "mint.referral.notInvited";
+export const ERROR_CODE = "mint.referral.notInvited";
 export interface NotInvitedErrorBody {
   errorCode: typeof ERROR_CODE;
   memberId: MemberId;

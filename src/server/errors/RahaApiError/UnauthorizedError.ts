@@ -3,7 +3,7 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
-const ERROR_CODE = "unauthorized";
+export const ERROR_CODE = "unauthorized";
 export interface UnauthorizedErrorBody {
   errorCode: typeof ERROR_CODE;
 }

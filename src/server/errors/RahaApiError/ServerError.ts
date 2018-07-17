@@ -3,7 +3,7 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
-const ERROR_CODE = "serverError";
+export const ERROR_CODE = "serverError";
 export interface ServerErrorBody {
   errorCode: typeof ERROR_CODE;
   description: string;

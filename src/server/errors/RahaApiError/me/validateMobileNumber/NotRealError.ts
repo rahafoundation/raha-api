@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-const ERROR_CODE = "validateMobileNumber.notReal";
+export const ERROR_CODE = "validateMobileNumber.notReal";
 export interface NotRealErrorBody {
   errorCode: typeof ERROR_CODE;
   mobileNumber: string;

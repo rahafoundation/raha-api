@@ -2,7 +2,7 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-const ERROR_CODE = "requestInvite.alreadyRequested";
+export const ERROR_CODE = "requestInvite.alreadyRequested";
 export interface AlreadyRequestedErrorBody {
   errorCode: typeof ERROR_CODE;
 }
