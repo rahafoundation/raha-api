@@ -3,7 +3,7 @@
  */
 
 import { Middleware } from "koa";
-import { HttpApiError } from "./errors/HttpApiError";
+import { HttpApiError } from "../shared/errors/HttpApiError";
 
 // TODO: Logging
 

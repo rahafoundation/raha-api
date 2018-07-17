@@ -2,8 +2,9 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
+export const ERROR_CODE = "validateMobileNumber.disallowedType";
 export interface DisallowedTypeErrorBody {
-  errorCode: "validateMobileNumber.disallowedType";
+  errorCode: typeof ERROR_CODE;
   mobileNumber: string;
   foundType: string;
   validTypes: ["mobile"];
@@ -12,7 +13,14 @@ export interface DisallowedTypeErrorBody {
 /**
  * Phone number is not a proper mobile number (i.e. is voip or landline)
  */
-export class DisallowedTypeError extends RahaApiError<DisallowedTypeErrorBody> {
+export class DisallowedTypeError extends RahaApiError<
+  typeof ERROR_CODE,
+  DisallowedTypeErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(mobileNumber: string, foundType: string) {
     super(
       httpStatus.BAD_REQUEST,

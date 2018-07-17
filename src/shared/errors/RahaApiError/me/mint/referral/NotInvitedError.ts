@@ -3,18 +3,26 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
-export interface AlreadyMintedErrorBody {
-  errorCode: "mint.referral.alreadyMinted";
+export const ERROR_CODE = "mint.referral.notInvited";
+export interface NotInvitedErrorBody {
+  errorCode: typeof ERROR_CODE;
   memberId: MemberId;
 }
 
 /**
- * Member tries to redeem referral bonus they have already redeemed
+ * Member tries to redeem referral bonus for a member they didn't invite
  */
-export class AlreadyMintedError extends RahaApiError<AlreadyMintedErrorBody> {
+export class NotInvitedError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotInvitedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(memberId: MemberId) {
     super(httpStatus.FORBIDDEN, "You have not invited this member.", {
-      errorCode: "mint.referral.alreadyMinted",
+      errorCode: "mint.referral.notInvited",
       memberId
     });
 
@@ -24,6 +32,6 @@ export class AlreadyMintedError extends RahaApiError<AlreadyMintedErrorBody> {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, AlreadyMintedError.prototype);
+    Object.setPrototypeOf(this, NotInvitedError.prototype);
   }
 }

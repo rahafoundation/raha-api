@@ -2,23 +2,30 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-export interface InviterMustBeInvitedErrorBody {
-  errorCode: "sendInvite.inviterMustBeInvited";
+export const ERROR_CODE = "validateMobileNumber.invalidNumber";
+export interface InvalidNumberErrorBody {
+  errorCode: typeof ERROR_CODE;
+  mobileNumber: string;
 }
 
 /**
- * Member attempts to invite someone without themsevles having first been
- * invited.
+ * Phone number is invalid
  */
-export class InviterMustBeInvitedError extends RahaApiError<
-  InviterMustBeInvitedErrorBody
+export class InvalidNumberError extends RahaApiError<
+  typeof ERROR_CODE,
+  InvalidNumberErrorBody
 > {
-  constructor() {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
+  constructor(mobileNumber: string) {
     super(
-      httpStatus.FORBIDDEN,
-      "You must yourself have been invited to Raha to send invites.",
+      httpStatus.BAD_REQUEST,
+      "The supplied mobile number could not be validated.",
       {
-        errorCode: "sendInvite.inviterMustBeInvited"
+        errorCode: "validateMobileNumber.invalidNumber",
+        mobileNumber
       }
     );
 
@@ -28,6 +35,6 @@ export class InviterMustBeInvitedError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, InviterMustBeInvitedError.prototype);
+    Object.setPrototypeOf(this, InvalidNumberError.prototype);
   }
 }

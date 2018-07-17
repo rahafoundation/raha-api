@@ -1,20 +1,27 @@
 import * as httpStatus from "http-status";
 
-import { RahaApiError } from "../..";
+import { RahaApiError } from ".";
+import { getHttpStatusText } from "../../../shared/types/helpers/http";
 
-export interface MintAmountTooLargeErrorBody {
-  errorCode: "mint.amountTooLarge";
+export const ERROR_CODE = "unauthorized";
+export interface UnauthorizedErrorBody {
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
- * Member attempts to give more Raha than they have available.
+ * Authentication required to take the action requested via the API.
  */
-export class MintAmountTooLargeError extends RahaApiError<
-  MintAmountTooLargeErrorBody
+export class UnauthorizedError extends RahaApiError<
+  typeof ERROR_CODE,
+  UnauthorizedErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
-    super(httpStatus.FORBIDDEN, "Mint amount exceeds the allowed amount.", {
-      errorCode: "mint.amountTooLarge"
+    super(httpStatus.UNAUTHORIZED, getHttpStatusText(httpStatus.UNAUTHORIZED), {
+      errorCode: "unauthorized"
     });
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
@@ -23,6 +30,6 @@ export class MintAmountTooLargeError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, MintAmountTooLargeError.prototype);
+    Object.setPrototypeOf(this, UnauthorizedError.prototype);
   }
 }

@@ -21,18 +21,18 @@ import {
   SendAppInstallTextApiEndpoint
 } from "../../../shared/routes/me/definitions";
 import { twilioClient } from "../../twilio";
-import { InviterMustBeInvitedError } from "../../errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
-import { MissingParamsError } from "../../errors/RahaApiError/MissingParamsError";
-import { MintAmountTooLargeError } from "../../errors/RahaApiError/me/mint/MintAmountTooLargeError";
-import { NotFoundError } from "../../errors/RahaApiError/NotFoundError";
-import { NotInvitedError } from "../../errors/RahaApiError/me/mint/referral/NotInvitedError";
-import { NotTrustedError } from "../../errors/RahaApiError/me/mint/referral/NotTrustedError";
-import { AlreadyMintedError } from "../../errors/RahaApiError/me/mint/referral/AlreadyMintedError";
-import { MintInvalidTypeError } from "../../errors/RahaApiError/me/mint/MintInvalidTypeError";
-import { InvalidNumberError } from "../../errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
-import { NotRealError } from "../../errors/RahaApiError/me/validateMobileNumber/NotRealError";
-import { DisallowedTypeError } from "../../errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
-import { ServerError } from "../../errors/RahaApiError/ServerError";
+import { InviterMustBeInvitedError } from "../../../shared/errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
+import { MissingParamsError } from "../../../shared/errors/RahaApiError/MissingParamsError";
+import { MintAmountTooLargeError } from "../../../shared/errors/RahaApiError/me/mint/MintAmountTooLargeError";
+import { NotFoundError } from "../../../shared/errors/RahaApiError/NotFoundError";
+import { NotInvitedError } from "../../../shared/errors/RahaApiError/me/mint/referral/NotInvitedError";
+import { NotTrustedError } from "../../../shared/errors/RahaApiError/me/mint/referral/NotTrustedError";
+import { AlreadyMintedError } from "../../../shared/errors/RahaApiError/me/mint/referral/AlreadyMintedError";
+import { MintInvalidTypeError } from "../../../shared/errors/RahaApiError/me/mint/MintInvalidTypeError";
+import { InvalidNumberError } from "../../../shared/errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
+import { NotRealError } from "../../../shared/errors/RahaApiError/me/validateMobileNumber/NotRealError";
+import { DisallowedTypeError } from "../../../shared/errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
+import { ServerError } from "../../../shared/errors/RahaApiError/ServerError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;

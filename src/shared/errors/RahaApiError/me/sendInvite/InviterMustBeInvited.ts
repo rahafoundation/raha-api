@@ -1,23 +1,30 @@
 import * as httpStatus from "http-status";
 
-import { RahaApiError } from ".";
+import { RahaApiError } from "../..";
 
-export interface InvalidAuthorizationErrorBody {
-  errorCode: "invalidAuthorization";
+export const ERROR_CODE = "sendInvite.inviterMustBeInvited";
+export interface InviterMustBeInvitedErrorBody {
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
- * Unable to validate the credentials sent with an API request.
+ * Member attempts to invite someone without themsevles having first been
+ * invited.
  */
-export class InvalidAuthorizationError extends RahaApiError<
-  InvalidAuthorizationErrorBody
+export class InviterMustBeInvitedError extends RahaApiError<
+  typeof ERROR_CODE,
+  InviterMustBeInvitedErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor() {
     super(
       httpStatus.FORBIDDEN,
-      "Unable to authorize the member with supplied credentials",
+      "You must yourself have been invited to Raha to send invites.",
       {
-        errorCode: "invalidAuthorization"
+        errorCode: "sendInvite.inviterMustBeInvited"
       }
     );
 
@@ -27,6 +34,6 @@ export class InvalidAuthorizationError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, InvalidAuthorizationError.prototype);
+    Object.setPrototypeOf(this, InviterMustBeInvitedError.prototype);
   }
 }

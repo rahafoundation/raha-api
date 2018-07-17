@@ -4,8 +4,9 @@ import { RahaApiError } from "../..";
 import { MintType } from "../../../../../shared/models/Operation";
 import { EnumValues } from "../../../../../../node_modules/enum-values";
 
+export const ERROR_CODE = "mint.invalidType";
 export interface MintInvalidTypeErrorBody {
-  errorCode: "mint.invalidType";
+  errorCode: typeof ERROR_CODE;
   inputtedType: string;
   validTypes: MintType[];
 }
@@ -14,8 +15,13 @@ export interface MintInvalidTypeErrorBody {
  * Mint type is invalid
  */
 export class MintInvalidTypeError extends RahaApiError<
+  typeof ERROR_CODE,
   MintInvalidTypeErrorBody
 > {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(inputtedType: string) {
     super(httpStatus.BAD_REQUEST, "Mint type was invalid.", {
       errorCode: "mint.invalidType",

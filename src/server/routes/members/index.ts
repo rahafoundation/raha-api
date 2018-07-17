@@ -24,11 +24,11 @@ import {
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint
 } from "../../../shared/routes/members/definitions";
-import { HttpApiError } from "../../errors/HttpApiError";
-import { AlreadyRequestedError } from "../../errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
-import { NotFoundError } from "../../errors/RahaApiError/NotFoundError";
-import { AlreadyTrustedError } from "../../errors/RahaApiError/members/trust/AlreadyTrustedError";
-import { InsufficientBalanceError } from "../../errors/RahaApiError/members/give/InsufficientBalanceError";
+import { HttpApiError } from "../../../shared/errors/HttpApiError";
+import { AlreadyRequestedError } from "../../../shared/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
+import { NotFoundError } from "../../../shared/errors/RahaApiError/NotFoundError";
+import { AlreadyTrustedError } from "../../../shared/errors/RahaApiError/members/trust/AlreadyTrustedError";
+import { InsufficientBalanceError } from "../../../shared/errors/RahaApiError/members/give/InsufficientBalanceError";
 
 const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";

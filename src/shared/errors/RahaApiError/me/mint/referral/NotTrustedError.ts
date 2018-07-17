@@ -3,8 +3,9 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../../shared/models/identifiers";
 
+export const ERROR_CODE = "mint.referral.notTrusted";
 export interface NotTrustedErrorBody {
-  errorCode: "mint.referral.notTrusted";
+  errorCode: typeof ERROR_CODE;
   memberId: MemberId;
 }
 
@@ -12,7 +13,14 @@ export interface NotTrustedErrorBody {
  * Member tries to redeem referral bonus without completing the invite flow by
  * trusting the new member.
  */
-export class NotTrustedError extends RahaApiError<NotTrustedErrorBody> {
+export class NotTrustedError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotTrustedErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(memberId: MemberId) {
     super(httpStatus.FORBIDDEN, "You have not trusted this member.", {
       errorCode: "mint.referral.notTrusted",

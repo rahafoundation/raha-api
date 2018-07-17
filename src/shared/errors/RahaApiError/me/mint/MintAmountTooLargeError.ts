@@ -2,21 +2,25 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-export interface AlreadyTrustedErrorBody {
-  errorCode: "trust.alreadyTrusted";
-  memberId: string;
+export const ERROR_CODE = "mint.amountTooLarge";
+export interface MintAmountTooLargeErrorBody {
+  errorCode: typeof ERROR_CODE;
 }
 
 /**
- * Member trusts another member that they already trust.
- *
- * TODO: should this be an idempotent operation/this not be an error?
+ * Member attempts to give more Raha than they have available.
  */
-export class AlreadyTrustedError extends RahaApiError<AlreadyTrustedErrorBody> {
-  constructor(memberId: string) {
-    super(httpStatus.FORBIDDEN, "You have already trusted this member.", {
-      errorCode: "trust.alreadyTrusted",
-      memberId
+export class MintAmountTooLargeError extends RahaApiError<
+  typeof ERROR_CODE,
+  MintAmountTooLargeErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
+  constructor() {
+    super(httpStatus.FORBIDDEN, "Mint amount exceeds the allowed amount.", {
+      errorCode: "mint.amountTooLarge"
     });
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
@@ -25,6 +29,6 @@ export class AlreadyTrustedError extends RahaApiError<AlreadyTrustedErrorBody> {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, AlreadyTrustedError.prototype);
+    Object.setPrototypeOf(this, MintAmountTooLargeError.prototype);
   }
 }

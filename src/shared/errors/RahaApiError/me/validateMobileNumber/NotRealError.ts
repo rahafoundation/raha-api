@@ -2,21 +2,29 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-export interface InvalidNumberErrorBody {
-  errorCode: "validateMobileNumber.invalidNumber";
+export const ERROR_CODE = "validateMobileNumber.notReal";
+export interface NotRealErrorBody {
+  errorCode: typeof ERROR_CODE;
   mobileNumber: string;
 }
 
 /**
- * Phone number is invalid
+ * Phone number is valid but doesn't appear to correspond to a real phone number
  */
-export class InvalidNumberError extends RahaApiError<InvalidNumberErrorBody> {
+export class NotRealError extends RahaApiError<
+  typeof ERROR_CODE,
+  NotRealErrorBody
+> {
+  get errorCode(): typeof ERROR_CODE {
+    return ERROR_CODE;
+  }
+
   constructor(mobileNumber: string) {
     super(
       httpStatus.BAD_REQUEST,
-      "The supplied mobile number could not be validated.",
+      "Your number does not appear to be a real number.",
       {
-        errorCode: "validateMobileNumber.invalidNumber",
+        errorCode: "validateMobileNumber.notReal",
         mobileNumber
       }
     );
@@ -27,6 +35,6 @@ export class InvalidNumberError extends RahaApiError<InvalidNumberErrorBody> {
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, InvalidNumberError.prototype);
+    Object.setPrototypeOf(this, NotRealError.prototype);
   }
 }
