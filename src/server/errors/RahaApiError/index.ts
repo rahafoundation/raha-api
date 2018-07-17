@@ -6,8 +6,11 @@ import { HttpStatusCode } from "../../../shared/types/helpers/http";
  * structure.
  */
 export abstract class RahaApiError<
-  Data extends { errorCode: string }
+  ErrorCode extends string,
+  Data extends { errorCode: ErrorCode }
 > extends HttpApiError<Data> {
+  abstract get errorCode(): ErrorCode;
+
   constructor(statusCode: HttpStatusCode, message: string, data: Data) {
     super(statusCode, message, data);
 
