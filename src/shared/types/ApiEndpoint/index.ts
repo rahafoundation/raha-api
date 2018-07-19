@@ -16,6 +16,7 @@ import {
   SendAppInstallTextApiEndpoint
 } from "../../routes/me/definitions";
 import { ListOperationsApiEndpoint } from "../../routes/operations/definitions";
+import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
 
 /**
  * Canonical name of an endpoint you can query.
@@ -28,7 +29,8 @@ export enum ApiEndpointName {
   MINT = "MINT",
   GIVE = "GIVE",
   VALIDATE_MOBILE_NUMBER = "VALIDATE_MOBILE_NUMBER",
-  SEND_APP_INSTALL_TEXT = "SEND_APP_INSTALL_TEXT"
+  SEND_APP_INSTALL_TEXT = "SEND_APP_INSTALL_TEXT",
+  SSO_DISCOURSE = "SSO_DISCOURSE"
 }
 
 export enum ApiEndpointUri {
@@ -39,7 +41,8 @@ export enum ApiEndpointUri {
   MINT = "me/mint",
   GIVE = "members/:memberId/give",
   VALIDATE_MOBILE_NUMBER = "me/validateMobileNumber",
-  SEND_APP_INSTALL_TEXT = "me/sendAppInstallText"
+  SEND_APP_INSTALL_TEXT = "me/sendAppInstallText",
+  SSO_DISCOURSE = "sso/discourse"
 }
 
 /**
@@ -71,7 +74,8 @@ export type ApiEndpoint =
   | GiveApiEndpoint
   | MintApiEndpoint
   | ValidateMobileNumberApiEndpoint
-  | SendAppInstallTextApiEndpoint;
+  | SendAppInstallTextApiEndpoint
+  | SSODiscourseApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";

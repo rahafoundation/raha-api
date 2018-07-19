@@ -16,6 +16,7 @@ import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
 import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
+import * as ssoRoutes from "./routes/sso";
 
 import { config } from "./config/config";
 import {
@@ -37,6 +38,7 @@ import {
   validateMobileNumberApiLocation,
   sendAppInstallApiTextLocation
 } from "../shared/routes/me/definitions";
+import { ssoDiscourseApiLocation } from "../shared/routes/sso/definitions";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const credentialsPathArg =
@@ -130,6 +132,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: sendAppInstallApiTextLocation,
     handler: meRoutes.sendAppInstallText(config)
+  },
+  {
+    location: ssoDiscourseApiLocation,
+    handler: ssoRoutes.ssoDiscourse(config, membersCollection)
   }
 ];
 

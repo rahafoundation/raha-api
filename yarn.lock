@@ -925,6 +925,10 @@ dir-glob@^2.0.0:
     arrify "^1.0.1"
     path-type "^3.0.0"
 
+discourse-sso@rahafoundation/discourse_sso_node:
+  version "1.0.3"
+  resolved "https://codeload.github.com/rahafoundation/discourse_sso_node/tar.gz/bc12549a86b73a40d1a506fd5a3e67e509abd6d7"
+
 dot-prop@^4.1.0:
   version "4.2.0"
   resolved "https://registry.npmjs.org/dot-prop/-/dot-prop-4.2.0.tgz#1f19e0c2e1aa0e32797c49799f2837ac6af69c57"
