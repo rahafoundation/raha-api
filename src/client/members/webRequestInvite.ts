@@ -1,8 +1,8 @@
 import { MemberId } from "../../shared/models/identifiers";
 import {
-  RequestInviteApiEndpoint,
-  RequestInviteApiCall,
-  requestInviteApiLocation
+  WebRequestInviteApiEndpoint,
+  WebRequestInviteApiCall,
+  webRequestInviteApiLocation
 } from "../../shared/routes/members/definitions";
 
 import { callApi } from "../callApi";
@@ -15,7 +15,7 @@ import { callApi } from "../callApi";
  * existing member
  * @param username New username for the new member. Must be unique
  */
-export function requestInvite(
+export function webRequestInvite(
   apiBase: string,
   authToken: string,
   memberId: MemberId,
@@ -23,12 +23,12 @@ export function requestInvite(
   videoUrl: string,
   username: string
 ) {
-  const apiCall: RequestInviteApiCall = {
-    location: requestInviteApiLocation,
+  const apiCall: WebRequestInviteApiCall = {
+    location: webRequestInviteApiLocation,
     request: {
       params: { memberId },
       body: { fullName, videoUrl, username }
     }
   };
-  return callApi<RequestInviteApiEndpoint>(apiBase, apiCall, authToken);
+  return callApi<WebRequestInviteApiEndpoint>(apiBase, apiCall, authToken);
 }

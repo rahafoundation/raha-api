@@ -29,7 +29,7 @@ import { ApiLocation } from "../shared/types/ApiEndpoint/ApiCall";
 import { listOperationsApiLocation } from "../shared/routes/operations/definitions";
 import {
   trustMemberApiLocation,
-  requestInviteApiLocation,
+  webRequestInviteApiLocation,
   giveApiLocation
 } from "../shared/routes/members/definitions";
 import {
@@ -104,8 +104,8 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: membersRoutes.trust(db, membersCollection, operationsCollection)
   },
   {
-    location: requestInviteApiLocation,
-    handler: membersRoutes.requestInvite(
+    location: webRequestInviteApiLocation,
+    handler: membersRoutes.webRequestInvite(
       config,
       storage,
       coconutApiKey,

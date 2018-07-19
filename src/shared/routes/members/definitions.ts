@@ -18,32 +18,32 @@ import { ApiLocationDefinition } from "../../types/ApiEndpoint/ApiCall";
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration
  */
-export type RequestInviteApiLocation = ApiLocationDefinition<
-  ApiEndpointUri.REQUEST_INVITE,
+export type WebRequestInviteApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.WEB_REQUEST_INVITE,
   HttpVerb.POST,
   true
 >;
-export const requestInviteApiLocation: RequestInviteApiLocation = {
-  uri: ApiEndpointUri.REQUEST_INVITE,
+export const webRequestInviteApiLocation: WebRequestInviteApiLocation = {
+  uri: ApiEndpointUri.WEB_REQUEST_INVITE,
   method: HttpVerb.POST,
   authenticated: true
 };
-export type RequestInviteApiCall = ApiCallDefinition<
-  RequestInviteApiLocation["uri"],
-  RequestInviteApiLocation["method"],
-  RequestInviteApiLocation["authenticated"],
+export type WebRequestInviteApiCall = ApiCallDefinition<
+  WebRequestInviteApiLocation["uri"],
+  WebRequestInviteApiLocation["method"],
+  WebRequestInviteApiLocation["authenticated"],
   { memberId: MemberId },
   { fullName: string; videoUrl: string; username: string }
 >;
-export type RequestInviteApiResponse = ApiResponseDefinition<
+export type WebRequestInviteApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
 >;
 
-export type RequestInviteApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.REQUEST_INVITE,
-  RequestInviteApiCall,
-  RequestInviteApiResponse
+export type WebRequestInviteApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.WEB_REQUEST_INVITE,
+  WebRequestInviteApiCall,
+  WebRequestInviteApiResponse
 >;
 
 /*

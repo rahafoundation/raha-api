@@ -21,7 +21,7 @@ import { getMemberById } from "../../../shared/models/Member";
 import { Context } from "koa";
 import {
   GiveApiEndpoint,
-  RequestInviteApiEndpoint,
+  WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint
 } from "../../../shared/routes/members/definitions";
 import { HttpApiError } from "../../../shared/errors/HttpApiError";
@@ -213,14 +213,14 @@ export const uploadVideo = (
   ctx.status = 201;
 };
 
-export const requestInvite = (
+export const webRequestInvite = (
   config: Config,
   storage: BucketStorage,
   coconutApiKey: string,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
-  createApiRoute<RequestInviteApiEndpoint>(
+  createApiRoute<WebRequestInviteApiEndpoint>(
     async (call, loggedInMemberToken) => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMemberRef = membersCollection.doc(loggedInUid);

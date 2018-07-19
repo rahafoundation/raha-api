@@ -6,7 +6,7 @@ import { ApiResponse } from "./ApiResponse";
 
 import {
   GiveApiEndpoint,
-  RequestInviteApiEndpoint,
+  WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint
 } from "../../routes/members/definitions";
 import {
@@ -24,7 +24,7 @@ import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
 export enum ApiEndpointName {
   TRUST_MEMBER = "TRUST_MEMBER",
   GET_OPERATIONS = "GET_OPERATIONS",
-  REQUEST_INVITE = "REQUEST_INVITE",
+  WEB_REQUEST_INVITE = "WEB_REQUEST_INVITE",
   SEND_INVITE = "SEND_INVITE",
   MINT = "MINT",
   GIVE = "GIVE",
@@ -36,7 +36,7 @@ export enum ApiEndpointName {
 export enum ApiEndpointUri {
   TRUST_MEMBER = "members/:memberId/trust",
   GET_OPERATIONS = "operations",
-  REQUEST_INVITE = "members/:memberId/request_invite",
+  WEB_REQUEST_INVITE = "members/:memberId/web_request_invite",
   SEND_INVITE = "me/send_invite",
   MINT = "me/mint",
   GIVE = "members/:memberId/give",
@@ -69,7 +69,7 @@ export interface ApiEndpointDefinition<
 export type ApiEndpoint =
   | TrustMemberApiEndpoint
   | ListOperationsApiEndpoint
-  | RequestInviteApiEndpoint
+  | WebRequestInviteApiEndpoint
   | SendInviteApiEndpoint
   | GiveApiEndpoint
   | MintApiEndpoint
