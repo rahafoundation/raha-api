@@ -1,6 +1,5 @@
 import { URL } from "url";
 import Big from "big.js";
-import { EnumValues } from "enum-values";
 import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 
