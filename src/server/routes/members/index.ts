@@ -22,7 +22,8 @@ import { Context } from "koa";
 import {
   GiveApiEndpoint,
   WebRequestInviteApiEndpoint,
-  TrustMemberApiEndpoint
+  TrustMemberApiEndpoint,
+  RequestInviteApiEndpoint
 } from "../../../shared/routes/members/definitions";
 import { HttpApiError } from "../../../shared/errors/HttpApiError";
 import { AlreadyRequestedError } from "../../../shared/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
@@ -289,7 +290,7 @@ export const requestInvite = (
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
-  createApiRoute<WebRequestInviteApiEndpoint>(
+  createApiRoute<RequestInviteApiEndpoint>(
     async (call, loggedInMemberToken) => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMemberRef = membersCollection.doc(loggedInUid);

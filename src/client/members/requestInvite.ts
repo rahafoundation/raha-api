@@ -15,7 +15,7 @@ import { callApi } from "../callApi";
  * existing member
  * @param username New username for the new member. Must be unique
  */
-export function webRequestInvite(
+export function requestInvite(
   apiBase: string,
   authToken: string,
   memberId: MemberId,
