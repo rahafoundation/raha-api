@@ -49,6 +49,37 @@ export type WebRequestInviteApiEndpoint = ApiEndpointDefinition<
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration
  */
+export type RequestInviteApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.REQUEST_INVITE,
+  HttpVerb.POST,
+  true
+>;
+export const requestInviteApiLocation: RequestInviteApiLocation = {
+  uri: ApiEndpointUri.REQUEST_INVITE,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type RequestInviteApiCall = ApiCallDefinition<
+  RequestInviteApiLocation["uri"],
+  RequestInviteApiLocation["method"],
+  RequestInviteApiLocation["authenticated"],
+  { memberId: MemberId },
+  { fullName: string; videoUrl: string; username: string }
+>;
+export type RequestInviteApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+
+export type RequestInviteApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.REQUEST_INVITE,
+  RequestInviteApiCall,
+  RequestInviteApiResponse
+>;
+
+/*
+ * TODO: find a better way to narrow the types precisely than this repetitive type declaration
+ */
 export type TrustMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.TRUST_MEMBER,
   HttpVerb.POST,

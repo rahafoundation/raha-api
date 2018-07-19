@@ -30,7 +30,8 @@ import { listOperationsApiLocation } from "../shared/routes/operations/definitio
 import {
   trustMemberApiLocation,
   webRequestInviteApiLocation,
-  giveApiLocation
+  giveApiLocation,
+  requestInviteApiLocation
 } from "../shared/routes/members/definitions";
 import {
   sendInviteApiLocation,
@@ -106,6 +107,16 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: webRequestInviteApiLocation,
     handler: membersRoutes.webRequestInvite(
+      config,
+      storage,
+      coconutApiKey,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  {
+    location: requestInviteApiLocation,
+    handler: membersRoutes.requestInvite(
       config,
       storage,
       coconutApiKey,
