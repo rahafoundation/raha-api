@@ -1,8 +1,8 @@
 import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
-import { MintType } from "../../../../../shared/models/Operation";
-import { EnumValues } from "../../../../../../node_modules/enum-values";
+import { MintType } from "../../../../models/Operation";
+import { EnumValues } from "enum-values";
 
 export const ERROR_CODE = "mint.invalidType";
 export interface MintInvalidTypeErrorBody {

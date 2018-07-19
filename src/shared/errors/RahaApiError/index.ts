@@ -1,5 +1,5 @@
 import { HttpApiError } from "../HttpApiError";
-import { HttpStatusCode } from "../../../shared/types/helpers/http";
+import { HttpStatusCode } from "../../types/helpers/http";
 
 /**
  * Error that corresponds to a particular Raha API error code and response

@@ -1,7 +1,7 @@
 import * as httpStatus from "http-status";
 
 import { RahaApiError } from ".";
-import { getHttpStatusText } from "../../../shared/types/helpers/http";
+import { getHttpStatusText } from "../../types/helpers/http";
 
 export const ERROR_CODE = "unauthorized";
 export interface UnauthorizedErrorBody {

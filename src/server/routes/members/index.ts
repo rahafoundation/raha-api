@@ -21,8 +21,9 @@ import { getMemberById } from "../../../shared/models/Member";
 import { Context } from "koa";
 import {
   GiveApiEndpoint,
-  RequestInviteApiEndpoint,
-  TrustMemberApiEndpoint
+  WebRequestInviteApiEndpoint,
+  TrustMemberApiEndpoint,
+  RequestInviteApiEndpoint
 } from "../../../shared/routes/members/definitions";
 import { HttpApiError } from "../../../shared/errors/HttpApiError";
 import { AlreadyRequestedError } from "../../../shared/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
@@ -212,6 +213,75 @@ export const uploadVideo = (
 
   ctx.status = 201;
 };
+
+export const webRequestInvite = (
+  config: Config,
+  storage: BucketStorage,
+  coconutApiKey: string,
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference
+) =>
+  createApiRoute<WebRequestInviteApiEndpoint>(
+    async (call, loggedInMemberToken) => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMemberRef = membersCollection.doc(loggedInUid);
+
+      if ((await loggedInMemberRef.get()).exists) {
+        throw new AlreadyRequestedError();
+      }
+
+      const { username, fullName } = call.body;
+      const requestingFromId = call.params.memberId;
+      const requestingFromMember = await getMemberById(
+        membersCollection,
+        requestingFromId
+      );
+      if (!requestingFromMember) {
+        throw new NotFoundError(requestingFromId);
+      }
+
+      const newOperation: OperationToBeCreated = {
+        creator_uid: loggedInUid,
+        op_code: OperationType.REQUEST_INVITE,
+        data: {
+          username,
+          full_name: fullName,
+          to_uid: requestingFromId
+          // TODO: Eventually we need to extract file extension from this or a similar parameter.
+          // Currently we only handle videos uploaded as invite.mp4.
+          // video_url: ctx.request.body.videoUrl
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newMember = {
+        username,
+        full_name: fullName,
+        request_invite_from_uid: requestingFromId,
+        invite_confirmed: false,
+        created_at: firestore.FieldValue.serverTimestamp(),
+        request_invite_block_at: null,
+        request_invite_block_seq: null,
+        request_invite_op_seq: null
+      };
+
+      createCoconutVideoEncodingJob(
+        config,
+        storage,
+        coconutApiKey,
+        loggedInUid
+      );
+
+      const newOperationDoc = await operationsCollection.add(newOperation);
+      await loggedInMemberRef.create(newMember);
+      return {
+        body: {
+          ...(await newOperationDoc.get()).data(),
+          id: newOperationDoc.id
+        } as Operation,
+        status: 201
+      };
+    }
+  );
 
 export const requestInvite = (
   config: Config,
