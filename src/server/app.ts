@@ -119,7 +119,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: membersRoutes.requestInvite(
       config,
       storage,
-      coconutApiKey,
       membersCollection,
       operationsCollection
     )
