@@ -48,6 +48,18 @@ function getPrivateVideoRef(
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
+function getInviteVideoRef(
+  config: Config,
+  storage: BucketStorage,
+  videoToken: string
+): Storage.File {
+  // TODO: this is a quick hack to make the types work out because test and prod
+  // use different storage backends; see the corresponding TODO in app.ts
+  return (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`invite-video/${videoToken}/invite.mp4`);
+}
+
 function getPublicVideoRef(
   config: Config,
   storage: BucketStorage,
@@ -103,6 +115,28 @@ async function createCoconutVideoEncodingJob(
       }
     }
   );
+}
+
+async function moveInviteVideoToPublicVideo(
+  config: Config,
+  storage: BucketStorage,
+  memberUid: string,
+  videoToken?: string
+) {
+  const publicVideoRef = getPublicVideoRef(config, storage, memberUid);
+  if ((await publicVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
+    );
+  }
+
+  const inviteVideoRef = videoToken
+    ? getInviteVideoRef(config, storage, videoToken)
+    : getPrivateVideoRef(config, storage, memberUid);
+
+  await inviteVideoRef.move(publicVideoRef);
 }
 
 /**
@@ -286,7 +320,6 @@ export const webRequestInvite = (
 export const requestInvite = (
   config: Config,
   storage: BucketStorage,
-  coconutApiKey: string,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
@@ -299,7 +332,7 @@ export const requestInvite = (
         throw new AlreadyRequestedError();
       }
 
-      const { username, fullName } = call.body;
+      const { username, fullName, videoToken } = call.body;
       const requestingFromId = call.params.memberId;
       const requestingFromMember = await getMemberById(
         membersCollection,
@@ -316,9 +349,6 @@ export const requestInvite = (
           username,
           full_name: fullName,
           to_uid: requestingFromId
-          // TODO: Eventually we need to extract file extension from this or a similar parameter.
-          // Currently we only handle videos uploaded as invite.mp4.
-          // video_url: ctx.request.body.videoUrl
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
@@ -333,12 +363,7 @@ export const requestInvite = (
         request_invite_op_seq: null
       };
 
-      createCoconutVideoEncodingJob(
-        config,
-        storage,
-        coconutApiKey,
-        loggedInUid
-      );
+      moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
 
       const newOperationDoc = await operationsCollection.add(newOperation);
       await loggedInMemberRef.create(newMember);
