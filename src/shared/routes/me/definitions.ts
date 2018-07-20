@@ -111,7 +111,7 @@ export type SendAppInstallTextApiLocation = ApiLocationDefinition<
   HttpVerb.POST,
   false
 >;
-export const sendAppInstallApiTextLocation: SendAppInstallTextApiLocation = {
+export const sendAppInstallTextApiLocation: SendAppInstallTextApiLocation = {
   uri: ApiEndpointUri.SEND_APP_INSTALL_TEXT,
   method: HttpVerb.POST,
   authenticated: false
