@@ -7,10 +7,12 @@ import {
 import { callApi } from "../callApi";
 
 /**
- * API call that sends a text to a mobile number with links to install the app.
- * @param mobileNumber E.164 formatted mobile number to send the text to.
+ * Validates the SSO payload and signature sent by Discourse and returns
+ * the link for the client to use to redirect back to Discourse.
+ * @param ssoRequestPayload The SSO payload sent by Discourse.
+ * @param ssoRequestSignature The SSO signature sent by Discourse.
  */
-export function sendAppInstallText(
+export function getSSODiscourseRedirect(
   apiBase: string,
   authToken: string,
   ssoRequestPayload: string,
