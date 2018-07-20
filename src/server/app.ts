@@ -36,7 +36,7 @@ import {
   sendInviteApiLocation,
   mintApiLocation,
   validateMobileNumberApiLocation,
-  sendAppInstallApiTextLocation
+  sendAppInstallTextApiLocation
 } from "../shared/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "../shared/routes/sso/definitions";
 
@@ -130,7 +130,7 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: meRoutes.validateMobileNumber(config)
   },
   {
-    location: sendAppInstallApiTextLocation,
+    location: sendAppInstallTextApiLocation,
     handler: meRoutes.sendAppInstallText(config)
   },
   {
