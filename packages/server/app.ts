@@ -41,9 +41,9 @@ import {
 } from "@raha/api-shared/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/routes/sso/definitions";
 
-const isTestEnv = process.env.NODE_ENV === "test";
+const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
-  isTestEnv && process.argv.length > 2 ? process.argv[2] : undefined;
+  isDevEnv && process.argv.length > 2 ? process.argv[2] : undefined;
 const credentialsPath = credentialsPathArg
   ? path.isAbsolute(credentialsPathArg)
     ? credentialsPathArg
