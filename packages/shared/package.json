@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/big.js": "^4.0.4",
     "@types/url-join": "^0.8.2",
+    "np": "^3.0.4",
     "prettier": "^1.12.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.10.0",
