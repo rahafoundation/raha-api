@@ -9,7 +9,8 @@
     "rootDir": "./",
     "strict": true,
     "noImplicitAny": true,
-    "declaration": true
+    "declaration": true,
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "dist"]
 }
