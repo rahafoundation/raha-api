@@ -59,7 +59,7 @@ export type RequestInviteApiCall = ApiCallDefinition<
   RequestInviteApiLocation["method"],
   RequestInviteApiLocation["authenticated"],
   { memberId: MemberId },
-  { fullName: string; videoUrl: string; username: string }
+  { fullName: string; username: string; videoToken?: string }
 >;
 export type RequestInviteApiResponse = ApiResponseDefinition<
   201,

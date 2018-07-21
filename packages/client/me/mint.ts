@@ -35,7 +35,7 @@ export async function mint(
 ) {
   const body: MintPayload = {
     ...params,
-    amount: params.amount.toFixed(2)
+    amount: params.amount.round(2, 0).toString()
   };
 
   const apiCall: MintApiCall = {
