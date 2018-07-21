@@ -9,6 +9,9 @@
   "author": "Raha",
   "license": "Apache-2.0",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@raha/api-shared": "^0.0.1",
     "big.js": "^5.0.3",

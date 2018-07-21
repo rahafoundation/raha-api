@@ -9,6 +9,9 @@
   "author": "Raha",
   "license": "Apache-2.0",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "enum-values": "^1.2.1",
     "http-status": "^1.2.0"
