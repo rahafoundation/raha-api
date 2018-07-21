@@ -1,0 +1,29 @@
+{
+  "name": "@raha/api",
+  "version": "0.0.12",
+  "description": "API Client for Raha",
+  "main": "dist/index.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "author": "Raha",
+  "license": "Apache-2.0",
+  "private": false,
+  "dependencies": {
+    "@raha/api-shared": "^0.0.2",
+    "big.js": "^5.0.3",
+    "url-join": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/big.js": "^4.0.4",
+    "@types/url-join": "^0.8.2",
+    "prettier": "^1.12.1",
+    "tslint": "^5.9.1",
+    "tslint-config-prettier": "^1.10.0",
+    "typescript": "^3.0.0-dev.20180711"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc && cp ./package.json dist",
+    "prepublishOnly": "if [ $(basename \"$PWD\") != \"dist\" ]; then echo \"Must publish dist/ directory; after running 'yarn build' in the client/ directory, run 'npm publish dist'. Aborting\" && false; fi"
+  }
+}

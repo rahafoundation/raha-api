@@ -1,0 +1,28 @@
+{
+  "name": "@raha/api-shared",
+  "version": "0.0.2",
+  "description": "Shared code between the Raha API and client library.",
+  "main": "dist/index.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "author": "Raha",
+  "license": "Apache-2.0",
+  "private": false,
+  "dependencies": {
+    "enum-values": "^1.2.1",
+    "http-status": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/big.js": "^4.0.4",
+    "@types/url-join": "^0.8.2",
+    "prettier": "^1.12.1",
+    "tslint": "^5.9.1",
+    "tslint-config-prettier": "^1.10.0",
+    "typescript": "^3.0.0-dev.20180711"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc && cp ./package.json dist",
+    "prepublishOnly": "if [ $(basename \"$PWD\") != \"dist\" ]; then echo \"Must publish dist/ directory; after running 'yarn build' in the shared/ directory, run 'npm publish dist'. Aborting\" && false; fi"
+  }
+}
