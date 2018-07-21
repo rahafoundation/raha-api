@@ -1,6 +1,6 @@
 {
   "name": "@raha/api-shared",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Shared code between the Raha API and client library.",
   "main": "index.js",
   "files": [
@@ -21,7 +21,6 @@
     "@types/jest": "^23.3.0",
     "@types/url-join": "^0.8.2",
     "jest": "^23.4.1",
-    "np": "^3.0.4",
     "prettier": "^1.12.1",
     "ts-jest": "^23.0.1",
     "tslint": "^5.9.1",
