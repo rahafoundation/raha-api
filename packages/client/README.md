@@ -11,7 +11,7 @@ yarn add @raha/api
 ## Usage
 
 ```typescript
-import { list } from "@raha/api/client/operations/list";
+import { list } from "@raha/api/operations/list";
 const API_BASE = "https://raha-5395e.appspot.com/api/";
 
 list(API_BASE).then(({ status, body }) => {
@@ -21,6 +21,12 @@ list(API_BASE).then(({ status, body }) => {
   body.map(operation => console.log(JSON.stringify(operation))); // or do something else.
 });
 ```
+
+## Publishing the library
+
+1.  Run `npm version <patch|minor|major>` and then `git push --tags`.
+1.  Run `yarn build` in the `client/` directory
+1.  Run `npm publish dist` to publish the built code.
 
 ## Page weight
 

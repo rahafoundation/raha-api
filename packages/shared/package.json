@@ -1,6 +1,6 @@
 {
   "name": "@raha/api-shared",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Shared code between the Raha API and client library.",
   "main": "dist/index.js",
   "files": [
@@ -23,6 +23,6 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc && cp ./package.json dist",
-    "prepublishOnly": "if [ $(basename \"$PWD\") != \"dist\" ]; then echo \"Must publish dist/ directory; after running 'yarn build' in the shared/ directory, run 'npm publish dist'. Aborting\" && false; fi"
+    "prepublishOnly": "echo \"Ensure you've run 'npm version <patch|minor|major>' and then 'yarn build' in the shared/ directory before running this command.\" && if [ $(basename \"$PWD\") != \"dist\" ]; then echo \"Error: Must publish dist/ directory; i.e. 'npm publish dist'. Aborting\" && false; fi"
   }
 }
