@@ -27,7 +27,8 @@
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ./package.json dist",
-    "prepublishOnly": "echo \"Ensure you've run 'npm version <patch|minor|major>' and then 'yarn build' in the client/ directory before running this command.\" && if [ $(basename \"$PWD\") != \"dist\" ]; then echo \"Error: Must publish dist/ directory; i.e. 'npm publish dist'. Aborting\" && false; fi"
+    "build": "rm -rf dist && tsc",
+    "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
+    "pub": "yarn build && np --contents dist"
   }
 }
