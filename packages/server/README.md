@@ -43,3 +43,12 @@ Ask @rahulgi for the key.
 ## Deploy Instructions
 
 1.  Deploy: `yarn deploy-<prod/test>`
+
+## Testing
+
+Run `yarn test`.
+
+This project uses `jest` for testing. Any file that ends in `.test.(j|t)sx?` is
+treated as a test.
+
+Tests are currently sparse/nonexistent; this must be fixed!

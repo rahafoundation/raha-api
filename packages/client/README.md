@@ -28,6 +28,14 @@ list(API_BASE).then(({ status, body }) => {
 1.  Run `yarn build` in the `client/` directory
 1.  Run `npm publish dist` to publish the built code.
 
+## Testing
+
+This project uses `jest` for testing.
+
+Any file that ends in `.test.(j|t)sx?` is treated as a test.
+
+Tests are currently sparse/nonexistent; this must be fixed!
+
 ## Page weight
 
 You probably want to use some tree-shaking so that you don't include unnecessary
