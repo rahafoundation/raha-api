@@ -33,5 +33,18 @@
     "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
     "pub": "yarn build && np --contents dist",
     "test": "jest"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }
