@@ -29,16 +29,16 @@
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc -p \"tsconfig.build.json\" && cp ./README.md ./LICENSE dist/",
     "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
-    "pub": "yarn build && np --contents dist",
+    "pub": "yarn build && yarn version && ts-node ./scripts/publish.ts",
     "test": "jest"
   },
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testRegex": "[^/]+[.]test.(j|t)sx?$",
     "moduleFileExtensions": [
       "ts",
       "tsx",
