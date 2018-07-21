@@ -11,9 +11,13 @@ yarn add @raha/api-shared
 
 ## Publishing the library
 
-1.  Run `npm version <patch|minor|major>` and then `git push --tags`.
-1.  Run `yarn build` in the `shared/` directory
-1.  Run `npm publish dist` to publish the built code.
+Run this command:
+
+```bash
+yarn pub
+```
+
+Please follow [semver](https://semver.org) when choosing a version number.
 
 ## Testing
 
