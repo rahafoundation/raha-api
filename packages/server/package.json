@@ -31,7 +31,7 @@
   "scripts": {
     "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
     "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
-    "build": "rm -rf dist && tsc && echo DO_NOT_COMMIT* > ./dist/.npmignore",
+    "build": "rm -rf dist && tsc",
     "start": "node dist/app.js",
     "start:dev": "NODE_ENV=development node dist/app.js",
     "test": "jest",
