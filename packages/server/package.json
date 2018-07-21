@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
-    "@google-cloud/firestore": "^0.14.1",
+    "@google-cloud/firestore": "^0.15.4",
     "@google-cloud/storage": "^1.6.0",
     "@koa/cors": "2",
     "@raha/api-shared": "^0.0.5",
