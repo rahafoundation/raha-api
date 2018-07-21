@@ -307,7 +307,9 @@ export const sendAppInstallText = (config: Config) =>
     try {
       await twilioClient.messages.create({
         body:
-          "Hi! You can download the Raha apps at the following links.\nfor Android: <PLACEHOLDER>\nfor iOS: <PLACEHOLDER>",
+          "Hi! You can download the Raha app at the following links.\n" +
+          " Android: https://play.google.com/store/apps/details?id=app.raha.mobile\n" +
+          " iOS: Please hang tight! The iOS app on the way.",
         to: mobileNumber,
         from: config.twilio.fromNumber,
         // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
