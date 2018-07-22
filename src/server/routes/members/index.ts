@@ -290,7 +290,7 @@ export const webRequestInvite = (
       const newMember = {
         username,
         full_name: fullName,
-        request_invite_from_uid: requestingFromId,
+        request_invite_from_member_id: requestingFromId,
         invite_confirmed: false,
         created_at: firestore.FieldValue.serverTimestamp(),
         request_invite_block_at: null,
@@ -355,7 +355,7 @@ export const requestInvite = (
       const newMember = {
         username,
         full_name: fullName,
-        request_invite_from_uid: requestingFromId,
+        request_invite_from_member_id: requestingFromId,
         invite_confirmed: false,
         created_at: firestore.FieldValue.serverTimestamp(),
         request_invite_block_at: null,
