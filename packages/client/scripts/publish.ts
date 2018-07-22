@@ -1,7 +1,8 @@
+// tslint:disable:no-console
 import * as fs from "fs";
 import * as path from "path";
 
-const packageJson = require("../package.json");
+import packageJson = require("../package.json");
 import { spawnSync } from "child_process";
 
 const { scripts, ...restPackageJson } = packageJson;

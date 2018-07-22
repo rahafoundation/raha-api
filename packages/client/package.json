@@ -29,9 +29,9 @@
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p \"tsconfig.json\" && cp ./README.md ../../LICENSE dist/",
+    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
     "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
-    "pub": "yarn build && yarn version && node ./scripts/publish.js",
+    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish.ts",
     "test": "jest"
   },
   "jest": {
