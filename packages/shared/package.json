@@ -1,6 +1,6 @@
 {
   "name": "@raha/api-shared",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Shared code between the Raha API and client library.",
   "main": "index.js",
   "files": [
