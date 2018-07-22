@@ -33,7 +33,7 @@
     "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
     "build": "rm -rf dist && tsc",
     "start": "node dist/app.js",
-    "start:dev": "NODE_ENV=development nodemon --watch 'src/' --ignore 'src/**/*.test.ts' --exec 'ts-node' src/app.ts",
+    "start:dev": "NODE_ENV=development nodemon --watch 'src/' --ignore 'src/**/*.test.ts' --exec 'ts-node -r tsconfig-paths/register -P tsconfig.ts-node.json' src/app.ts",
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
     "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
@@ -49,9 +49,11 @@
     "nodemon": "^1.18.3",
     "prettier": "^1.12.1",
     "ts-jest": "^23.0.1",
+    "ts-node": "^7.0.0",
+    "tsconfig-paths": "^3.4.2",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.10.0",
-    "typescript": "^3.0.0-dev.20180711"
+    "typescript": "^2.9.2"
   },
   "jest": {
     "transform": {

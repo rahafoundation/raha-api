@@ -1,16 +1,9 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
-    "moduleResolution": "node",
     "lib": ["es2018", "dom"],
-    "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./",
-    "strict": true,
-    "noImplicitAny": true,
-    "declaration": true,
-    "resolveJsonModule": true
+    "rootDirs": ["./src", "../shared/src"]
   },
   "exclude": ["node_modules", "dist"]
 }
