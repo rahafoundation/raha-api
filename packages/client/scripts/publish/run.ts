@@ -2,19 +2,19 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import packageJson = require("../package.json");
+import packageJson = require("../../package.json");
 import { spawnSync } from "child_process";
 
 const { scripts, ...restPackageJson } = packageJson;
 const { prepublishOnly, ...newScripts } = packageJson.scripts;
 
-const distDir = path.join(__dirname, "..", "dist");
+const distDir = path.join(__dirname, "..", "..", "dist");
 
 console.info("Writing new package json in `dist/`...");
 const newPackageJson = { ...restPackageJson, ...newScripts };
 fs.writeFileSync(
   path.join(distDir, "package.json"),
-  JSON.stringify(newPackageJson)
+  JSON.stringify(newPackageJson, null, 2)
 );
 
 console.info("Written. Publishing `dist/`");

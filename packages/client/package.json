@@ -31,7 +31,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
     "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
-    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish.ts",
+    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish/run.ts",
     "test": "jest"
   },
   "jest": {
