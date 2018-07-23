@@ -1,0 +1,50 @@
+{
+  "name": "@raha/api-shared",
+  "version": "0.0.6",
+  "description": "Shared code between the Raha API and client library.",
+  "main": "index.js",
+  "files": [
+    "**/*"
+  ],
+  "author": "Raha",
+  "license": "Apache-2.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "enum-values": "^1.2.1",
+    "http-status": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/big.js": "^4.0.4",
+    "@types/jest": "^23.3.0",
+    "@types/url-join": "^0.8.2",
+    "jest": "^23.4.1",
+    "prettier": "^1.12.1",
+    "ts-jest": "^23.0.1",
+    "tslint": "^5.9.1",
+    "tslint-config-prettier": "^1.10.0",
+    "typescript": "^3.0.0-dev.20180711"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
+    "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
+    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish/run.ts",
+    "test": "jest"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "[^/]+[.]test.(j|t)sx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}

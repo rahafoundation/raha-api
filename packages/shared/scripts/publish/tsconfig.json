@@ -1,0 +1,4 @@
+// this is here to make vscode parse the run script properly
+{
+  "extends": "../../tsconfig.publish.json"
+}

@@ -1,52 +1,6 @@
 {
-  "name": "@raha/api",
-  "version": "0.0.14",
-  "description": "Backend services for Raha.",
-  "main": "dist/app.js",
-  "files": [
-    "dist/**/*"
-  ],
-  "author": "Raha",
-  "license": "Apache-2.0",
-  "private": false,
-  "dependencies": {
-    "@google-cloud/firestore": "^0.14.1",
-    "@google-cloud/storage": "^1.6.0",
-    "@koa/cors": "2",
-    "@sendgrid/mail": "^6.2.1",
-    "@types/big.js": "^4.0.4",
-    "@types/url-join": "^0.8.2",
-    "async-busboy": "^0.6.2",
-    "big.js": "^5.0.3",
-    "coconutjs": "^2.2.0",
-    "discourse-sso": "rahafoundation/discourse_sso_node",
-    "enum-values": "^1.2.1",
-    "firebase-admin": "^5.12.0",
-    "http-status": "^1.2.0",
-    "koa": "^2.5.0",
-    "koa-bodyparser": "^4.2.0",
-    "koa-router": "^7.4.0",
-    "twilio": "^3.17.6",
-    "url-join": "^4.0.0"
-  },
-  "scripts": {
-    "use-prod-config": "cp src/server/config/prod.config.ts src/server/config/config.ts",
-    "use-test-config": "cp src/server/config/test.config.ts src/server/config/config.ts",
-    "build": "rm -rf dist && tsc && echo DO_NOT_COMMIT* > ./dist/.npmignore",
-    "start": "node dist/server/app.js",
-    "test": "NODE_ENV=test node dist/server/app.js",
-    "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
-    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
-  },
-  "devDependencies": {
-    "@types/koa": "^2.0.45",
-    "@types/koa-bodyparser": "^4.2.0",
-    "@types/koa-router": "^7.0.28",
-    "@types/koa__cors": "^2.2.2",
-    "@types/node": "^9.6.2",
-    "prettier": "^1.12.1",
-    "tslint": "^5.9.1",
-    "tslint-config-prettier": "^1.10.0",
-    "typescript": "^3.0.0-dev.20180711"
-  }
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
 }
