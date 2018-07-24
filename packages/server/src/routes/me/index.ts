@@ -70,27 +70,48 @@ export const sendInvite = (
     // If there is already a videoToken, give them the deeplink format.
     const inviteLink = videoToken
       ? new URL(
-          `/invite/referrer=${loggedInUsername}&token=${videoToken}`,
+          `/invite?r=${loggedInUsername}&t=${videoToken}`,
           `https://raha.app`
         ).toString()
       : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
 
+    const webInstructionsText = `Visit ${inviteLink} to join Raha!`;
+    const webInstructionsHtml = `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`;
+
+    const mobileInstructionsText =
+      "1. Download the app:\n" +
+      "  Android: https://play.google.com/store/apps/details?id=app.raha.mobile" +
+      "  iOS: Please hang tight! The iOS app is on the way." +
+      "\n\n" +
+      `2. Click on your invite link to join: ${inviteLink}`;
+    const mobileInstructionsHtml =
+      "<ol><li>Download the app for <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a>. (Sorry, iOS is on the way!)</li>" +
+      `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
+      "</ol>";
+
+    const instructionsText = videoToken
+      ? mobileInstructionsText
+      : webInstructionsText;
+    const instructionsHtml = videoToken
+      ? mobileInstructionsHtml
+      : webInstructionsHtml;
+
     const msg = {
       to: inviteEmail,
-      from: "invites@raha.io",
+      from: "invites@raha.app",
       subject: `${loggedInFullName} invited you to join Raha!`,
       text:
         "Raha is the foundation for a global universal basic income. " +
         "To ensure that only real humans can join, people must be invited " +
         `by an existing member of the Raha network. ${loggedInFullName} ` +
         "has invited you to join!\n\n" +
-        `Visit ${inviteLink} to join Raha!`,
+        instructionsText,
       html:
         "<span><strong>Raha is the foundation for a global universal basic income.</strong><br /><br />" +
         "To ensure that only real humans can join, people must be invited " +
         `by an existing member of the Raha network. ${loggedInFullName} ` +
         "has invited you to join!</span><br /><br />" +
-        `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`
+        instructionsHtml
     };
     sgMail.send(msg);
 
