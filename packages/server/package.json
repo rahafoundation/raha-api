@@ -32,7 +32,7 @@
     "use-prod-config": "cp src/config/prod.config.ts src/config/config.ts",
     "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
     "build": "rm -rf dist && tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/server/src/app.js",
     "start:dev": "NODE_ENV=development nodemon --watch 'src/' --ignore 'src/**/*.test.ts' --exec 'ts-node -r tsconfig-paths/register -P tsconfig.ts-node.json' src/app.ts",
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
