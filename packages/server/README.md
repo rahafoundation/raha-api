@@ -17,7 +17,7 @@ yarn install
 
 ## Running locally
 
-1.  Run server: `yarn build && yarn test <path to service account credentials>`
+1.  Run server: `yarn start:dev <path to service account credentials>`
 1.  If you don't have service account credentials, follow the instructions at:
     https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app. DO NOT
     COMMIT THESE CREDENTIALS.
