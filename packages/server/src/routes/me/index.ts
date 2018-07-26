@@ -85,7 +85,7 @@ export const sendInvite = (
       "\n\n" +
       `2. Click on your invite link to join: ${inviteLink}`;
     const mobileInstructionsHtml =
-      "<ol><li>Download the app for <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a>. (Sorry, iOS is on the way!)</li>" +
+      "<ol><li>Download the app for <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a>. (Please hang tight! The iOS app is on the way.)</li>" +
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
 
