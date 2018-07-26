@@ -89,6 +89,9 @@ export const sendInvite = (
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
 
+    // We use the existence of the videoToken to determine whether the user is
+    // inviting from mobile or from the web. From mobile, we will always include
+    // a video. If this assumption changes, please update.
     const instructionsText = videoToken
       ? mobileInstructionsText
       : webInstructionsText;
