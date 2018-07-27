@@ -2,10 +2,17 @@
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
 
 export enum OperationType {
+  CREATE_MEMBER = "CREATE_MEMBER",
   REQUEST_INVITE = "REQUEST_INVITE",
   TRUST = "TRUST",
   MINT = "MINT",
   GIVE = "GIVE"
+}
+
+export interface CreateMemberPayload {
+  full_name: string;
+  request_invite_from_member_id?: MemberId;
+  username: MemberUsername;
 }
 export interface RequestInvitePayload {
   full_name: string;
@@ -48,6 +55,15 @@ export interface SavedOperationBase {
   created_at: Date;
 }
 
+interface CreateMemberOperationMetadata {
+  op_code: OperationType.CREATE_MEMBER;
+  data: CreateMemberPayload;
+}
+export type CreateMemberOperation = SavedOperationBase &
+  CreateMemberOperationMetadata;
+export type CreateMemberOperationToBeCreated = ToSaveOperationBase &
+  CreateMemberOperationMetadata;
+
 interface RequestInviteOperationMetadata {
   op_code: OperationType.REQUEST_INVITE;
   data: RequestInvitePayload;
@@ -82,12 +98,14 @@ export type GiveOperationToBeCreated = ToSaveOperationBase &
   GiveOperationMetadata;
 
 export type Operation =
+  | CreateMemberOperation
   | RequestInviteOperation
   | TrustOperation
   | MintOperation
   | GiveOperation;
 
 export type OperationToBeCreated =
+  | CreateMemberOperationToBeCreated
   | RequestInviteOperationToBeCreated
   | TrustOperationToBeCreated
   | MintOperationToBeCreated

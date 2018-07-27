@@ -23,7 +23,8 @@ import {
   GiveApiEndpoint,
   WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint,
-  RequestInviteApiEndpoint
+  RequestInviteApiEndpoint,
+  CreateMemberApiEndpoint
 } from "@raha/api-shared/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/errors/HttpApiError";
 import { AlreadyRequestedError } from "@raha/api-shared/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
@@ -532,6 +533,71 @@ export const give = (
       body: {
         ...(await newOperationReference.get()).data(),
         id: newOperationReference.id
+      } as Operation,
+      status: 201
+    };
+  });
+
+export const createMember = (
+  config: Config,
+  storage: BucketStorage,
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference
+) =>
+  createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
+    const loggedInUid = loggedInMemberToken.uid;
+    const loggedInMemberRef = membersCollection.doc(loggedInUid);
+
+    if ((await loggedInMemberRef.get()).exists) {
+      throw new AlreadyRequestedError();
+    }
+
+    const {
+      username,
+      fullName,
+      videoToken,
+      requestInviteFromMemberId
+    } = call.body;
+    const requestingFromMember = requestInviteFromMemberId
+      ? await getMemberById(membersCollection, requestInviteFromMemberId)
+      : undefined;
+    if (requestInviteFromMemberId && !requestingFromMember) {
+      throw new NotFoundError(requestInviteFromMemberId);
+    }
+
+    const newOperation: OperationToInsert = {
+      creator_uid: loggedInUid,
+      op_code: OperationType.CREATE_MEMBER,
+      data: {
+        username,
+        full_name: fullName,
+        ...(requestInviteFromMemberId
+          ? { request_invite_from_member_id: requestInviteFromMemberId }
+          : {})
+      },
+      created_at: firestore.FieldValue.serverTimestamp()
+    };
+    const newMember = {
+      username,
+      full_name: fullName,
+      ...(requestInviteFromMemberId
+        ? { request_invite_from_member_id: requestInviteFromMemberId }
+        : {}),
+      invite_confirmed: false,
+      created_at: firestore.FieldValue.serverTimestamp(),
+      request_invite_block_at: null,
+      request_invite_block_seq: null,
+      request_invite_op_seq: null
+    };
+
+    moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
+
+    const newOperationDoc = await operationsCollection.add(newOperation);
+    await loggedInMemberRef.create(newMember);
+    return {
+      body: {
+        ...(await newOperationDoc.get()).data(),
+        id: newOperationDoc.id
       } as Operation,
       status: 201
     };
