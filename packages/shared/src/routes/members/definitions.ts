@@ -131,3 +131,36 @@ export type GiveApiEndpoint = ApiEndpointDefinition<
   GiveApiCall,
   GiveApiResponse
 >;
+
+export type CreateMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.CREATE_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const createMemberApiLocation: CreateMemberApiLocation = {
+  uri: ApiEndpointUri.CREATE_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type CreateMemberApiCall = ApiCallDefinition<
+  CreateMemberApiLocation["uri"],
+  CreateMemberApiLocation["method"],
+  CreateMemberApiLocation["authenticated"],
+  void,
+  {
+    fullName: string;
+    videoToken: string;
+    username: string;
+    requestInviteFromMemberId?: string;
+  }
+>;
+export type CreateMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+
+export type CreateMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.CREATE_MEMBER,
+  CreateMemberApiCall,
+  CreateMemberApiResponse
+>;
