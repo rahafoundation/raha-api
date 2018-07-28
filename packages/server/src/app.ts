@@ -31,7 +31,9 @@ import {
   trustMemberApiLocation,
   webRequestInviteApiLocation,
   giveApiLocation,
-  requestInviteApiLocation
+  requestInviteApiLocation,
+  createMemberApiLocation,
+  verifyMemberApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
 import {
   sendInviteApiLocation,
@@ -101,6 +103,20 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: listOperationsApiLocation,
     handler: operationsRoutes.listOperations(operationsCollection)
+  },
+  {
+    location: createMemberApiLocation,
+    handler: membersRoutes.createMember(
+      config,
+      db,
+      storage,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  {
+    location: verifyMemberApiLocation,
+    handler: membersRoutes.verify(db, membersCollection, operationsCollection)
   },
   {
     location: trustMemberApiLocation,

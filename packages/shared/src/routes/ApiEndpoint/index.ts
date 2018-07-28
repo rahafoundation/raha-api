@@ -9,7 +9,8 @@ import {
   WebRequestInviteApiEndpoint,
   RequestInviteApiEndpoint,
   TrustMemberApiEndpoint,
-  CreateMemberApiEndpoint
+  CreateMemberApiEndpoint,
+  VerifyMemberApiEndpoint
 } from "../../routes/members/definitions";
 import {
   MintApiEndpoint,
@@ -34,7 +35,8 @@ export enum ApiEndpointName {
   VALIDATE_MOBILE_NUMBER = "VALIDATE_MOBILE_NUMBER",
   SEND_APP_INSTALL_TEXT = "SEND_APP_INSTALL_TEXT",
   SSO_DISCOURSE = "SSO_DISCOURSE",
-  CREATE_MEMBER = "CREATE_MEMBER"
+  CREATE_MEMBER = "CREATE_MEMBER",
+  VERIFY_MEMBER = "CREATE_MEMBER"
 }
 
 export enum ApiEndpointUri {
@@ -48,7 +50,8 @@ export enum ApiEndpointUri {
   VALIDATE_MOBILE_NUMBER = "me/validateMobileNumber",
   SEND_APP_INSTALL_TEXT = "me/sendAppInstallText",
   SSO_DISCOURSE = "sso/discourse",
-  CREATE_MEMBER = "members/createMember"
+  CREATE_MEMBER = "members/createMember",
+  VERIFY_MEMBER = "members/:memerId/verify"
 }
 
 /**
@@ -83,7 +86,8 @@ export type ApiEndpoint =
   | ValidateMobileNumberApiEndpoint
   | SendAppInstallTextApiEndpoint
   | SSODiscourseApiEndpoint
-  | CreateMemberApiEndpoint;
+  | CreateMemberApiEndpoint
+  | VerifyMemberApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";

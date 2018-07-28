@@ -164,3 +164,33 @@ export type CreateMemberApiEndpoint = ApiEndpointDefinition<
   CreateMemberApiCall,
   CreateMemberApiResponse
 >;
+
+export type VerifyMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.VERIFY_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const verifyMemberApiLocation: VerifyMemberApiLocation = {
+  uri: ApiEndpointUri.VERIFY_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type VerifyMemberApiCall = ApiCallDefinition<
+  VerifyMemberApiLocation["uri"],
+  VerifyMemberApiLocation["method"],
+  VerifyMemberApiLocation["authenticated"],
+  { memberId: string },
+  {
+    videoToken: string;
+  }
+>;
+export type VerifyMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+
+export type VerifyMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.CREATE_MEMBER,
+  VerifyMemberApiCall,
+  VerifyMemberApiResponse
+>;
