@@ -28,7 +28,7 @@
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
+    "build": "rm -rf dist && tsc",
     "prepublishOnly": "yarn build && yarn version",
     "test": "jest"
   },

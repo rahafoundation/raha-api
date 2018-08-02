@@ -29,7 +29,7 @@
     "typescript": "^3.0.1"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
+    "build": "rm -rf dist && tsc",
     "prepublishOnly": "yarn build && yarn version",
     "test": "jest"
   },
