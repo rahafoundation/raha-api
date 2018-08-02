@@ -11,10 +11,14 @@ yarn add @raha/api-shared
 
 ## Publishing the library
 
-Run this command:
+First, ask a maintainer of this library to grant you access to
+`@raha/api-shared` on NPM.
+
+Then, run this command:
 
 ```bash
-yarn pub
+npm login  # log into NPM if you haven't already
+npm publish
 ```
 
 Please follow [semver](https://semver.org) when choosing a version number.

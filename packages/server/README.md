@@ -42,7 +42,21 @@ Ask @rahulgi for the key.
 
 ## Deploy Instructions
 
-1.  Deploy: `yarn deploy-<prod/test>`
+If the changes here depend on changes to `@raha/api` or `@raha/api-shared` (i.e.
+changes to `/packages/client` and `/packages/shared`), ensure:
+
+1.  You publish `/packages/client` and `/packages/shared` first.
+1.  The versions of `@raha/api` and `@raha/api-shared` referenced in
+    `/packages/server/package.json` have been bumped to the newly published
+    versions.
+
+Then, run:
+
+```bash
+yarn deploy-test
+# or
+yarn deploy-prod
+```
 
 ## Testing
 
