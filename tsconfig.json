@@ -2,10 +2,13 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": "./packages",
-    "paths": {
-      "@raha/api/*": ["./client/src/*"],
-      "@raha/api-shared/*": ["./shared/src/*"],
-      "@raha/api-server/*": ["./server/src/*"]
-    }
-  }
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "references": [
+    { "@raha/api": [".packages/client"] },
+    { "@raha/api-shared": [".packages/shared"] },
+    { "@raha/api-server": [".packages/server"] }
+  ]
 }
