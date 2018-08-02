@@ -1,8 +1,8 @@
 import * as adminLib from "firebase-admin";
 import { Middleware } from "koa";
 
-import { InvalidAuthorizationError } from "@raha/api-shared/errors/RahaApiError/InvalidAuthorizationError";
-import { UnauthorizedError } from "@raha/api-shared/errors/RahaApiError/UnauthorizedError";
+import { InvalidAuthorizationError } from "@raha/api-shared/dist/errors/RahaApiError/InvalidAuthorizationError";
+import { UnauthorizedError } from "@raha/api-shared/dist/errors/RahaApiError/UnauthorizedError";
 
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
 // The Firebase ID token needs to be passed as a Bearer token in the Authorization HTTP header like this:

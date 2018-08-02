@@ -2,7 +2,7 @@ import {
   ListOperationsApiEndpoint,
   listOperationsApiLocation,
   ListOperationsApiCall
-} from "@raha/api-shared/routes/operations/definitions";
+} from "@raha/api-shared/dist/routes/operations/definitions";
 
 import { callApi } from "../callApi";
 

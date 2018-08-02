@@ -1,8 +1,8 @@
 import { CollectionReference } from "@google-cloud/firestore";
 
-import { Operation } from "@raha/api-shared/models/Operation";
+import { Operation } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute } from "..";
-import { ListOperationsApiEndpoint } from "@raha/api-shared/routes/operations/definitions";
+import { ListOperationsApiEndpoint } from "@raha/api-shared/dist/routes/operations/definitions";
 
 /**
  * Lists all Operations.

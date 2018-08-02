@@ -1,5 +1,5 @@
 import { ApiCallError } from ".";
-import { ApiCall } from "@raha/api-shared/routes/ApiEndpoint/ApiCall";
+import { ApiCall } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiCall";
 import * as urlJoin from "url-join";
 
 function apiCallToString(apiBase: string, apiCall: ApiCall) {

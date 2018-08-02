@@ -4,7 +4,7 @@
  * TODO: create a proper Member type, preferably from the one in mobile.
  */
 import { CollectionReference, DocumentSnapshot } from "@google-cloud/firestore";
-import { MemberId } from "@raha/api-shared/models/identifiers";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 /**
  * Get a member from the db by ID if it is available.

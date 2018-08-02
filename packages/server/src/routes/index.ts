@@ -1,4 +1,4 @@
-import { ApiEndpoint } from "@raha/api-shared/routes/ApiEndpoint";
+import { ApiEndpoint } from "@raha/api-shared/dist/routes/ApiEndpoint";
 import { AuthenticatedContext, RahaApiContext } from "../app";
 
 export type ApiHandler<Def extends ApiEndpoint> = (
