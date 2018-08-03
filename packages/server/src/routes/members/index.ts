@@ -24,7 +24,8 @@ import {
   WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint,
   RequestInviteApiEndpoint,
-  CreateMemberApiEndpoint
+  CreateMemberApiEndpoint,
+  VerifyMemberApiEndpoint
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 import { AlreadyRequestedError } from "@raha/api-shared/dist/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
@@ -538,66 +539,179 @@ export const give = (
     };
   });
 
+/**
+ * This endpoint begins the next version of how members will join Raha.
+ *
+ * For someone to become a full member of Raha, 2-3 operations must happen:
+ *  1. CreateMember - This creates a Member account for the user and includes a
+ *       video in which the user states their identity.
+ *  2. (Optional) RequestVerification - This operation indicates that the new
+ *       member would like to request identity verification from an existing member
+ *       of Raha.
+ *  3. Verify - This operation indicates that an existing verified member of Raha
+ *       is verifying the new member's identity, and must include a video in which
+ *       the existing member does so.
+ *
+ * If the member is joining via an async verification flow, the create and verify
+ * member operations will have different videos. Otherwise, they can point to the
+ * same video.
+ *
+ * Eventually, RequestInvite will be replaced by CreateMember and Verify operations.
+ *
+ * However, the Trust operation will continue to coexist with Verify. Trust does not
+ * require a video, but is also not sufficient to verify a member's identity for
+ * the UBI.
+ */
 export const createMember = (
   config: Config,
+  db: Firestore,
   storage: BucketStorage,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
-    const loggedInUid = loggedInMemberToken.uid;
-    const loggedInMemberRef = membersCollection.doc(loggedInUid);
+    const newOperationReference = await db.runTransaction(async transaction => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
-    if ((await loggedInMemberRef.get()).exists) {
-      throw new AlreadyRequestedError();
-    }
+      if ((await transaction.get(loggedInMemberRef)).exists) {
+        throw new AlreadyRequestedError();
+      }
 
-    const {
-      username,
-      fullName,
-      videoToken,
-      requestInviteFromMemberId
-    } = call.body;
-    const requestingFromMember = requestInviteFromMemberId
-      ? await getMemberById(membersCollection, requestInviteFromMemberId)
-      : undefined;
-    if (requestInviteFromMemberId && !requestingFromMember) {
-      throw new NotFoundError(requestInviteFromMemberId);
-    }
+      const {
+        username,
+        fullName,
+        videoToken,
+        requestInviteFromMemberId
+      } = call.body;
+      const requestingFromMember = requestInviteFromMemberId
+        ? await transaction.get(
+            membersCollection.doc(requestInviteFromMemberId)
+          )
+        : undefined;
+      if (
+        requestInviteFromMemberId &&
+        (!requestingFromMember || !requestingFromMember.exists)
+      ) {
+        throw new NotFoundError(requestInviteFromMemberId);
+      }
 
-    const newOperation: OperationToInsert = {
-      creator_uid: loggedInUid,
-      op_code: OperationType.CREATE_MEMBER,
-      data: {
+      const newCreateMemberOperation: OperationToInsert = {
+        creator_uid: loggedInUid,
+        op_code: OperationType.CREATE_MEMBER,
+        data: {
+          username,
+          full_name: fullName,
+          ...(requestInviteFromMemberId
+            ? { request_invite_from_member_id: requestInviteFromMemberId }
+            : {})
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newRequestVerificationOperation:
+        | OperationToInsert
+        | undefined = requestInviteFromMemberId
+        ? {
+            creator_uid: loggedInUid,
+            op_code: OperationType.REQUEST_VERIFICATION,
+            data: {
+              to_uid: requestInviteFromMemberId
+            },
+            created_at: firestore.FieldValue.serverTimestamp()
+          }
+        : undefined;
+      const newMember = {
         username,
         full_name: fullName,
         ...(requestInviteFromMemberId
           ? { request_invite_from_member_id: requestInviteFromMemberId }
-          : {})
-      },
-      created_at: firestore.FieldValue.serverTimestamp()
-    };
-    const newMember = {
-      username,
-      full_name: fullName,
-      ...(requestInviteFromMemberId
-        ? { request_invite_from_member_id: requestInviteFromMemberId }
-        : {}),
-      invite_confirmed: false,
-      created_at: firestore.FieldValue.serverTimestamp(),
-      request_invite_block_at: null,
-      request_invite_block_seq: null,
-      request_invite_op_seq: null
-    };
+          : {}),
+        invite_confirmed: false,
+        created_at: firestore.FieldValue.serverTimestamp(),
+        request_invite_block_at: null,
+        request_invite_block_seq: null,
+        request_invite_op_seq: null
+      };
 
-    moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
+      const createMemberOperationRef = operationsCollection.doc();
+      transaction.create(createMemberOperationRef, newCreateMemberOperation);
+      if (newRequestVerificationOperation) {
+        transaction.create(
+          operationsCollection.doc(),
+          newRequestVerificationOperation
+        );
+      }
+      transaction.create(membersCollection.doc(), newMember);
 
-    const newOperationDoc = await operationsCollection.add(newOperation);
-    await loggedInMemberRef.create(newMember);
+      moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
+
+      return createMemberOperationRef;
+    });
+
     return {
       body: {
-        ...(await newOperationDoc.get()).data(),
-        id: newOperationDoc.id
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
+      } as Operation,
+      status: 201
+    };
+  });
+
+/**
+ * Create a verify relationship to a target member from the logged in member
+ */
+export const verify = (
+  db: Firestore,
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference
+) =>
+  createApiRoute<VerifyMemberApiEndpoint>(async (call, loggedInMemberToken) => {
+    const newOperationReference = await db.runTransaction(async transaction => {
+      const loggedInUid = loggedInMemberToken.uid;
+      const toVerifyMemberId = call.params.memberId;
+      const memberToVerify = await transaction.get(
+        membersCollection.doc(toVerifyMemberId)
+      );
+
+      if (!memberToVerify) {
+        throw new NotFoundError(toVerifyMemberId);
+      }
+      const existingVerifyOperations = await transaction.get(
+        operationsCollection
+          .where("creator_uid", "==", loggedInUid)
+          .where("op_code", "==", OperationType.VERIFY)
+          .where("data.to_uid", "==", toVerifyMemberId)
+      );
+      if (!existingVerifyOperations.empty) {
+        // Note we do not throw an error here since we want to transition to an idempotent API.
+        // TODO What should we do if there are multiple matching verify operations? That's a weird state to be in.
+        return existingVerifyOperations.docs[0].ref;
+      }
+
+      const newOperation: OperationToInsert = {
+        creator_uid: loggedInUid,
+        op_code: OperationType.VERIFY,
+        data: {
+          to_uid: toVerifyMemberId,
+          video_url: "TODO" // TODO
+        },
+        created_at: firestore.FieldValue.serverTimestamp()
+      };
+      const newOperationRef = operationsCollection.doc();
+      if (memberToVerify.get("request_invite_from_uid") === loggedInUid) {
+        transaction.update(memberToVerify.ref, {
+          invite_confirmed: true
+        });
+      }
+      transaction.set(newOperationRef, newOperation);
+
+      return newOperationRef;
+    });
+
+    return {
+      body: {
+        ...(await newOperationReference.get()).data(),
+        id: newOperationReference.id
       } as Operation,
       status: 201
     };

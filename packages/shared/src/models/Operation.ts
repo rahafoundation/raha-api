@@ -3,6 +3,8 @@ import { MemberId, MemberUsername, OperationId } from "./identifiers";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
+  REQUEST_VERIFICATION = "REQUEST_VERIFICATION",
+  VERIFY = "VERIFY",
   REQUEST_INVITE = "REQUEST_INVITE",
   TRUST = "TRUST",
   MINT = "MINT",
@@ -13,6 +15,13 @@ export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
+}
+export interface RequestVerificationPayload {
+  to_uid: MemberId;
+}
+export interface VerifyPayload {
+  to_uid: MemberId;
+  video_url: string;
 }
 export interface RequestInvitePayload {
   full_name: string;
@@ -64,6 +73,23 @@ export type CreateMemberOperation = SavedOperationBase &
 export type CreateMemberOperationToBeCreated = ToSaveOperationBase &
   CreateMemberOperationMetadata;
 
+interface RequestVerificationMetadata {
+  op_code: OperationType.REQUEST_VERIFICATION;
+  data: RequestVerificationPayload;
+}
+export type RequestVerificationOperation = SavedOperationBase &
+  RequestVerificationMetadata;
+export type RequestVerificationOperationToBeCreated = ToSaveOperationBase &
+  RequestVerificationMetadata;
+
+interface VerifyOperationMetadata {
+  op_code: OperationType.VERIFY;
+  data: VerifyPayload;
+}
+export type VerifyOperation = SavedOperationBase & VerifyOperationMetadata;
+export type VerifyOperationToBeCreated = ToSaveOperationBase &
+  VerifyOperationMetadata;
+
 interface RequestInviteOperationMetadata {
   op_code: OperationType.REQUEST_INVITE;
   data: RequestInvitePayload;
@@ -99,6 +125,8 @@ export type GiveOperationToBeCreated = ToSaveOperationBase &
 
 export type Operation =
   | CreateMemberOperation
+  | RequestVerificationOperation
+  | VerifyOperation
   | RequestInviteOperation
   | TrustOperation
   | MintOperation
@@ -106,6 +134,8 @@ export type Operation =
 
 export type OperationToBeCreated =
   | CreateMemberOperationToBeCreated
+  | RequestVerificationOperationToBeCreated
+  | VerifyOperationToBeCreated
   | RequestInviteOperationToBeCreated
   | TrustOperationToBeCreated
   | MintOperationToBeCreated
