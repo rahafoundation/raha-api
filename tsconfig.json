@@ -7,8 +7,8 @@
     "declarationMap": true
   },
   "references": [
-    { "@raha/api": [".packages/client"] },
-    { "@raha/api-shared": [".packages/shared"] },
-    { "@raha/api-server": [".packages/server"] }
+    { "@raha/api": ["./packages/client"] },
+    { "@raha/api-shared": ["./packages/shared"] },
+    { "@raha/api-server": ["./packages/server"] }
   ]
 }

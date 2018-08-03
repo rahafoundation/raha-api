@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc",
+    "build:watch": "rm -rf dist && tsc --watch",
     "prepublishOnly": "yarn build && yarn version",
     "test": "jest"
   },
