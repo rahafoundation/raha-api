@@ -2,9 +2,8 @@
   "name": "@raha/api-shared",
   "version": "0.0.6",
   "description": "Shared code between the Raha API and client library.",
-  "main": "index.js",
   "files": [
-    "**/*"
+    "dist/**/*"
   ],
   "author": "Raha",
   "license": "Apache-2.0",
@@ -28,9 +27,9 @@
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
-    "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
-    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish/run.ts",
+    "build": "rm -rf dist && tsc",
+    "build:watch": "rm -rf dist && tsc --watch",
+    "prepublishOnly": "yarn build && yarn version",
     "test": "jest"
   },
   "jest": {

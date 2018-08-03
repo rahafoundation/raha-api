@@ -11,7 +11,7 @@ yarn add @raha/api
 ## Usage
 
 ```typescript
-import { list } from "@raha/api/operations/list";
+import { list } from "@raha/api/dist/operations/list";
 const API_BASE = "https://raha-5395e.appspot.com/api/";
 
 list(API_BASE).then(({ status, body }) => {
@@ -24,10 +24,22 @@ list(API_BASE).then(({ status, body }) => {
 
 ## Publishing the library
 
-Run this command:
+First, ask a maintainer of this library to grant you access to
+`@raha/api` on NPM.
+
+Then, if the changes here depend on changes to `@raha/api-shared` (i.e. changes to
+`/packages/shared`), ensure:
+
+1.  You publish `/packages/shared` first.
+1.  The version of `@raha/api-shared` referenced in
+    `/packages/client/package.json` has been bumped to the newly published
+    version.
+
+Then, run:
 
 ```bash
-yarn pub
+npm login  # log into NPM if you haven't already
+npm publish
 ```
 
 Please follow [semver](https://semver.org) when choosing a version number.

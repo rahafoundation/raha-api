@@ -2,7 +2,6 @@
   "name": "@raha/api",
   "version": "0.1.0",
   "description": "API Client for Raha",
-  "main": "dist/index.js",
   "files": [
     "dist/**/*"
   ],
@@ -26,12 +25,12 @@
     "ts-jest": "^23.0.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.10.0",
-    "typescript": "^3.0.0-dev.20180711"
+    "typescript": "^3.0.1"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ./README.md ../../LICENSE dist/",
-    "prepublishOnly": "echo \"Please use the \\`yarn pub\\` script instead.\" && false",
-    "pub": "yarn build && yarn version && ts-node -P tsconfig.publish.json ./scripts/publish/run.ts",
+    "build": "rm -rf dist && tsc",
+    "build:watch": "rm -rf dist && tsc --watch",
+    "prepublishOnly": "yarn build && yarn version",
     "test": "jest"
   },
   "jest": {

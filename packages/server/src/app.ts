@@ -24,22 +24,22 @@ import {
   sendgridApiKey
 } from "./config/DO_NOT_COMMIT.secrets.config";
 import { createApiRoute } from "./routes";
-import { HttpVerb } from "@raha/api-shared/helpers/http";
-import { ApiLocation } from "@raha/api-shared/routes/ApiEndpoint/ApiCall";
-import { listOperationsApiLocation } from "@raha/api-shared/routes/operations/definitions";
+import { HttpVerb } from "@raha/api-shared/dist/helpers/http";
+import { ApiLocation } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiCall";
+import { listOperationsApiLocation } from "@raha/api-shared/dist/routes/operations/definitions";
 import {
   trustMemberApiLocation,
   webRequestInviteApiLocation,
   giveApiLocation,
   requestInviteApiLocation
-} from "@raha/api-shared/routes/members/definitions";
+} from "@raha/api-shared/dist/routes/members/definitions";
 import {
   sendInviteApiLocation,
   mintApiLocation,
   validateMobileNumberApiLocation,
   sendAppInstallTextApiLocation
-} from "@raha/api-shared/routes/me/definitions";
-import { ssoDiscourseApiLocation } from "@raha/api-shared/routes/sso/definitions";
+} from "@raha/api-shared/dist/routes/me/definitions";
+import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =

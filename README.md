@@ -8,3 +8,6 @@ Docs are at:
 - Server: [`packages/server/README.md`](packages/server/README.md)
 - Client: [`packages/client/README.md`](packages/client/README.md)
 - Shared: [`packages/shared/README.md`](packages/shared/README.md)
+
+For publishing and deploy instructions for each subpackage of this monorepo,
+see the README's above.

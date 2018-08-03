@@ -1,7 +1,7 @@
 import * as urlJoin from "url-join";
 
-import { HttpVerb } from "@raha/api-shared/helpers/http";
-import { ApiEndpoint } from "@raha/api-shared/routes/ApiEndpoint";
+import { HttpVerb } from "@raha/api-shared/dist/helpers/http";
+import { ApiEndpoint } from "@raha/api-shared/dist/routes/ApiEndpoint";
 import { InvalidApiRequestError } from "./errors/InvalidApiRequestError";
 import { NetworkError } from "./errors/NetworkError";
 import { UnauthenticatedError } from "./errors/UnauthenticatedError";

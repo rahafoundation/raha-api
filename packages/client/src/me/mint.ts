@@ -4,15 +4,15 @@ import {
   MintApiEndpoint,
   MintApiCall,
   mintApiLocation
-} from "@raha/api-shared/routes/me/definitions";
+} from "@raha/api-shared/dist/routes/me/definitions";
 
 import { callApi } from "../callApi";
 import {
   MintPayload,
   MintBasicIncomePayload,
   MintReferralBonusPayload
-} from "@raha/api-shared/models/Operation";
-import { Omit } from "@raha/api-shared/helpers/Omit";
+} from "@raha/api-shared/dist/models/Operation";
+import { Omit } from "@raha/api-shared/dist/helpers/Omit";
 
 type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
   amount: Big;

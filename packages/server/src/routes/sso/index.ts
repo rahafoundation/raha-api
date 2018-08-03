@@ -4,10 +4,10 @@ import { CollectionReference, DocumentSnapshot } from "@google-cloud/firestore";
 import { URL } from "url";
 
 import { createApiRoute } from "..";
-import { SSODiscourseApiEndpoint } from "@raha/api-shared/routes/sso/definitions";
+import { SSODiscourseApiEndpoint } from "@raha/api-shared/dist/routes/sso/definitions";
 import { discourseSSOSecret } from "../../config/DO_NOT_COMMIT.secrets.config";
-import { MissingParamsError } from "@raha/api-shared/errors/RahaApiError/MissingParamsError";
-import { HttpApiError } from "@raha/api-shared/errors/HttpApiError";
+import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 import { Config } from "../../config/prod.config";
 
 /**

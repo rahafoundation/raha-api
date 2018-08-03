@@ -2,7 +2,7 @@ import {
   SSODiscourseApiEndpoint,
   SSODiscourseApiCall,
   ssoDiscourseApiLocation
-} from "@raha/api-shared/routes/sso/definitions";
+} from "@raha/api-shared/dist/routes/sso/definitions";
 
 import { callApi } from "../callApi";
 

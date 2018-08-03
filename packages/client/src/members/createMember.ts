@@ -2,7 +2,7 @@ import {
   CreateMemberApiEndpoint,
   CreateMemberApiCall,
   createMemberApiLocation
-} from "@raha/api-shared/routes/members/definitions";
+} from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
 

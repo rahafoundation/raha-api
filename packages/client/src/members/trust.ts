@@ -1,9 +1,9 @@
-import { MemberId } from "@raha/api-shared/models/identifiers";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import {
   TrustMemberApiEndpoint,
   TrustMemberApiCall,
   trustMemberApiLocation
-} from "@raha/api-shared/routes/members/definitions";
+} from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
 

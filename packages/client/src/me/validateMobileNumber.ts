@@ -2,7 +2,7 @@ import {
   ValidateMobileNumberApiCall,
   validateMobileNumberApiLocation,
   ValidateMobileNumberApiEndpoint
-} from "@raha/api-shared/routes/me/definitions";
+} from "@raha/api-shared/dist/routes/me/definitions";
 
 import { callApi } from "../callApi";
 

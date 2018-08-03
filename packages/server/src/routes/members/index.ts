@@ -13,7 +13,7 @@ import {
   Operation,
   OperationToBeCreated,
   OperationType
-} from "@raha/api-shared/models/Operation";
+} from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute } from "..";
 import { Config } from "../../config/prod.config";
 import { Readable as ReadableStream } from "stream";
@@ -25,12 +25,12 @@ import {
   TrustMemberApiEndpoint,
   RequestInviteApiEndpoint,
   CreateMemberApiEndpoint
-} from "@raha/api-shared/routes/members/definitions";
-import { HttpApiError } from "@raha/api-shared/errors/HttpApiError";
-import { AlreadyRequestedError } from "@raha/api-shared/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
-import { NotFoundError } from "@raha/api-shared/errors/RahaApiError/NotFoundError";
-import { AlreadyTrustedError } from "@raha/api-shared/errors/RahaApiError/members/trust/AlreadyTrustedError";
-import { InsufficientBalanceError } from "@raha/api-shared/errors/RahaApiError/members/give/InsufficientBalanceError";
+} from "@raha/api-shared/dist/routes/members/definitions";
+import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
+import { AlreadyRequestedError } from "@raha/api-shared/dist/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
+import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
+import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
+import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 
 type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;

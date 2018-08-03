@@ -4,34 +4,34 @@ import { firestore } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 
 import { Config } from "../../config/prod.config";
-import { MemberId } from "@raha/api-shared/models/identifiers";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import {
   MintBasicIncomePayload,
   MintType,
   MintReferralBonusPayload,
   OperationType
-} from "@raha/api-shared/models/Operation";
+} from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute } from "..";
-import { OperationApiResponseBody } from "@raha/api-shared/routes/ApiEndpoint/ApiResponse";
+import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiResponse";
 import {
   SendInviteApiEndpoint,
   MintApiEndpoint,
   ValidateMobileNumberApiEndpoint,
   SendAppInstallTextApiEndpoint
-} from "@raha/api-shared/routes/me/definitions";
+} from "@raha/api-shared/dist/routes/me/definitions";
 import { twilioClient } from "../../twilio";
-import { InviterMustBeInvitedError } from "@raha/api-shared/errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
-import { MissingParamsError } from "@raha/api-shared/errors/RahaApiError/MissingParamsError";
-import { MintAmountTooLargeError } from "@raha/api-shared/errors/RahaApiError/me/mint/MintAmountTooLargeError";
-import { NotFoundError } from "@raha/api-shared/errors/RahaApiError/NotFoundError";
-import { NotInvitedError } from "@raha/api-shared/errors/RahaApiError/me/mint/referral/NotInvitedError";
-import { NotTrustedError } from "@raha/api-shared/errors/RahaApiError/me/mint/referral/NotTrustedError";
-import { AlreadyMintedError } from "@raha/api-shared/errors/RahaApiError/me/mint/referral/AlreadyMintedError";
-import { MintInvalidTypeError } from "@raha/api-shared/errors/RahaApiError/me/mint/MintInvalidTypeError";
-import { InvalidNumberError } from "@raha/api-shared/errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
-import { NotRealError } from "@raha/api-shared/errors/RahaApiError/me/validateMobileNumber/NotRealError";
-import { DisallowedTypeError } from "@raha/api-shared/errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
-import { ServerError } from "@raha/api-shared/errors/RahaApiError/ServerError";
+import { InviterMustBeInvitedError } from "@raha/api-shared/dist/errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
+import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { MintAmountTooLargeError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/MintAmountTooLargeError";
+import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
+import { NotInvitedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotInvitedError";
+import { NotTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotTrustedError";
+import { AlreadyMintedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/AlreadyMintedError";
+import { MintInvalidTypeError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/MintInvalidTypeError";
+import { InvalidNumberError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
+import { NotRealError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/NotRealError";
+import { DisallowedTypeError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
+import { ServerError } from "@raha/api-shared/dist/errors/RahaApiError/ServerError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;

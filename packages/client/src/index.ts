@@ -1,1 +1,1 @@
-export { ApiEndpointName } from "@raha/api-shared/routes/ApiEndpoint";
+export { ApiEndpointName } from "@raha/api-shared/dist/routes/ApiEndpoint";
