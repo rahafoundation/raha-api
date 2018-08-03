@@ -636,7 +636,7 @@ export const createMember = (
   });
 
 /**
- * Create a trust relationship to a target member from the logged in member
+ * Create a verify relationship to a target member from the logged in member
  */
 export const verify = (
   db: Firestore,
@@ -654,15 +654,16 @@ export const verify = (
       if (!memberToTrust) {
         throw new NotFoundError(toVerifyMemberId);
       }
-      if (
-        !(await transaction.get(
-          operationsCollection
-            .where("creator_uid", "==", loggedInUid)
-            .where("op_code", "==", OperationType.VERIFY)
-            .where("data.to_uid", "==", toVerifyMemberId)
-        )).empty
-      ) {
-        throw new AlreadyVerifiedError(toVerifyMemberId);
+      const existingVerifyOperations = await transaction.get(
+        operationsCollection
+          .where("creator_uid", "==", loggedInUid)
+          .where("op_code", "==", OperationType.VERIFY)
+          .where("data.to_uid", "==", toVerifyMemberId)
+      );
+      if (!existingVerifyOperations.empty) {
+        // Note we do not throw an error here since we want to transition to an idempotent API.
+        // TODO What should we do if there are multiple matching verify operations? That's a weird state to be in.
+        return existingVerifyOperations.docs[0].ref;
       }
 
       const newOperation: OperationToInsert = {
