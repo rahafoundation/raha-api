@@ -17,12 +17,27 @@ yarn install
 
 ## Running locally
 
-1.  Run server: `yarn start:dev <path to service account credentials>`
-1.  If you don't have service account credentials, follow the instructions at:
-    https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app. DO NOT
-    COMMIT THESE CREDENTIALS.
-1.  If you receive an error about default application credentials:
-    `gcloud auth application-default login`
+1.  If you don't have Firebase service account credentials, follow the
+    instructions at:
+    https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app to get
+    them. DO NOT COMMIT THESE CREDENTIALS.
+1.  Run the dev server (this refreshes on changes automatically):
+
+```bash
+FIREBASE_CREDENTIALS_PATH="<path to service account credentials>" yarn start:dev
+```
+
+It spams that it restarted the server a bunch when you first run it, but after
+that it should be fine.
+
+### Troubleshooting
+
+If you receive an error about default application credentials, try logging in
+with `gcloud`:
+
+```bash
+gcloud auth application-default login
+```
 
 ## Acquiring Coconut API key
 
