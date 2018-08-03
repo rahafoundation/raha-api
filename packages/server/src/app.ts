@@ -43,7 +43,9 @@ import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/defini
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
-  isDevEnv && process.argv.length > 2 ? process.argv[2] : undefined;
+  isDevEnv && process.env.FIREBASE_CREDENTIALS_PATH
+    ? process.env.FIREBASE_CREDENTIALS_PATH
+    : undefined;
 const credentialsPath = credentialsPathArg
   ? path.isAbsolute(credentialsPathArg)
     ? credentialsPathArg
