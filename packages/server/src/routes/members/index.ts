@@ -29,7 +29,6 @@ import {
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 import { AlreadyRequestedError } from "@raha/api-shared/dist/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
-import { AlreadyVerifiedError } from "@raha/api-shared/dist/errors/RahaApiError/members/verify/AlreadyVerifiedError";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
@@ -540,6 +539,29 @@ export const give = (
     };
   });
 
+/**
+ * This endpoint begins the next version of how members will join Raha.
+ *
+ * For someone to become a full member of Raha, 2-3 operations must happen:
+ *  1. CreateMember - This creates a Member account for the user and includes a
+ *       video in which the user states their identity.
+ *  2. (Optional) RequestVerification - This operation indicates that the new
+ *       member would like to request identity verification from an existing member
+ *       of Raha.
+ *  3. Verify - This operation indicates that an existing verified member of Raha
+ *       is verifying the new member's identity, and must include a video in which
+ *       the existing member does so.
+ *
+ * If the member is joining via an async verification flow, the create and verify
+ * member operations will have different videos. Otherwise, they can point to the
+ * same video.
+ *
+ * Eventually, RequestInvite will be replaced by CreateMember and Verify operations.
+ *
+ * However, the Trust operation will continue to coexist with Verify. Trust does not
+ * require a video, but is also not sufficient to verify a member's identity for
+ * the UBI.
+ */
 export const createMember = (
   config: Config,
   db: Firestore,
@@ -647,11 +669,11 @@ export const verify = (
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
       const toVerifyMemberId = call.params.memberId;
-      const memberToTrust = await transaction.get(
+      const memberToVerify = await transaction.get(
         membersCollection.doc(toVerifyMemberId)
       );
 
-      if (!memberToTrust) {
+      if (!memberToVerify) {
         throw new NotFoundError(toVerifyMemberId);
       }
       const existingVerifyOperations = await transaction.get(
@@ -671,13 +693,13 @@ export const verify = (
         op_code: OperationType.VERIFY,
         data: {
           to_uid: toVerifyMemberId,
-          video_url: "test"
+          video_url: "TODO" // TODO
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
       const newOperationRef = operationsCollection.doc();
-      if (memberToTrust.get("request_invite_from_uid") === loggedInUid) {
-        transaction.update(memberToTrust.ref, {
+      if (memberToVerify.get("request_invite_from_uid") === loggedInUid) {
+        transaction.update(memberToVerify.ref, {
           invite_confirmed: true
         });
       }
