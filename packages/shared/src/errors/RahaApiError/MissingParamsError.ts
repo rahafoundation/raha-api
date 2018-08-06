@@ -21,7 +21,7 @@ export class MissingParamsError extends RahaApiError<
   }
 
   constructor(missingParams: string[]) {
-    super(httpStatus.NOT_FOUND, getHttpStatusText(httpStatus.NOT_FOUND), {
+    super(httpStatus.BAD_REQUEST, getHttpStatusText(httpStatus.NOT_FOUND), {
       errorCode: "notFound",
       missingParams
     });
