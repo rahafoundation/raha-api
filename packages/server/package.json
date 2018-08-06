@@ -33,7 +33,7 @@
     "use-test-config": "cp src/config/test.config.ts src/config/config.ts",
     "build:nodelete": "tsc",
     "build": "rm -rf dist && tsc",
-    "start": "node dist/server/src/app.js",
+    "start": "node dist/app.js",
     "start:dev": "yarn build && concurrently --names \"BUILD,SERVER\" \"yarn build:nodelete --watch\" \"NODE_ENV=development nodemon --watch 'dist/' --ext js,ts --ignore 'dist/**/*.test.(js,ts)' dist/app.js\"",
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
