@@ -149,7 +149,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
   void,
   {
     fullName: string;
-    videoToken: string;
+    videoToken?: string;
     username: string;
     requestInviteFromMemberId?: string;
   }

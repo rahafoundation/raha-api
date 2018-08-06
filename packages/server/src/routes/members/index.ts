@@ -124,6 +124,10 @@ async function createCoconutVideoEncodingJob(
   );
 }
 
+/**
+ * If videoToken is null, expects the video to be at /private-video/<uid>/invite.mp4. Otherwise looks for the video at
+ * /private-video/<videoToken>/invite.mp4.
+ */
 async function moveInviteVideoToPublicVideo(
   config: Config,
   storage: BucketStorage,
@@ -602,9 +606,6 @@ export const createMember = (
       }
       if (!fullName) {
         throw new MissingParamsError(["fullName"]);
-      }
-      if (!videoToken) {
-        throw new MissingParamsError(["videoToken"]);
       }
 
       const newCreateMemberOperation: OperationToInsert = {
