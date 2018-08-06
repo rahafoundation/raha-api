@@ -32,6 +32,7 @@ import { AlreadyRequestedError } from "@raha/api-shared/dist/errors/RahaApiError
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
+import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 
 type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
@@ -594,6 +595,16 @@ export const createMember = (
         (!requestingFromMember || !requestingFromMember.exists)
       ) {
         throw new NotFoundError(requestInviteFromMemberId);
+      }
+
+      if (!username) {
+        throw new MissingParamsError(["username"]);
+      }
+      if (!fullName) {
+        throw new MissingParamsError(["fullName"]);
+      }
+      if (!videoToken) {
+        throw new MissingParamsError(["videoToken"]);
       }
 
       const newCreateMemberOperation: OperationToInsert = {
