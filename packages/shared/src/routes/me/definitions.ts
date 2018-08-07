@@ -31,7 +31,7 @@ export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string; isJointVideo: boolean, videoToken?: string }
+  { inviteEmail: string; videoToken?: string, isJointVideo?: boolean, }
   >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,

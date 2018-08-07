@@ -54,7 +54,7 @@ export const sendInvite = (
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
 
-    const { inviteEmail, isJointVideo, videoToken } = call.body;
+    const { inviteEmail, videoToken, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
@@ -62,10 +62,6 @@ export const sendInvite = (
 
     if (!inviteEmail) {
       throw new MissingParamsError(["inviteEmail"]);
-    }
-
-    if (!isJointVideo) {
-      throw new MissingParamsError(["isJointVideo"]);
     }
 
     const loggedInFullName = loggedInMember.get("full_name");

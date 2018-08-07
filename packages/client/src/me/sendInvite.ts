@@ -15,13 +15,18 @@ export function sendInvite(
   apiBase: string,
   authToken: string,
   inviteEmail: string,
-  videoToken?: string
+  videoToken?: string,
+  isJointVideo?: boolean
 ) {
   const apiCall: SendInviteApiCall = {
     location: sendInviteApiLocation,
     request: {
       params: undefined,
-      body: { inviteEmail, ...(videoToken ? { videoToken } : {}) }
+      body: {
+        inviteEmail,
+        ...(videoToken ? { videoToken } : {}),
+        ...(isJointVideo ? { isJointVideo } : {})
+      }
     }
   };
   return callApi<SendInviteApiEndpoint>(apiBase, apiCall, authToken);
