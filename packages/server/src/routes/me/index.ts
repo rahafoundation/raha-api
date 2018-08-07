@@ -54,7 +54,7 @@ export const sendInvite = (
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
 
-    const { inviteEmail, videoToken } = call.body;
+    const { inviteEmail, videoToken, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
@@ -70,7 +70,9 @@ export const sendInvite = (
     // If there is already a videoToken, give them the deeplink format.
     const inviteLink = videoToken
       ? new URL(
-          `/invite?r=${loggedInUsername}&t=${videoToken}`,
+          `/invite?r=${loggedInUsername}&t=${videoToken}${
+            isJointVideo ? `&j=${isJointVideo}` : ""
+          }`,
           `https://raha.app`
         ).toString()
       : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
