@@ -9,9 +9,6 @@
   "author": "Raha",
   "license": "Apache-2.0",
   "private": true,
-  "engines": {
-    "node": "9.x"
-  },
   "dependencies": {
     "@google-cloud/firestore": "^0.15.4",
     "@google-cloud/storage": "^1.6.0",
