@@ -8,17 +8,13 @@ import * as asyncBusboy from "async-busboy";
 import Big from "big.js";
 import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
+import { Context } from "koa";
 
 import {
   Operation,
   OperationToBeCreated,
   OperationType
 } from "@raha/api-shared/dist/models/Operation";
-import { createApiRoute } from "..";
-import { Config } from "../../config/prod.config";
-import { Readable as ReadableStream } from "stream";
-import { getMemberById } from "../../collections/members";
-import { Context } from "koa";
 import {
   GiveApiEndpoint,
   WebRequestInviteApiEndpoint,
@@ -33,6 +29,12 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+
+import { createApiRoute } from "..";
+import { Config } from "../../config/prod.config";
+import { Readable as ReadableStream } from "stream";
+import { getMemberById } from "../../collections/members";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
@@ -148,6 +150,50 @@ async function moveInviteVideoToPublicVideo(
     : getPrivateVideoRef(config, storage, memberUid);
 
   await inviteVideoRef.move(publicVideoRef);
+}
+
+function getPublicUrlForMemberAndToken(
+  config: Config,
+  memberUid: string,
+  videoToken: string
+) {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberUid}/${videoToken}/video.mp4`;
+}
+
+/**
+ * Expects the video to be at /private-video/<memberUid>/<videoToken>/video.mp4.
+ * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
+ * (Note, we use UID instead of MemberId to ensure that people who haven't yet
+ * gone through the member creation process can still upload an appropriately scoped video.)
+ * TODO: Remove all other video handling functions. This should be all that we need.
+ */
+async function movePrivateVideoToPublicVideo(
+  config: Config,
+  storage: BucketStorage,
+  videoToken: string,
+  memberUid: string
+) {
+  const publicVideoRef = (storage as Storage.Storage)
+    .bucket(config.publicVideoBucket)
+    .file(`${memberUid}/${videoToken}/video.mp4`);
+
+  if ((await publicVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
+    );
+  }
+
+  const privateVideoRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`${memberUid}/${videoToken}/video.mp4`);
+
+  await privateVideoRef.move(publicVideoRef);
+
+  return publicVideoRef;
 }
 
 /**
@@ -673,7 +719,9 @@ export const createMember = (
  * Create a verify relationship to a target member from the logged in member
  */
 export const verify = (
+  config: Config,
   db: Firestore,
+  storage: BucketStorage,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference
 ) =>
@@ -688,6 +736,12 @@ export const verify = (
       if (!memberToVerify) {
         throw new NotFoundError(toVerifyMemberId);
       }
+
+      const { videoToken } = call.body;
+      if (!videoToken) {
+        throw new MissingParamsError(["videoToken"]);
+      }
+
       const existingVerifyOperations = await transaction.get(
         operationsCollection
           .where("creator_uid", "==", loggedInUid)
@@ -697,15 +751,27 @@ export const verify = (
       if (!existingVerifyOperations.empty) {
         // Note we do not throw an error here since we want to transition to an idempotent API.
         // TODO What should we do if there are multiple matching verify operations? That's a weird state to be in.
+        // TODO What should we do with the video in this case?
         return existingVerifyOperations.docs[0].ref;
       }
+
+      await movePrivateVideoToPublicVideo(
+        config,
+        storage,
+        loggedInUid,
+        videoToken
+      );
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
         op_code: OperationType.VERIFY,
         data: {
           to_uid: toVerifyMemberId,
-          video_url: "TODO" // TODO
+          video_url: getPublicUrlForMemberAndToken(
+            config,
+            loggedInUid,
+            videoToken
+          )
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };

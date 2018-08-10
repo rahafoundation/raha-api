@@ -116,7 +116,13 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: verifyMemberApiLocation,
-    handler: membersRoutes.verify(db, membersCollection, operationsCollection)
+    handler: membersRoutes.verify(
+      config,
+      db,
+      storage,
+      membersCollection,
+      operationsCollection
+    )
   },
   {
     location: trustMemberApiLocation,
