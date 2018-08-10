@@ -51,7 +51,7 @@ export enum ApiEndpointUri {
   SEND_APP_INSTALL_TEXT = "me/sendAppInstallText",
   SSO_DISCOURSE = "sso/discourse",
   CREATE_MEMBER = "members/createMember",
-  VERIFY_MEMBER = "members/:memerId/verify"
+  VERIFY_MEMBER = "members/:memberId/verify"
 }
 
 /**
