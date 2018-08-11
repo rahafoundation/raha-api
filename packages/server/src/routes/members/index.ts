@@ -34,7 +34,6 @@ import { createApiRoute } from "..";
 import { Config } from "../../config/prod.config";
 import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../../collections/members";
-import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
@@ -170,12 +169,12 @@ function getPublicUrlForMemberAndToken(
 async function movePrivateVideoToPublicVideo(
   config: Config,
   storage: BucketStorage,
-  videoToken: string,
-  memberUid: string
+  memberUid: string,
+  videoToken: string
 ) {
   const publicVideoRef = (storage as Storage.Storage)
     .bucket(config.publicVideoBucket)
-    .file(`${videoToken}/video.mp4`);
+    .file(`${memberUid}/${videoToken}/video.mp4`);
 
   if ((await publicVideoRef.exists())[0]) {
     throw new HttpApiError(
@@ -187,7 +186,15 @@ async function movePrivateVideoToPublicVideo(
 
   const privateVideoRef = (storage as Storage.Storage)
     .bucket(config.privateVideoBucket)
-    .file(`${memberUid}/${videoToken}/video.mp4`);
+    .file(`private-video/${videoToken}/video.mp4`);
+
+  if (!(await privateVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Private video does not exist at expected location. Cannot move.",
+      {}
+    );
+  }
 
   await privateVideoRef.move(publicVideoRef);
 
