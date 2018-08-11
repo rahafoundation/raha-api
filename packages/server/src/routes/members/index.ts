@@ -161,6 +161,12 @@ function getPublicUrlForMemberAndToken(
   }/${memberUid}/${videoToken}/video.mp4`;
 }
 
+function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberUid}/invite.mp4`;
+}
+
 /**
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
@@ -682,7 +688,15 @@ export const createMember = (
             creator_uid: loggedInUid,
             op_code: OperationType.REQUEST_VERIFICATION,
             data: {
-              to_uid: requestInviteFromMemberId
+              to_uid: requestInviteFromMemberId,
+              ...(isJointVideo
+                ? {
+                    video_url: getPublicInviteVideoUrlForMember(
+                      config,
+                      loggedInUid
+                    )
+                  }
+                : {})
             },
             created_at: firestore.FieldValue.serverTimestamp()
           }
@@ -746,9 +760,9 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      const { videoToken } = call.body;
-      if (!videoToken) {
-        throw new MissingParamsError(["videoToken"]);
+      const { videoToken, videoUrl } = call.body;
+      if (!videoToken && !videoUrl) {
+        throw new MissingParamsError(["videoToken", "videoUrl"]);
       }
 
       const existingVerifyOperations = await transaction.get(
@@ -764,23 +778,29 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      await movePrivateVideoToPublicVideo(
-        config,
-        storage,
-        loggedInUid,
-        videoToken
-      );
+      if (!videoUrl) {
+        // To satisfy the type compiler (false should be impossible due to the above missing params check)
+        if (videoToken) {
+          await movePrivateVideoToPublicVideo(
+            config,
+            storage,
+            loggedInUid,
+            videoToken
+          );
+        }
+      }
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
         op_code: OperationType.VERIFY,
         data: {
           to_uid: toVerifyMemberId,
-          video_url: getPublicUrlForMemberAndToken(
-            config,
-            loggedInUid,
-            videoToken
-          )
+          video_url: videoUrl
+            ? videoUrl
+            : // To satisfy the type compiler (false should be impossible due to the above missing params check)
+              videoToken
+              ? getPublicUrlForMemberAndToken(config, loggedInUid, videoToken)
+              : "ERROR"
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
