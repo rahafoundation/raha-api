@@ -150,6 +150,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
   {
     fullName: string;
     videoToken?: string;
+    isJointVideo: boolean;
     username: string;
     requestInviteFromMemberId?: string;
   }

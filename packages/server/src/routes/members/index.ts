@@ -638,6 +638,7 @@ export const createMember = (
         username,
         fullName,
         videoToken,
+        isJointVideo,
         requestInviteFromMemberId
       } = call.body;
       const requestingFromMember = requestInviteFromMemberId
@@ -657,6 +658,9 @@ export const createMember = (
       }
       if (!fullName) {
         throw new MissingParamsError(["fullName"]);
+      }
+      if (isJointVideo === undefined) {
+        throw new MissingParamsError(["isJointVideo"]);
       }
 
       const newCreateMemberOperation: OperationToInsert = {
