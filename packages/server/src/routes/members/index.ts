@@ -777,18 +777,14 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      let videoUrl;
-      let videoToken;
-      if ("videoToken" in call.body) {
-        videoToken = call.body.videoToken;
-        videoUrl = getPublicUrlForMemberAndToken(
-          config,
-          loggedInUid,
-          videoToken
-        );
-      } else {
-        videoUrl = call.body.videoUrl;
-      }
+      const videoUrl =
+        "videoToken" in call.body
+          ? getPublicUrlForMemberAndToken(
+              config,
+              loggedInUid,
+              call.body.videoToken
+            )
+          : call.body.videoUrl;
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
@@ -807,12 +803,12 @@ export const verify = (
       }
       transaction.set(newOperationRef, newOperation);
 
-      if (videoToken) {
+      if ("videoToken" in call.body) {
         await movePrivateVideoToPublicVideo(
           config,
           storage,
           loggedInUid,
-          videoToken
+          call.body.videoToken
         );
       }
 
