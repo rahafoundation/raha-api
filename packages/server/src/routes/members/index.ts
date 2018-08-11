@@ -760,8 +760,7 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      const { videoToken, videoUrl } = call.body;
-      if (!videoToken && !videoUrl) {
+      if (!("videoToken" in call.body) && !("videoUrl" in call.body)) {
         throw new MissingParamsError(["videoToken", "videoUrl"]);
       }
 
@@ -778,16 +777,17 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      if (!videoUrl) {
-        // To satisfy the type compiler (false should be impossible due to the above missing params check)
-        if (videoToken) {
-          await movePrivateVideoToPublicVideo(
-            config,
-            storage,
-            loggedInUid,
-            videoToken
-          );
-        }
+      let videoUrl;
+      let videoToken;
+      if ("videoToken" in call.body) {
+        videoToken = call.body.videoToken;
+        videoUrl = getPublicUrlForMemberAndToken(
+          config,
+          loggedInUid,
+          videoToken
+        );
+      } else {
+        videoUrl = call.body.videoUrl;
       }
 
       const newOperation: OperationToInsert = {
@@ -796,11 +796,6 @@ export const verify = (
         data: {
           to_uid: toVerifyMemberId,
           video_url: videoUrl
-            ? videoUrl
-            : // To satisfy the type compiler (false should be impossible due to the above missing params check)
-              videoToken
-              ? getPublicUrlForMemberAndToken(config, loggedInUid, videoToken)
-              : "ERROR"
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
@@ -811,6 +806,15 @@ export const verify = (
         });
       }
       transaction.set(newOperationRef, newOperation);
+
+      if (videoToken) {
+        await movePrivateVideoToPublicVideo(
+          config,
+          storage,
+          loggedInUid,
+          videoToken
+        );
+      }
 
       return newOperationRef;
     });

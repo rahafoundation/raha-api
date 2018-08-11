@@ -181,10 +181,7 @@ export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: string },
-  {
-    videoToken?: string;
-    videoUrl?: string;
-  }
+  { videoToken: string } | { videoUrl: string }
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,
