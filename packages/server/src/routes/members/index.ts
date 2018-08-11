@@ -163,10 +163,8 @@ function getPublicUrlForMemberAndToken(
 }
 
 /**
- * Expects the video to be at /private-video/<memberUid>/<videoToken>/video.mp4.
+ * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
- * (Note, we use UID instead of MemberId to ensure that people who haven't yet
- * gone through the member creation process can still upload an appropriately scoped video.)
  * TODO: Remove all other video handling functions. This should be all that we need.
  */
 async function movePrivateVideoToPublicVideo(
@@ -177,7 +175,7 @@ async function movePrivateVideoToPublicVideo(
 ) {
   const publicVideoRef = (storage as Storage.Storage)
     .bucket(config.publicVideoBucket)
-    .file(`${memberUid}/${videoToken}/video.mp4`);
+    .file(`${videoToken}/video.mp4`);
 
   if ((await publicVideoRef.exists())[0]) {
     throw new HttpApiError(
