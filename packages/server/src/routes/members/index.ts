@@ -161,6 +161,12 @@ function getPublicUrlForMemberAndToken(
   }/${memberUid}/${videoToken}/video.mp4`;
 }
 
+function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberUid}/invite.mp4`;
+}
+
 /**
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
@@ -638,6 +644,7 @@ export const createMember = (
         username,
         fullName,
         videoToken,
+        isJointVideo,
         requestInviteFromMemberId
       } = call.body;
       const requestingFromMember = requestInviteFromMemberId
@@ -657,6 +664,9 @@ export const createMember = (
       }
       if (!fullName) {
         throw new MissingParamsError(["fullName"]);
+      }
+      if (isJointVideo === undefined) {
+        throw new MissingParamsError(["isJointVideo"]);
       }
 
       const newCreateMemberOperation: OperationToInsert = {
@@ -678,7 +688,15 @@ export const createMember = (
             creator_uid: loggedInUid,
             op_code: OperationType.REQUEST_VERIFICATION,
             data: {
-              to_uid: requestInviteFromMemberId
+              to_uid: requestInviteFromMemberId,
+              ...(isJointVideo
+                ? {
+                    video_url: getPublicInviteVideoUrlForMember(
+                      config,
+                      loggedInUid
+                    )
+                  }
+                : {})
             },
             created_at: firestore.FieldValue.serverTimestamp()
           }
@@ -742,9 +760,8 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      const { videoToken } = call.body;
-      if (!videoToken) {
-        throw new MissingParamsError(["videoToken"]);
+      if (!("videoToken" in call.body) && !("videoUrl" in call.body)) {
+        throw new MissingParamsError(["videoToken", "videoUrl"]);
       }
 
       const existingVerifyOperations = await transaction.get(
@@ -760,23 +777,21 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      await movePrivateVideoToPublicVideo(
-        config,
-        storage,
-        loggedInUid,
-        videoToken
-      );
+      const videoUrl =
+        "videoToken" in call.body
+          ? getPublicUrlForMemberAndToken(
+              config,
+              loggedInUid,
+              call.body.videoToken
+            )
+          : call.body.videoUrl;
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
         op_code: OperationType.VERIFY,
         data: {
           to_uid: toVerifyMemberId,
-          video_url: getPublicUrlForMemberAndToken(
-            config,
-            loggedInUid,
-            videoToken
-          )
+          video_url: videoUrl
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };
@@ -787,6 +802,15 @@ export const verify = (
         });
       }
       transaction.set(newOperationRef, newOperation);
+
+      if ("videoToken" in call.body) {
+        await movePrivateVideoToPublicVideo(
+          config,
+          storage,
+          loggedInUid,
+          call.body.videoToken
+        );
+      }
 
       return newOperationRef;
     });

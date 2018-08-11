@@ -20,6 +20,7 @@ export function createMember(
   fullName: string,
   username: string,
   videoToken: string,
+  isJointVideo: boolean,
   requestInviteFromMemberId?: string
 ) {
   const apiCall: CreateMemberApiCall = {
@@ -30,6 +31,7 @@ export function createMember(
         fullName,
         username,
         videoToken,
+        isJointVideo,
         requestInviteFromMemberId
       }
     }
