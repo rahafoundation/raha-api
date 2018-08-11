@@ -13,7 +13,7 @@
     "@google-cloud/firestore": "^0.15.4",
     "@google-cloud/storage": "^1.6.0",
     "@koa/cors": "2",
-    "@raha/api-shared": "^0.1.4",
+    "@raha/api-shared": "^0.1.5",
     "@sendgrid/mail": "^6.2.1",
     "@types/big.js": "^4.0.4",
     "@types/url-join": "^0.8.2",
