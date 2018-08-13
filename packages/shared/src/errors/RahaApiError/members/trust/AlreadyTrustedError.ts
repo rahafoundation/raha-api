@@ -22,7 +22,7 @@ export class AlreadyTrustedError extends RahaApiError<
   }
 
   constructor(memberId: string) {
-    super(httpStatus.FORBIDDEN, "You have already trusted this member.", {
+    super(httpStatus.BAD_REQUEST, "You have already trusted this member.", {
       errorCode: "trust.alreadyTrusted",
       memberId
     });
