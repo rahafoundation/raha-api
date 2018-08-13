@@ -722,7 +722,7 @@ export const createMember = (
           newRequestVerificationOperation
         );
       }
-      transaction.create(membersCollection.doc(), newMember);
+      transaction.create(membersCollection.doc(loggedInUid), newMember);
 
       moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
 
