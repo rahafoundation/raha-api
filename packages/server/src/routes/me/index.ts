@@ -138,11 +138,12 @@ function mintBasicIncome(
     Date.now();
   const now = Date.now();
   const sinceLastMinted = now - lastMinted;
-  const maxMintable =
-    (RAHA_UBI_WEEKLY_RATE * sinceLastMinted) / MILLISECONDS_PER_WEEK;
+  const maxMintable = new Big(RAHA_UBI_WEEKLY_RATE)
+    .times(sinceLastMinted)
+    .div(MILLISECONDS_PER_WEEK);
 
   if (bigAmount.gt(maxMintable)) {
-    throw new MintAmountTooLargeError();
+    throw new MintAmountTooLargeError(bigAmount, maxMintable);
   }
 
   return {
@@ -176,7 +177,7 @@ async function mintReferralBonus(
   }
 
   if (bigAmount.gt(RAHA_REFERRAL_BONUS)) {
-    throw new MintAmountTooLargeError();
+    throw new MintAmountTooLargeError(bigAmount, new Big(RAHA_REFERRAL_BONUS));
   }
 
   // Verify that bonus hasn't already been claimed.
