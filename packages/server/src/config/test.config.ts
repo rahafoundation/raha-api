@@ -18,6 +18,6 @@ export const config: Config = {
     messagingServiceSid: "MG90714479d4b405a524a4a6ccd2f9bf7d",
     fromNumber: "+16572377242"
   },
-  debugNumbers: ["+14405555555", "+14406231005"],
+  debugNumbers: ["+14405555555", "+14406231005", "+14255555555"],
   discourseBase: "https://discuss.raha.app/"
 };
