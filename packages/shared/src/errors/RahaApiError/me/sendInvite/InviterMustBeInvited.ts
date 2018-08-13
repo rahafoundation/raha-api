@@ -21,7 +21,7 @@ export class InviterMustBeInvitedError extends RahaApiError<
 
   constructor() {
     super(
-      httpStatus.FORBIDDEN,
+      httpStatus.BAD_REQUEST,
       "You must yourself have been invited to Raha to send invites.",
       {
         errorCode: "sendInvite.inviterMustBeInvited"

@@ -19,7 +19,7 @@ export class InsufficientBalanceError extends RahaApiError<
   }
 
   constructor() {
-    super(httpStatus.FORBIDDEN, "Amount exceeds account balance.", {
+    super(httpStatus.BAD_REQUEST, "Amount exceeds account balance.", {
       errorCode: "give.insufficientBalance"
     });
 

@@ -19,7 +19,7 @@ export class AlreadyRequestedError extends RahaApiError<
   }
 
   constructor() {
-    super(httpStatus.FORBIDDEN, "You have already requested an invite.", {
+    super(httpStatus.BAD_REQUEST, "You have already requested an invite.", {
       errorCode: "requestInvite.alreadyRequested"
     });
 
