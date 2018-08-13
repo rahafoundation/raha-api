@@ -1,3 +1,4 @@
+import Big from "big.js";
 import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
@@ -18,10 +19,14 @@ export class MintAmountTooLargeError extends RahaApiError<
     return ERROR_CODE;
   }
 
-  constructor() {
-    super(httpStatus.FORBIDDEN, "Mint amount exceeds the allowed amount.", {
-      errorCode: "mint.amountTooLarge"
-    });
+  constructor(amount: Big, allowedAmount: Big) {
+    super(
+      httpStatus.BAD_REQUEST,
+      `Mint amount of ${amount.toString()} exceeds the allowed amount of ${allowedAmount.toString()}.`,
+      {
+        errorCode: "mint.amountTooLarge"
+      }
+    );
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
     // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
