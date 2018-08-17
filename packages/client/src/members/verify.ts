@@ -16,13 +16,13 @@ export function verify(
   apiBase: string,
   authToken: string,
   memberId: MemberId,
-  video: { videoToken: string } | { videoUrl: string }
+  videoToken: string
 ) {
   const apiCall: VerifyMemberApiCall = {
     location: verifyMemberApiLocation,
     request: {
       params: { memberId },
-      body: video
+      body: { videoToken }
     }
   };
   return callApi<VerifyMemberApiEndpoint>(apiBase, apiCall, authToken);
