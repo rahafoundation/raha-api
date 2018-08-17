@@ -19,7 +19,7 @@ export interface CreateMemberPayload {
 }
 export interface RequestVerificationPayload {
   to_uid: MemberId;
-  video_url?: string;
+  invite_token?: string;
 }
 export interface VerifyPayload {
   to_uid: MemberId;
