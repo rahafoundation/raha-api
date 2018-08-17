@@ -11,9 +11,8 @@ import { callApi } from "../callApi";
  * @param fullName Full name of new member
  * @param username New username for the new member. Must be unique
  * @param videoToken Video token of the invite, of the new member either identifying themselves or
- * being invited by the existing member. If not provided, the video will be pulled from private-video.
- * @param isJointVideo boolean indicating whether both the creating and inviting members are present in the video
- * @param requestInviteFromMemberId Optional id of the member this user is requesting an invite from.
+ * being invited by the existing member.
+ * @param inviteToken: Token identifying associated invite operation.
  */
 export function createMember(
   apiBase: string,
@@ -21,8 +20,7 @@ export function createMember(
   fullName: string,
   username: string,
   videoToken: string,
-  isJointVideo: boolean,
-  requestInviteFromMemberId?: string
+  inviteToken?: string
 ) {
   const apiCall: CreateMemberApiCall = {
     location: createMemberApiLocation,
@@ -32,8 +30,7 @@ export function createMember(
         fullName,
         username,
         videoToken,
-        isJointVideo,
-        requestInviteFromMemberId
+        inviteToken
       }
     }
   };
