@@ -53,8 +53,8 @@ interface EmailMessage {
 export const sendInvite = (
   config: Config,
   sgMail: { send: (message: EmailMessage) => void },
-  operations: CollectionReference,
-  members: CollectionReference
+  members: CollectionReference,
+  operations: CollectionReference
 ) =>
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInMemberId = loggedInMemberToken.uid;
