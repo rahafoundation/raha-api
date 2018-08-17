@@ -5,6 +5,7 @@ export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
   REQUEST_VERIFICATION = "REQUEST_VERIFICATION",
   VERIFY = "VERIFY",
+  INVITE = "INVITE",
   REQUEST_INVITE = "REQUEST_INVITE",
   TRUST = "TRUST",
   MINT = "MINT",
@@ -23,6 +24,11 @@ export interface RequestVerificationPayload {
 export interface VerifyPayload {
   to_uid: MemberId;
   video_url: string;
+}
+export interface InvitePayload {
+  invite_token: string;
+  is_joint_video: boolean;
+  video_token: string;
 }
 export interface RequestInvitePayload {
   full_name: string;
@@ -91,6 +97,14 @@ export type VerifyOperation = SavedOperationBase & VerifyOperationMetadata;
 export type VerifyOperationToBeCreated = ToSaveOperationBase &
   VerifyOperationMetadata;
 
+interface InviteOperationMetadata {
+  op_code: OperationType.INVITE;
+  data: InvitePayload;
+}
+export type InviteOperation = SavedOperationBase & InviteOperationMetadata;
+export type InviteOperationToBeCreated = ToSaveOperationBase &
+  InviteOperationMetadata;
+
 interface RequestInviteOperationMetadata {
   op_code: OperationType.REQUEST_INVITE;
   data: RequestInvitePayload;
@@ -128,6 +142,7 @@ export type Operation =
   | CreateMemberOperation
   | RequestVerificationOperation
   | VerifyOperation
+  | InviteOperation
   | RequestInviteOperation
   | TrustOperation
   | MintOperation
@@ -137,6 +152,7 @@ export type OperationToBeCreated =
   | CreateMemberOperationToBeCreated
   | RequestVerificationOperationToBeCreated
   | VerifyOperationToBeCreated
+  | InviteOperationToBeCreated
   | RequestInviteOperationToBeCreated
   | TrustOperationToBeCreated
   | MintOperationToBeCreated
