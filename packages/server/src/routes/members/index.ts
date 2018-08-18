@@ -443,66 +443,6 @@ export const webRequestInvite = (
     }
   );
 
-export const requestInvite = (
-  config: Config,
-  storage: BucketStorage,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
-) =>
-  createApiRoute<RequestInviteApiEndpoint>(
-    async (call, loggedInMemberToken) => {
-      const loggedInUid = loggedInMemberToken.uid;
-      const loggedInMemberRef = membersCollection.doc(loggedInUid);
-
-      if ((await loggedInMemberRef.get()).exists) {
-        throw new AlreadyRequestedError();
-      }
-
-      const { username, fullName, videoToken } = call.body;
-      const requestingFromId = call.params.memberId;
-      const requestingFromMember = await getMemberById(
-        membersCollection,
-        requestingFromId
-      );
-      if (!requestingFromMember) {
-        throw new NotFoundError(requestingFromId);
-      }
-
-      const newOperation: OperationToInsert = {
-        creator_uid: loggedInUid,
-        op_code: OperationType.REQUEST_INVITE,
-        data: {
-          username,
-          full_name: fullName,
-          to_uid: requestingFromId
-        },
-        created_at: firestore.FieldValue.serverTimestamp()
-      };
-      const newMember = {
-        username,
-        full_name: fullName,
-        request_invite_from_member_id: requestingFromId,
-        invite_confirmed: false,
-        created_at: firestore.FieldValue.serverTimestamp(),
-        request_invite_block_at: null,
-        request_invite_block_seq: null,
-        request_invite_op_seq: null
-      };
-
-      moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
-
-      const newOperationDoc = await operationsCollection.add(newOperation);
-      await loggedInMemberRef.create(newMember);
-      return {
-        body: {
-          ...(await newOperationDoc.get()).data(),
-          id: newOperationDoc.id
-        } as Operation,
-        status: 201
-      };
-    }
-  );
-
 /**
  * Create a trust relationship to a target member from the logged in member
  */
