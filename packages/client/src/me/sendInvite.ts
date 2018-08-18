@@ -25,7 +25,7 @@ export function sendInvite(
       body: {
         inviteEmail,
         ...(videoToken ? { videoToken } : {}),
-        ...(isJointVideo ? { isJointVideo } : {})
+        ...(isJointVideo !== undefined ? { isJointVideo } : {})
       }
     }
   };
