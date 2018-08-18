@@ -807,13 +807,9 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
-big.js@^5.0.3:
+big.js@^5.0.3, big.js@^5.1.2:
   version "5.1.2"
   resolved "https://registry.npmjs.org/big.js/-/big.js-5.1.2.tgz#946c634f3efd9c8dcd98f953e96a5f389dac3fec"
-
-big.js@^5.1.2:
-  version "5.1.2"
-  resolved "https://registry.yarnpkg.com/big.js/-/big.js-5.1.2.tgz#946c634f3efd9c8dcd98f953e96a5f389dac3fec"
 
 binary-extensions@^1.0.0:
   version "1.11.0"
