@@ -31,7 +31,6 @@ import {
   trustMemberApiLocation,
   webRequestInviteApiLocation,
   giveApiLocation,
-  requestInviteApiLocation,
   createMemberApiLocation,
   verifyMemberApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
@@ -134,15 +133,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
       config,
       storage,
       coconutApiKey,
-      membersCollection,
-      operationsCollection
-    )
-  },
-  {
-    location: requestInviteApiLocation,
-    handler: membersRoutes.requestInvite(
-      config,
-      storage,
       membersCollection,
       operationsCollection
     )
