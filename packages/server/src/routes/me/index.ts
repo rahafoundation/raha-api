@@ -77,6 +77,8 @@ export const sendInvite = (
     // TODO generate this server side somewhere.
     const inviteToken = videoToken;
 
+    // Invite token will be null if this comes from the web
+    // TODO: Deprecate web functionality and simplify this function.
     if (inviteToken) {
       const newInvite: OperationToInsert = {
         creator_uid: loggedInMemberId,
@@ -94,7 +96,7 @@ export const sendInvite = (
     const loggedInFullName = loggedInMember.get("full_name");
     const loggedInUsername = loggedInMember.get("username");
 
-    // If there is already a videoToken, give them the deeplink format.
+    // If there is an inviteToken, give them the deeplink format.
     const inviteLink = inviteToken
       ? new URL(`/invite?t=${inviteToken}`, `https://raha.app`).toString()
       : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
@@ -113,7 +115,7 @@ export const sendInvite = (
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
 
-    // We use the existence of the videoToken to determine whether the user is
+    // We use the existence of the inviteToken to determine whether the user is
     // inviting from mobile or from the web. From mobile, we will always include
     // a video. If this assumption changes, please update.
     const instructionsText = inviteToken
