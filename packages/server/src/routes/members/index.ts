@@ -29,11 +29,14 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteToken";
+import { InvalidInviteOperationError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteOperation";
 
 import { createApiRoute } from "..";
 import { Config } from "../../config/prod.config";
 import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../../collections/members";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
@@ -44,7 +47,13 @@ const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
-function getPrivateVideoRef(
+
+/**
+ * This function is specifically used by the web-invite flow to locate files
+ * that are restricted to uploading-user-only access. These videos must be
+ * scrubbed by Coconut before being accessed by anyone else.
+ */
+function getPrivateUserOnlyVideoRef(
   config: Config,
   storage: BucketStorage,
   memberUid: string
@@ -56,7 +65,7 @@ function getPrivateVideoRef(
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
-function getInviteVideoRef(
+function getPrivateInviteVideoRef(
   config: Config,
   storage: BucketStorage,
   videoToken: string
@@ -68,7 +77,7 @@ function getInviteVideoRef(
     .file(`invite-video/${videoToken}/invite.mp4`);
 }
 
-function getPublicVideoRef(
+function getPublicInviteVideoRef(
   config: Config,
   storage: BucketStorage,
   uid: string
@@ -84,7 +93,7 @@ async function createCoconutVideoEncodingJob(
   coconutApiKey: string,
   memberUid: string
 ) {
-  const videoRef = getPrivateVideoRef(config, storage, memberUid);
+  const videoRef = getPrivateUserOnlyVideoRef(config, storage, memberUid);
 
   const temporaryAccessUrl = (await videoRef.getSignedUrl({
     action: "read",
@@ -135,7 +144,7 @@ async function moveInviteVideoToPublicVideo(
   memberUid: string,
   videoToken?: string
 ) {
-  const publicVideoRef = getPublicVideoRef(config, storage, memberUid);
+  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
   if ((await publicVideoRef.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
@@ -145,8 +154,8 @@ async function moveInviteVideoToPublicVideo(
   }
 
   const inviteVideoRef = videoToken
-    ? getInviteVideoRef(config, storage, videoToken)
-    : getPrivateVideoRef(config, storage, memberUid);
+    ? getPrivateInviteVideoRef(config, storage, videoToken)
+    : getPrivateUserOnlyVideoRef(config, storage, memberUid);
 
   await inviteVideoRef.move(publicVideoRef);
 }
@@ -176,7 +185,8 @@ async function movePrivateVideoToPublicVideo(
   config: Config,
   storage: BucketStorage,
   memberUid: string,
-  videoToken: string
+  videoToken: string,
+  removeOriginal: boolean
 ) {
   const publicVideoRef = (storage as Storage.Storage)
     .bucket(config.publicVideoBucket)
@@ -202,7 +212,51 @@ async function movePrivateVideoToPublicVideo(
     );
   }
 
-  await privateVideoRef.move(publicVideoRef);
+  await (removeOriginal
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
+
+  return publicVideoRef;
+}
+
+/**
+ * Expects the video to be at /private-video/<videoToken>/video.mp4.
+ * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
+ * TODO: Remove this once all invite videos have been moved to tokenized locations
+ * and tokens recorded on operations/members.
+ */
+async function movePrivateVideoToPublicInviteVideo(
+  config: Config,
+  storage: BucketStorage,
+  memberUid: string,
+  videoToken: string,
+  removeOriginal: boolean
+) {
+  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
+
+  if ((await publicVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
+    );
+  }
+
+  const privateVideoRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`private-video/${videoToken}/video.mp4`);
+
+  if (!(await privateVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Private video does not exist at expected location. Cannot move.",
+      {}
+    );
+  }
+
+  await (removeOriginal
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
 
   return publicVideoRef;
 }
@@ -260,7 +314,7 @@ export const uploadVideo = (
 ) => async (ctx: Context) => {
   const videoForUid = ctx.params.memberId;
 
-  const publicVideoRef = getPublicVideoRef(config, storage, videoForUid);
+  const publicVideoRef = getPublicInviteVideoRef(config, storage, videoForUid);
   if ((await publicVideoRef.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
@@ -305,7 +359,11 @@ export const uploadVideo = (
 
   await publicVideoRef.save(videoBuf);
 
-  const privateVideoRef = getPrivateVideoRef(config, storage, videoForUid);
+  const privateVideoRef = getPrivateUserOnlyVideoRef(
+    config,
+    storage,
+    videoForUid
+  );
   if ((await privateVideoRef.exists())[0]) {
     await privateVideoRef.delete();
   } else {
@@ -601,6 +659,145 @@ export const give = (
     };
   });
 
+async function _createInvitedMember(
+  config: Config,
+  storage: BucketStorage,
+  transaction: FirebaseFirestore.Transaction,
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference,
+  loggedInUid: string,
+  fullName: string,
+  username: string,
+  videoToken: string,
+  inviteToken: string
+) {
+  const inviteOperations = await operationsCollection
+    .where("op_code", "==", OperationType.INVITE)
+    .where("data.invite_token", "==", inviteToken)
+    .get();
+  if (inviteOperations.empty) {
+    throw new InvalidInviteTokenError();
+  }
+  const inviteOperation = inviteOperations.docs[0];
+
+  const requestInviteFromMemberId: MemberId = inviteOperation.get(
+    "creator_uid"
+  );
+  const isJointVideo: boolean = inviteOperation.get("data.is_joint_video");
+  const inviteVideoToken: string = inviteOperation.get("data.video_token");
+
+  if (
+    !requestInviteFromMemberId ||
+    isJointVideo === undefined ||
+    !inviteVideoToken
+  ) {
+    throw new InvalidInviteOperationError();
+  }
+
+  const requestingFromMember = await transaction.get(
+    membersCollection.doc(requestInviteFromMemberId)
+  );
+  if (!requestingFromMember.exists) {
+    throw new NotFoundError(requestInviteFromMemberId);
+  }
+
+  const newCreateMemberOperation: OperationToInsert = {
+    creator_uid: loggedInUid,
+    op_code: OperationType.CREATE_MEMBER,
+    data: {
+      username,
+      full_name: fullName,
+      request_invite_from_member_id: requestInviteFromMemberId,
+      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+    },
+    created_at: firestore.FieldValue.serverTimestamp()
+  };
+
+  const newRequestVerificationOperation: OperationToInsert = {
+    creator_uid: loggedInUid,
+    op_code: OperationType.REQUEST_VERIFICATION,
+    data: {
+      to_uid: requestInviteFromMemberId,
+      invite_token: inviteToken
+    },
+    created_at: firestore.FieldValue.serverTimestamp()
+  };
+  const newMember = {
+    username,
+    full_name: fullName,
+    request_invite_from_member_id: requestInviteFromMemberId,
+    invite_confirmed: false,
+    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    created_at: firestore.FieldValue.serverTimestamp()
+  };
+
+  const createMemberOperationRef = operationsCollection.doc();
+  transaction.create(createMemberOperationRef, newCreateMemberOperation);
+  const requestVerificationOperationRef = operationsCollection.doc();
+  transaction.create(
+    requestVerificationOperationRef,
+    newRequestVerificationOperation
+  );
+  transaction.create(membersCollection.doc(loggedInUid), newMember);
+
+  movePrivateVideoToPublicInviteVideo(
+    config,
+    storage,
+    loggedInUid,
+    videoToken,
+    // If the videoToken == the videoToken of the identity video, then we want to leave
+    // the private video in place so that the verifier can confirm it.
+    videoToken !== inviteVideoToken
+  );
+
+  return [createMemberOperationRef, requestVerificationOperationRef];
+}
+
+async function _createUninvitedMember(
+  config: Config,
+  storage: BucketStorage,
+  transaction: FirebaseFirestore.Transaction,
+  membersCollection: CollectionReference,
+  operationsCollection: CollectionReference,
+  loggedInUid: string,
+  fullName: string,
+  username: string,
+  videoToken: string
+) {
+  const newCreateMemberOperation: OperationToInsert = {
+    creator_uid: loggedInUid,
+    op_code: OperationType.CREATE_MEMBER,
+    data: {
+      username,
+      full_name: fullName,
+      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+    },
+    created_at: firestore.FieldValue.serverTimestamp()
+  };
+  const newMember = {
+    username,
+    full_name: fullName,
+    invite_confirmed: false,
+    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    created_at: firestore.FieldValue.serverTimestamp()
+  };
+
+  const createMemberOperationRef = operationsCollection.doc();
+  transaction.create(createMemberOperationRef, newCreateMemberOperation);
+  const newMemberRef = membersCollection.doc(loggedInUid);
+  transaction.create(newMemberRef, newMember);
+
+  movePrivateVideoToPublicInviteVideo(
+    config,
+    storage,
+    loggedInUid,
+    videoToken,
+    true
+  );
+
+  return [createMemberOperationRef];
+}
+
 /**
  * This endpoint begins the next version of how members will join Raha.
  *
@@ -632,108 +829,62 @@ export const createMember = (
   operationsCollection: CollectionReference
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
-    const newOperationReference = await db.runTransaction(async transaction => {
-      const loggedInUid = loggedInMemberToken.uid;
-      const loggedInMemberRef = membersCollection.doc(loggedInUid);
+    const newOperationReferences = await db.runTransaction(
+      async transaction => {
+        const loggedInUid = loggedInMemberToken.uid;
+        const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
-      if ((await transaction.get(loggedInMemberRef)).exists) {
-        throw new AlreadyRequestedError();
+        if ((await transaction.get(loggedInMemberRef)).exists) {
+          throw new AlreadyRequestedError();
+        }
+
+        const { username, fullName, videoToken, inviteToken } = call.body;
+
+        if (!username) {
+          throw new MissingParamsError(["username"]);
+        }
+        if (!fullName) {
+          throw new MissingParamsError(["fullName"]);
+        }
+        if (!videoToken) {
+          throw new MissingParamsError(["videoToken"]);
+        }
+
+        const opRefs = inviteToken
+          ? _createInvitedMember(
+              config,
+              storage,
+              transaction,
+              membersCollection,
+              operationsCollection,
+              loggedInUid,
+              fullName,
+              username,
+              videoToken,
+              inviteToken
+            )
+          : _createUninvitedMember(
+              config,
+              storage,
+              transaction,
+              membersCollection,
+              operationsCollection,
+              loggedInUid,
+              fullName,
+              username,
+              videoToken
+            );
+
+        return opRefs;
       }
-
-      const {
-        username,
-        fullName,
-        videoToken,
-        isJointVideo,
-        requestInviteFromMemberId
-      } = call.body;
-      const requestingFromMember = requestInviteFromMemberId
-        ? await transaction.get(
-            membersCollection.doc(requestInviteFromMemberId)
-          )
-        : undefined;
-      if (
-        requestInviteFromMemberId &&
-        (!requestingFromMember || !requestingFromMember.exists)
-      ) {
-        throw new NotFoundError(requestInviteFromMemberId);
-      }
-
-      if (!username) {
-        throw new MissingParamsError(["username"]);
-      }
-      if (!fullName) {
-        throw new MissingParamsError(["fullName"]);
-      }
-      if (isJointVideo === undefined) {
-        throw new MissingParamsError(["isJointVideo"]);
-      }
-
-      const newCreateMemberOperation: OperationToInsert = {
-        creator_uid: loggedInUid,
-        op_code: OperationType.CREATE_MEMBER,
-        data: {
-          username,
-          full_name: fullName,
-          ...(requestInviteFromMemberId
-            ? { request_invite_from_member_id: requestInviteFromMemberId }
-            : {})
-        },
-        created_at: firestore.FieldValue.serverTimestamp()
-      };
-      const newRequestVerificationOperation:
-        | OperationToInsert
-        | undefined = requestInviteFromMemberId
-        ? {
-            creator_uid: loggedInUid,
-            op_code: OperationType.REQUEST_VERIFICATION,
-            data: {
-              to_uid: requestInviteFromMemberId,
-              ...(isJointVideo
-                ? {
-                    video_url: getPublicInviteVideoUrlForMember(
-                      config,
-                      loggedInUid
-                    )
-                  }
-                : {})
-            },
-            created_at: firestore.FieldValue.serverTimestamp()
-          }
-        : undefined;
-      const newMember = {
-        username,
-        full_name: fullName,
-        ...(requestInviteFromMemberId
-          ? { request_invite_from_member_id: requestInviteFromMemberId }
-          : {}),
-        invite_confirmed: false,
-        created_at: firestore.FieldValue.serverTimestamp(),
-        request_invite_block_at: null,
-        request_invite_block_seq: null,
-        request_invite_op_seq: null
-      };
-
-      const createMemberOperationRef = operationsCollection.doc();
-      transaction.create(createMemberOperationRef, newCreateMemberOperation);
-      if (newRequestVerificationOperation) {
-        transaction.create(
-          operationsCollection.doc(),
-          newRequestVerificationOperation
-        );
-      }
-      transaction.create(membersCollection.doc(loggedInUid), newMember);
-
-      moveInviteVideoToPublicVideo(config, storage, loggedInUid, videoToken);
-
-      return createMemberOperationRef;
-    });
+    );
 
     return {
-      body: {
-        ...(await newOperationReference.get()).data(),
-        id: newOperationReference.id
-      } as Operation,
+      body: await Promise.all(
+        newOperationReferences.map(
+          async opRef => (await opRef.get()).data() as Operation
+        )
+      ),
       status: 201
     };
   });
@@ -760,9 +911,7 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      if (!("videoToken" in call.body) && !("videoUrl" in call.body)) {
-        throw new MissingParamsError(["videoToken", "videoUrl"]);
-      }
+      const { videoToken } = call.body;
 
       const existingVerifyOperations = await transaction.get(
         operationsCollection
@@ -777,14 +926,11 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      const videoUrl =
-        "videoToken" in call.body
-          ? getPublicUrlForMemberAndToken(
-              config,
-              loggedInUid,
-              call.body.videoToken
-            )
-          : call.body.videoUrl;
+      const videoUrl = getPublicUrlForMemberAndToken(
+        config,
+        loggedInUid,
+        call.body.videoToken
+      );
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
@@ -803,14 +949,13 @@ export const verify = (
       }
       transaction.set(newOperationRef, newOperation);
 
-      if ("videoToken" in call.body) {
-        await movePrivateVideoToPublicVideo(
-          config,
-          storage,
-          loggedInUid,
-          call.body.videoToken
-        );
-      }
+      await movePrivateVideoToPublicVideo(
+        config,
+        storage,
+        loggedInUid,
+        call.body.videoToken,
+        true
+      );
 
       return newOperationRef;
     });

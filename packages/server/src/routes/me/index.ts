@@ -9,7 +9,8 @@ import {
   MintBasicIncomePayload,
   MintType,
   MintReferralBonusPayload,
-  OperationType
+  OperationType,
+  OperationToBeCreated
 } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute } from "..";
 import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiResponse";
@@ -37,6 +38,10 @@ const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
+type OperationToInsert = OperationToBeCreated & {
+  created_at: firestore.FieldValue;
+};
+
 interface EmailMessage {
   to: string;
   from: string;
@@ -48,7 +53,8 @@ interface EmailMessage {
 export const sendInvite = (
   config: Config,
   sgMail: { send: (message: EmailMessage) => void },
-  members: CollectionReference
+  members: CollectionReference,
+  operations: CollectionReference
 ) =>
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInMemberId = loggedInMemberToken.uid;
@@ -64,17 +70,35 @@ export const sendInvite = (
       throw new MissingParamsError(["inviteEmail"]);
     }
 
+    if (videoToken && isJointVideo === undefined) {
+      throw new MissingParamsError(["isJointVideo"]);
+    }
+
+    // TODO generate this server side somewhere.
+    const inviteToken = videoToken;
+
+    // Invite token will be null if this comes from the web
+    // TODO: Deprecate web functionality and simplify this function.
+    if (inviteToken) {
+      const newInvite: OperationToInsert = {
+        creator_uid: loggedInMemberId,
+        op_code: OperationType.INVITE,
+        created_at: firestore.FieldValue.serverTimestamp(),
+        data: {
+          invite_token: inviteToken,
+          is_joint_video: !!isJointVideo,
+          video_token: inviteToken
+        }
+      };
+      await operations.doc().create(newInvite);
+    }
+
     const loggedInFullName = loggedInMember.get("full_name");
     const loggedInUsername = loggedInMember.get("username");
 
-    // If there is already a videoToken, give them the deeplink format.
-    const inviteLink = videoToken
-      ? new URL(
-          `/invite?r=${loggedInUsername}&t=${videoToken}${
-            isJointVideo ? `&j=${isJointVideo}` : ""
-          }`,
-          `https://raha.app`
-        ).toString()
+    // If there is an inviteToken, give them the deeplink format.
+    const inviteLink = inviteToken
+      ? new URL(`/invite?t=${inviteToken}`, `https://raha.app`).toString()
       : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
 
     const webInstructionsText = `Visit ${inviteLink} to join Raha!`;
@@ -91,13 +115,13 @@ export const sendInvite = (
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
 
-    // We use the existence of the videoToken to determine whether the user is
+    // We use the existence of the inviteToken to determine whether the user is
     // inviting from mobile or from the web. From mobile, we will always include
     // a video. If this assumption changes, please update.
-    const instructionsText = videoToken
+    const instructionsText = inviteToken
       ? mobileInstructionsText
       : webInstructionsText;
-    const instructionsHtml = videoToken
+    const instructionsHtml = inviteToken
       ? mobileInstructionsHtml
       : webInstructionsHtml;
 

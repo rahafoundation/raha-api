@@ -6,7 +6,10 @@ import {
   ApiEndpointDefinition,
   ApiEndpointUri
 } from "../ApiEndpoint";
-import { OperationApiResponseBody } from "../ApiEndpoint/ApiResponse";
+import {
+  OperationApiResponseBody,
+  OperationsApiResponseBody
+} from "../ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 
@@ -149,15 +152,14 @@ export type CreateMemberApiCall = ApiCallDefinition<
   void,
   {
     fullName: string;
-    videoToken?: string;
-    isJointVideo: boolean;
+    videoToken: string;
     username: string;
-    requestInviteFromMemberId?: string;
+    inviteToken?: string;
   }
 >;
 export type CreateMemberApiResponse = ApiResponseDefinition<
   201,
-  OperationApiResponseBody
+  OperationsApiResponseBody
 >;
 
 export type CreateMemberApiEndpoint = ApiEndpointDefinition<
@@ -181,7 +183,7 @@ export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: string },
-  { videoToken: string } | { videoUrl: string }
+  { videoToken: string }
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,
