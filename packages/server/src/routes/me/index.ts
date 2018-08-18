@@ -70,7 +70,7 @@ export const sendInvite = (
       throw new MissingParamsError(["inviteEmail"]);
     }
 
-    if (videoToken && !isJointVideo) {
+    if (videoToken && isJointVideo === undefined) {
       throw new MissingParamsError(["isJointVideo"]);
     }
 
@@ -96,11 +96,7 @@ export const sendInvite = (
 
     // If there is already a videoToken, give them the deeplink format.
     const inviteLink = inviteToken
-      ? new URL(
-          `/invite?t=${inviteToken}
-          }`,
-          `https://raha.app`
-        ).toString()
+      ? new URL(`/invite?t=${inviteToken}`, `https://raha.app`).toString()
       : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
 
     const webInstructionsText = `Visit ${inviteLink} to join Raha!`;
