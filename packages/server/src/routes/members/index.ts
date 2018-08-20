@@ -19,7 +19,6 @@ import {
   GiveApiEndpoint,
   WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint,
-  RequestInviteApiEndpoint,
   CreateMemberApiEndpoint,
   VerifyMemberApiEndpoint
 } from "@raha/api-shared/dist/routes/members/definitions";
