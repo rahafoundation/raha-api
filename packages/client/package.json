@@ -1,6 +1,6 @@
 {
   "name": "@raha/api",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "API Client for Raha",
   "files": [
     "dist/**/*"
