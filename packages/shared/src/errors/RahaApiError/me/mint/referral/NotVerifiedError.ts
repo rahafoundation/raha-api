@@ -3,27 +3,27 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from "../../..";
 import { MemberId } from "../../../../../models/identifiers";
 
-export const ERROR_CODE = "mint.referral.notTrusted";
-export interface NotTrustedErrorBody {
+export const ERROR_CODE = "mint.referral.notVerified";
+export interface NotVerifiedErrorBody {
   errorCode: typeof ERROR_CODE;
   memberId: MemberId;
 }
 
 /**
  * Member tries to redeem referral bonus without completing the invite flow by
- * trusting the new member.
+ * verifying the new member.
  */
-export class NotTrustedError extends RahaApiError<
+export class NotVerifiedError extends RahaApiError<
   typeof ERROR_CODE,
-  NotTrustedErrorBody
+  NotVerifiedErrorBody
 > {
   get errorCode(): typeof ERROR_CODE {
     return ERROR_CODE;
   }
 
   constructor(memberId: MemberId) {
-    super(httpStatus.FORBIDDEN, "You have not trusted this member.", {
-      errorCode: "mint.referral.notTrusted",
+    super(httpStatus.FORBIDDEN, "You have not verified this member.", {
+      errorCode: "mint.referral.notVerified",
       memberId
     });
 
@@ -33,6 +33,6 @@ export class NotTrustedError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, NotTrustedError.prototype);
+    Object.setPrototypeOf(this, NotVerifiedError.prototype);
   }
 }
