@@ -73,6 +73,8 @@ yarn deploy-test
 yarn deploy-prod
 ```
 
+If you're getting Typescript errors related to `@raha/api-shared`, go to `packages/shared` and run `yarn build` first.
+
 ## Testing
 
 Run `yarn test`.
