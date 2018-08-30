@@ -26,7 +26,7 @@ import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/Mi
 import { MintAmountTooLargeError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/MintAmountTooLargeError";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { NotInvitedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotInvitedError";
-import { NotTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotTrustedError";
+import { NotVerifiedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotVerifiedError";
 import { AlreadyMintedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/AlreadyMintedError";
 import { MintInvalidTypeError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/MintInvalidTypeError";
 import { InvalidNumberError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/InvalidNumberError";
@@ -197,7 +197,7 @@ async function mintReferralBonus(
   }
 
   if (!invitedMember.get("invite_confirmed")) {
-    throw new NotTrustedError(invitedMemberId);
+    throw new NotVerifiedError(invitedMemberId);
   }
 
   if (bigAmount.gt(RAHA_REFERRAL_BONUS)) {

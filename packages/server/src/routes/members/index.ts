@@ -481,7 +481,7 @@ export const trust = (
         created_at: firestore.FieldValue.serverTimestamp()
       };
       const newOperationRef = operationsCollection.doc();
-      if (memberToTrust.get("request_invite_from_uid") === loggedInUid) {
+      if (memberToTrust.get("request_invite_from_member_id") === loggedInUid) {
         transaction.update(memberToTrust.ref, {
           invite_confirmed: true
         });
@@ -852,6 +852,10 @@ export const verify = (
 
       const { videoToken } = call.body;
 
+      if (!videoToken) {
+        throw new MissingParamsError(["videoToken"]);
+      }
+
       const existingVerifyOperations = await transaction.get(
         operationsCollection
           .where("creator_uid", "==", loggedInUid)
@@ -868,7 +872,7 @@ export const verify = (
       const videoUrl = getPublicUrlForMemberAndToken(
         config,
         loggedInUid,
-        call.body.videoToken
+        videoToken
       );
 
       const newOperation: OperationToInsert = {
@@ -881,7 +885,7 @@ export const verify = (
         created_at: firestore.FieldValue.serverTimestamp()
       };
       const newOperationRef = operationsCollection.doc();
-      if (memberToVerify.get("request_invite_from_uid") === loggedInUid) {
+      if (memberToVerify.get("request_invite_from_member_id") === loggedInUid) {
         transaction.update(memberToVerify.ref, {
           invite_confirmed: true
         });
@@ -892,7 +896,7 @@ export const verify = (
         config,
         storage,
         loggedInUid,
-        call.body.videoToken,
+        videoToken,
         true
       );
 
