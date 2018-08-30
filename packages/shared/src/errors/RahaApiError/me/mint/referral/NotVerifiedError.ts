@@ -22,7 +22,7 @@ export class NotVerifiedError extends RahaApiError<
   }
 
   constructor(memberId: MemberId) {
-    super(httpStatus.FORBIDDEN, "You have not verified this member.", {
+    super(httpStatus.BAD_REQUEST, "You have not verified this member.", {
       errorCode: "mint.referral.notVerified",
       memberId
     });

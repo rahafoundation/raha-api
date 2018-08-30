@@ -21,10 +21,14 @@ export class AlreadyMintedError extends RahaApiError<
   }
 
   constructor(memberId: MemberId) {
-    super(httpStatus.FORBIDDEN, "You have not invited this member.", {
-      errorCode: "mint.referral.alreadyMinted",
-      memberId
-    });
+    super(
+      httpStatus.BAD_REQUEST,
+      "You already minted your bonus for this member.",
+      {
+        errorCode: "mint.referral.alreadyMinted",
+        memberId
+      }
+    );
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
     // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
