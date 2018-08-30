@@ -21,7 +21,7 @@ export class NotInvitedError extends RahaApiError<
   }
 
   constructor(memberId: MemberId) {
-    super(httpStatus.FORBIDDEN, "You have not invited this member.", {
+    super(httpStatus.BAD_REQUEST, "You have not invited this member.", {
       errorCode: "mint.referral.notInvited",
       memberId
     });
