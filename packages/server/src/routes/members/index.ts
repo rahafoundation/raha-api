@@ -792,6 +792,11 @@ export const createMember = (
 
 /**
  * Create a verify relationship to a target member from the logged in member
+ *
+ * As of 2018/08/31, the `video_token` field in the payload refers to a Google
+ * Cloud bucket that contains two files: `video.mp4` and `thumbnail.jpg`. These
+ * files are uploaded by the client directly via Firebase, not by any calls
+ * to the API.
  */
 export const verify = (
   config: Config,
