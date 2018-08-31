@@ -64,18 +64,6 @@ function getPrivateUserOnlyVideoRef(
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
-function getPrivateInviteVideoRef(
-  config: Config,
-  storage: BucketStorage,
-  videoToken: string
-): Storage.File {
-  // TODO: this is a quick hack to make the types work out because test and prod
-  // use different storage backends; see the corresponding TODO in app.ts
-  return (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`invite-video/${videoToken}/invite.mp4`);
-}
-
 function getPublicInviteVideoRef(
   config: Config,
   storage: BucketStorage,
@@ -131,32 +119,6 @@ async function createCoconutVideoEncodingJob(
       }
     }
   );
-}
-
-/**
- * If videoToken is null, expects the video to be at /private-video/<uid>/invite.mp4. Otherwise looks for the video at
- * /private-video/<videoToken>/invite.mp4.
- */
-async function moveInviteVideoToPublicVideo(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string,
-  videoToken?: string
-) {
-  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
-  if ((await publicVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
-
-  const inviteVideoRef = videoToken
-    ? getPrivateInviteVideoRef(config, storage, videoToken)
-    : getPrivateUserOnlyVideoRef(config, storage, memberUid);
-
-  await inviteVideoRef.move(publicVideoRef);
 }
 
 function getPublicUrlForMemberAndToken(
