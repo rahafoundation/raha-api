@@ -18,6 +18,7 @@ export function createMember(
   apiBase: string,
   authToken: string,
   fullName: string,
+  emailAddress: string,
   username: string,
   videoToken: string,
   inviteToken?: string
@@ -29,6 +30,7 @@ export function createMember(
       body: {
         fullName,
         username,
+        emailAddress,
         videoToken,
         inviteToken
       }

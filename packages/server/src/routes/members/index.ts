@@ -623,6 +623,7 @@ async function _createInvitedMember(
   operationsCollection: CollectionReference,
   loggedInUid: string,
   fullName: string,
+  emailAddress: string,
   username: string,
   videoToken: string,
   inviteToken: string
@@ -681,6 +682,10 @@ async function _createInvitedMember(
   const newMember = {
     username,
     full_name: fullName,
+    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
+    // Updated client will have version number 0.0.6 for Android.
+    email_address: emailAddress || "",
+    email_address_is_verified: false,
     request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
     identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
@@ -717,6 +722,7 @@ async function _createUninvitedMember(
   operationsCollection: CollectionReference,
   loggedInUid: string,
   fullName: string,
+  emailAddress: string,
   username: string,
   videoToken: string
 ) {
@@ -733,6 +739,10 @@ async function _createUninvitedMember(
   const newMember = {
     username,
     full_name: fullName,
+    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
+    // Updated client will have version number 0.0.6 for Android.
+    email_address: emailAddress || "",
+    email_address_is_verified: false,
     invite_confirmed: false,
     identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
     created_at: firestore.FieldValue.serverTimestamp()
@@ -794,7 +804,13 @@ export const createMember = (
           throw new AlreadyRequestedError();
         }
 
-        const { username, fullName, videoToken, inviteToken } = call.body;
+        const {
+          username,
+          fullName,
+          emailAddress,
+          videoToken,
+          inviteToken
+        } = call.body;
 
         if (!username) {
           throw new MissingParamsError(["username"]);
@@ -802,6 +818,11 @@ export const createMember = (
         if (!fullName) {
           throw new MissingParamsError(["fullName"]);
         }
+        // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
+        // Updated client will have version number 0.0.6 for Android.
+        // if (!emailAddress) {
+        //   throw new MissingParamsError(["emailAddress"]);
+        // }
         if (!videoToken) {
           throw new MissingParamsError(["videoToken"]);
         }
@@ -815,6 +836,7 @@ export const createMember = (
               operationsCollection,
               loggedInUid,
               fullName,
+              emailAddress,
               username,
               videoToken,
               inviteToken
@@ -827,6 +849,7 @@ export const createMember = (
               operationsCollection,
               loggedInUid,
               fullName,
+              emailAddress,
               username,
               videoToken
             );
