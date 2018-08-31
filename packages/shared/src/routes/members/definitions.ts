@@ -121,6 +121,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
   void,
   {
     fullName: string;
+    emailAddress: string;
     videoToken: string;
     username: string;
     inviteToken?: string;
