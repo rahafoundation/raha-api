@@ -107,11 +107,11 @@ export const sendInvite = (
     const mobileInstructionsText =
       "1. Download the app:\n" +
       "  Android: https://play.google.com/store/apps/details?id=app.raha.mobile" +
-      "  iOS: Please hang tight! The iOS app is on the way." +
+      "  iOS: https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8" +
       "\n\n" +
       `2. Click on your invite link to join: ${inviteLink}`;
     const mobileInstructionsHtml =
-      "<ol><li>Download the app for <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a>. (Please hang tight! The iOS app is on the way.)</li>" +
+      "<ol><li>Download the app: <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a> or <a href='https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8'>iOS</a>.</li>" +
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
 
@@ -360,7 +360,7 @@ export const sendAppInstallText = (config: Config) =>
         body:
           "Hi! You can download the Raha app at the following links.\n" +
           " Android: https://play.google.com/store/apps/details?id=app.raha.mobile\n" +
-          " iOS: Please hang tight! The iOS app on the way.",
+          " iOS: https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8",
         to: mobileNumber,
         from: config.twilio.fromNumber,
         // I don't think the Twilio SDK actually supports the Messaging Service feature atm.
