@@ -12,6 +12,9 @@ export enum OperationType {
   GIVE = "GIVE"
 }
 
+/**
+ * TODO: make CreateMember video URLs be a part of the operation
+ */
 export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
@@ -21,6 +24,10 @@ export interface RequestVerificationPayload {
   to_uid: MemberId;
   invite_token?: string;
 }
+
+/**
+ * TODO: make Verify thumbnail URLs be a part of the operation
+ */
 export interface VerifyPayload {
   to_uid: MemberId;
   video_url: string;

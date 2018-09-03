@@ -64,16 +64,8 @@ function getPrivateUserOnlyVideoRef(
     .file(`private-video/${memberUid}/invite.mp4`);
 }
 
-function getPrivateInviteVideoRef(
-  config: Config,
-  storage: BucketStorage,
-  videoToken: string
-): Storage.File {
-  // TODO: this is a quick hack to make the types work out because test and prod
-  // use different storage backends; see the corresponding TODO in app.ts
-  return (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`invite-video/${videoToken}/invite.mp4`);
+function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
+  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
 }
 
 function getPublicInviteVideoRef(
@@ -81,9 +73,17 @@ function getPublicInviteVideoRef(
   storage: BucketStorage,
   uid: string
 ): Storage.File {
-  return (storage as Storage.Storage)
-    .bucket(config.publicVideoBucket)
-    .file(`${uid}/invite.mp4`);
+  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
+}
+
+function getPublicInviteVideoThumbnailRef(
+  config: Config,
+  storage: BucketStorage,
+  uid: string
+): Storage.File {
+  return getPublicVideoBucketRef(config, storage).file(
+    `${uid}/invite.mp4.thumb.jpg`
+  );
 }
 
 async function createCoconutVideoEncodingJob(
@@ -133,32 +133,6 @@ async function createCoconutVideoEncodingJob(
   );
 }
 
-/**
- * If videoToken is null, expects the video to be at /private-video/<uid>/invite.mp4. Otherwise looks for the video at
- * /private-video/<videoToken>/invite.mp4.
- */
-async function moveInviteVideoToPublicVideo(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string,
-  videoToken?: string
-) {
-  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
-  if ((await publicVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
-
-  const inviteVideoRef = videoToken
-    ? getPrivateInviteVideoRef(config, storage, videoToken)
-    : getPrivateUserOnlyVideoRef(config, storage, memberUid);
-
-  await inviteVideoRef.move(publicVideoRef);
-}
-
 function getPublicUrlForMemberAndToken(
   config: Config,
   memberUid: string,
@@ -187,9 +161,14 @@ async function movePrivateVideoToPublicVideo(
   videoToken: string,
   removeOriginal: boolean
 ) {
-  const publicVideoRef = (storage as Storage.Storage)
-    .bucket(config.publicVideoBucket)
-    .file(`${memberUid}/${videoToken}/video.mp4`);
+  const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
+  const publicVideoBucket = (storage as Storage.Storage).bucket(
+    config.publicVideoBucket
+  );
+  const publicVideoRef = publicVideoBucket.file(newVideoPath);
+  const publicThumbnailRef = publicVideoBucket.file(
+    `${newVideoPath}.thumb.jpg`
+  );
 
   if ((await publicVideoRef.exists())[0]) {
     throw new HttpApiError(
@@ -199,9 +178,16 @@ async function movePrivateVideoToPublicVideo(
     );
   }
 
-  const privateVideoRef = (storage as Storage.Storage)
+  const privateVideoPath = `private-video/${videoToken}`;
+  const privateVideoBucket = (storage as Storage.Storage).bucket(
+    config.privateVideoBucket
+  );
+  const privateVideoRef = privateVideoBucket.file(
+    `${privateVideoPath}/video.mp4`
+  );
+  const privateVideoThumbnailRef = (storage as Storage.Storage)
     .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/video.mp4`);
+    .file(`${privateVideoPath}/thumbnail.jpg`);
 
   if (!(await privateVideoRef.exists())[0]) {
     throw new HttpApiError(
@@ -212,8 +198,14 @@ async function movePrivateVideoToPublicVideo(
   }
 
   await (removeOriginal
-    ? privateVideoRef.move(publicVideoRef)
-    : privateVideoRef.copy(publicVideoRef));
+    ? Promise.all([
+        privateVideoRef.move(publicVideoRef),
+        privateVideoThumbnailRef.move(publicThumbnailRef)
+      ])
+    : Promise.all([
+        privateVideoRef.copy(publicVideoRef),
+        privateVideoThumbnailRef.copy(publicThumbnailRef)
+      ]));
 
   return publicVideoRef;
 }
@@ -232,8 +224,18 @@ async function movePrivateVideoToPublicInviteVideo(
   removeOriginal: boolean
 ) {
   const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
+  const publicThumbnailRef = getPublicInviteVideoThumbnailRef(
+    config,
+    storage,
+    memberUid
+  );
 
-  if ((await publicVideoRef.exists())[0]) {
+  if (
+    (await Promise.all([
+      publicVideoRef.exists(),
+      publicThumbnailRef.exists()
+    ])).find(x => x[0])
+  ) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
       "Video already exists at intended storage destination. Cannot overwrite.",
@@ -245,7 +247,16 @@ async function movePrivateVideoToPublicInviteVideo(
     .bucket(config.privateVideoBucket)
     .file(`private-video/${videoToken}/video.mp4`);
 
-  if (!(await privateVideoRef.exists())[0]) {
+  const privateThumbnailRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`private-video/${videoToken}/thumbnail.jpg`);
+
+  if (
+    (await Promise.all([
+      privateVideoRef.exists(),
+      privateThumbnailRef.exists()
+    ])).find(x => !x[0])
+  ) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
       "Private video does not exist at expected location. Cannot move.",
@@ -254,8 +265,14 @@ async function movePrivateVideoToPublicInviteVideo(
   }
 
   await (removeOriginal
-    ? privateVideoRef.move(publicVideoRef)
-    : privateVideoRef.copy(publicVideoRef));
+    ? Promise.all([
+        privateVideoRef.move(publicVideoRef),
+        privateThumbnailRef.move(publicThumbnailRef)
+      ])
+    : Promise.all([
+        privateVideoRef.copy(publicVideoRef),
+        privateThumbnailRef.copy(publicThumbnailRef)
+      ]));
 
   return publicVideoRef;
 }
@@ -830,6 +847,11 @@ export const createMember = (
 
 /**
  * Create a verify relationship to a target member from the logged in member
+ *
+ * As of 2018/08/31, the `video_token` field in the payload refers to a Google
+ * Cloud bucket that contains two files: `video.mp4` and `thumbnail.jpg`. These
+ * files are uploaded by the client directly via Firebase, not by any calls
+ * to the API.
  */
 export const verify = (
   config: Config,
