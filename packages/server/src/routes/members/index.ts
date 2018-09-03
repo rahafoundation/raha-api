@@ -667,7 +667,7 @@ async function _createInvitedMember(
     full_name: fullName,
     // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
     // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || "",
+    email_address: emailAddress || null,
     email_address_is_verified: false,
     request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
@@ -724,7 +724,7 @@ async function _createUninvitedMember(
     full_name: fullName,
     // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
     // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || "",
+    email_address: emailAddress || null,
     email_address_is_verified: false,
     invite_confirmed: false,
     identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
