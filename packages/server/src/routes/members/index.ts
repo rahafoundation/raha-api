@@ -795,19 +795,19 @@ export const createMember = (
           inviteToken
         } = call.body;
 
-        if (!username) {
-          throw new MissingParamsError(["username"]);
-        }
-        if (!fullName) {
-          throw new MissingParamsError(["fullName"]);
-        }
-        // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
-        // Updated client will have version number 0.0.6 for Android.
-        // if (!emailAddress) {
-        //   throw new MissingParamsError(["emailAddress"]);
-        // }
-        if (!videoToken) {
-          throw new MissingParamsError(["videoToken"]);
+        const requiredParams = {
+          username,
+          fullName,
+          // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
+          // Updated client will have version number 0.0.6 for Android.
+          // emailAddress
+          videoToken
+        };
+        const missingParams = (Object.keys(requiredParams) as Array<
+          keyof typeof requiredParams
+        >).filter(key => !requiredParams[key]);
+        if (missingParams.length !== 0) {
+          throw new MissingParamsError(missingParams);
         }
 
         const opRefs = inviteToken
