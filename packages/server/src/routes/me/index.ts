@@ -66,64 +66,51 @@ export const sendInvite = (
       throw new InviterMustBeInvitedError();
     }
 
-    if (!inviteEmail) {
-      throw new MissingParamsError(["inviteEmail"]);
-    }
-
-    if (videoToken && isJointVideo === undefined) {
-      throw new MissingParamsError(["isJointVideo"]);
+    const requiredParams = {
+      inviteEmail,
+      videoToken,
+      isJointVideo
+    };
+    const missingParams = (Object.keys(requiredParams) as Array<
+      keyof typeof requiredParams
+    >).filter(key => requiredParams[key] === undefined);
+    if (missingParams.length !== 0) {
+      throw new MissingParamsError(missingParams);
     }
 
     // TODO generate this server side somewhere.
     const inviteToken = videoToken;
 
-    // Invite token will be null if this comes from the web
-    // TODO: Deprecate web functionality and simplify this function.
-    if (inviteToken) {
-      const newInvite: OperationToInsert = {
-        creator_uid: loggedInMemberId,
-        op_code: OperationType.INVITE,
-        created_at: firestore.FieldValue.serverTimestamp(),
-        data: {
-          invite_token: inviteToken,
-          is_joint_video: !!isJointVideo,
-          video_token: inviteToken
-        }
-      };
-      await operations.doc().create(newInvite);
-    }
+    const newInvite: OperationToInsert = {
+      creator_uid: loggedInMemberId,
+      op_code: OperationType.INVITE,
+      created_at: firestore.FieldValue.serverTimestamp(),
+      data: {
+        invite_token: inviteToken,
+        is_joint_video: isJointVideo,
+        video_token: inviteToken
+      }
+    };
+    await operations.doc().create(newInvite);
 
     const loggedInFullName = loggedInMember.get("full_name");
-    const loggedInUsername = loggedInMember.get("username");
 
-    // If there is an inviteToken, give them the deeplink format.
-    const inviteLink = inviteToken
-      ? new URL(`/invite?t=${inviteToken}`, `https://d.raha.app`).toString()
-      : new URL(`/m/${loggedInUsername}/invite`, config.appBase).toString();
+    // Deeplink invite url.
+    const inviteLink = new URL(
+      `/invite?t=${inviteToken}`,
+      `https://d.raha.app`
+    ).toString();
 
-    const webInstructionsText = `Visit ${inviteLink} to join Raha!`;
-    const webInstructionsHtml = `<span><strong>Visit <a href="${inviteLink}">${inviteLink}</a> to join Raha!</strong></span>`;
-
-    const mobileInstructionsText =
+    const instructionsText =
       "1. Download the app:\n" +
       "  Android: https://play.google.com/store/apps/details?id=app.raha.mobile" +
       "  iOS: https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8" +
       "\n\n" +
       `2. Click on your invite link to join: ${inviteLink}`;
-    const mobileInstructionsHtml =
+    const instructionsHtml =
       "<ol><li>Download the app: <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a> or <a href='https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8'>iOS</a>.</li>" +
       `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
       "</ol>";
-
-    // We use the existence of the inviteToken to determine whether the user is
-    // inviting from mobile or from the web. From mobile, we will always include
-    // a video. If this assumption changes, please update.
-    const instructionsText = inviteToken
-      ? mobileInstructionsText
-      : webInstructionsText;
-    const instructionsHtml = inviteToken
-      ? mobileInstructionsHtml
-      : webInstructionsHtml;
 
     const msg = {
       to: inviteEmail,
