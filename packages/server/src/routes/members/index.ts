@@ -1,14 +1,9 @@
-import * as crypto from "crypto";
 import * as httpStatus from "http-status";
-import { URL } from "url";
 
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import * as Storage from "@google-cloud/storage";
-import * as asyncBusboy from "async-busboy";
 import Big from "big.js";
-import * as coconut from "coconutjs";
 import { firestore, storage as adminStorage } from "firebase-admin";
-import { Context } from "koa";
 
 import {
   Operation,
@@ -17,23 +12,21 @@ import {
 } from "@raha/api-shared/dist/models/Operation";
 import {
   GiveApiEndpoint,
-  WebRequestInviteApiEndpoint,
   TrustMemberApiEndpoint,
   CreateMemberApiEndpoint,
   VerifyMemberApiEndpoint
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
-import { AlreadyRequestedError } from "@raha/api-shared/dist/errors/RahaApiError/members/requestInvite/AlreadyRequestedError";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { AlreadyTrustedError } from "@raha/api-shared/dist/errors/RahaApiError/members/trust/AlreadyTrustedError";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteToken";
 import { InvalidInviteOperationError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteOperation";
+import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 
 import { createApiRoute } from "..";
 import { Config } from "../../config/prod.config";
-import { Readable as ReadableStream } from "stream";
 import { getMemberById } from "../../collections/members";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
@@ -41,28 +34,10 @@ type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
 };
 
-const TEN_MINUTES = 1000 * 60 * 10;
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
-
-/**
- * This function is specifically used by the web-invite flow to locate files
- * that are restricted to uploading-user-only access. These videos must be
- * scrubbed by Coconut before being accessed by anyone else.
- */
-function getPrivateUserOnlyVideoRef(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string
-): Storage.File {
-  // TODO: this is a quick hack to make the types work out because test and prod
-  // use different storage backends; see the corresponding TODO in app.ts
-  return (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${memberUid}/invite.mp4`);
-}
 
 function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
   return (storage as Storage.Storage).bucket(config.publicVideoBucket);
@@ -83,53 +58,6 @@ function getPublicInviteVideoThumbnailRef(
 ): Storage.File {
   return getPublicVideoBucketRef(config, storage).file(
     `${uid}/invite.mp4.thumb.jpg`
-  );
-}
-
-async function createCoconutVideoEncodingJob(
-  config: Config,
-  storage: BucketStorage,
-  coconutApiKey: string,
-  memberUid: string
-) {
-  const videoRef = getPrivateUserOnlyVideoRef(config, storage, memberUid);
-
-  const temporaryAccessUrl = (await videoRef.getSignedUrl({
-    action: "read",
-    expires: Date.now() + TEN_MINUTES
-  }))[0];
-
-  const webhookUrl = new URL(
-    `members/${memberUid}/notify_video_encoded`,
-    config.apiBase
-  );
-  const uploadUrl = new URL(
-    `members/${memberUid}/upload_video`,
-    config.apiBase
-  );
-
-  coconut.createJob(
-    {
-      api_key: coconutApiKey,
-      source: temporaryAccessUrl,
-      webhook: webhookUrl.toString(),
-      outputs: {
-        mp4: uploadUrl.toString()
-      }
-    },
-    (job: any) => {
-      if (job.status === "ok") {
-        // tslint:disable-next-line:no-console
-        console.log("Coconut encoding job created successfully.");
-        // tslint:disable-next-line:no-console
-        console.log(job.id);
-      } else {
-        // tslint:disable-next-line:no-console
-        console.error("Coconut encoding job error", job.error_code);
-        // tslint:disable-next-line:no-console
-        console.error(job.error_message);
-      }
-    }
   );
 }
 
@@ -276,188 +204,6 @@ async function movePrivateVideoToPublicInviteVideo(
 
   return publicVideoRef;
 }
-
-/**
- * Reads the entire stream of video data into a Buffer.
- * @param videoStream stream of video data.
- */
-function getVideoBufferFromStream(
-  videoStream: ReadableStream
-): Promise<Buffer> {
-  const buffers: Buffer[] = [];
-  const bufferPromise = new Promise<Buffer>((resolve, reject) => {
-    videoStream.on("data", (data: Buffer) => {
-      buffers.push(data);
-    });
-    videoStream.on("end", () => {
-      resolve(Buffer.concat(buffers));
-    });
-  });
-  videoStream.resume();
-  return bufferPromise;
-}
-
-/**
- * Calculate the hex-encoded sha256 hash of the video.
- * @param videoBuffer Buffer of video data.
- */
-function getHashFromVideoBuffer(videoBuffer: Buffer): string {
-  const hash = crypto.createHash("sha256");
-  hash.update(videoBuffer);
-  return hash.digest("hex");
-}
-
-/**
- * Endpoint coconut calls to notify an uploaded video has been successfully
- * encoded. Not intended to be called by a user, so doesn't go through the
- * `createApiRoute` flow.
- */
-export const notifyVideoEncoded = (ctx: Context) => {
-  ctx.status = 200;
-};
-
-/**
- * Endpoint to upload a user's invite video.
- * Doesn't go through the `createApiRoute` flow.
- *
- * TODO: should it use `createApiRoute` and have documented types?
- * TODO: if do above, should also use the RahaApiError class for structured response
- */
-export const uploadVideo = (
-  config: Config,
-  storage: BucketStorage,
-  uidToVideoHash: CollectionReference
-) => async (ctx: Context) => {
-  const videoForUid = ctx.params.memberId;
-
-  const publicVideoRef = getPublicInviteVideoRef(config, storage, videoForUid);
-  if ((await publicVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
-
-  const reqType = ctx.request.type;
-  if (reqType !== "multipart/form-data") {
-    ctx.status = 400;
-    ctx.body = "Must submit data as multipart/form-data";
-    return;
-  }
-
-  const { files } = await asyncBusboy(ctx.req);
-  const encodedVideo = files.filter(
-    (file: any) => file.fieldname === "encoded_video"
-  );
-  if (encodedVideo.length !== 1) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Zero or multiple encoded videos supplied with request.",
-      {}
-    );
-  }
-
-  const videoBuf = await getVideoBufferFromStream(encodedVideo[0]);
-  const hash = getHashFromVideoBuffer(videoBuf);
-
-  const hashMappingRef = uidToVideoHash.doc(videoForUid);
-  if ((await hashMappingRef.get()).exists) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Invite video already exists for specified user.",
-      {}
-    );
-  }
-  await hashMappingRef.create({
-    hash
-  });
-
-  await publicVideoRef.save(videoBuf);
-
-  const privateVideoRef = getPrivateUserOnlyVideoRef(
-    config,
-    storage,
-    videoForUid
-  );
-  if ((await privateVideoRef.exists())[0]) {
-    await privateVideoRef.delete();
-  } else {
-    // tslint:disable-next-line:no-console
-    console.warn("We expected a private video file to exist that did not.");
-  }
-
-  ctx.status = 201;
-};
-
-export const webRequestInvite = (
-  config: Config,
-  storage: BucketStorage,
-  coconutApiKey: string,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
-) =>
-  createApiRoute<WebRequestInviteApiEndpoint>(
-    async (call, loggedInMemberToken) => {
-      const loggedInUid = loggedInMemberToken.uid;
-      const loggedInMemberRef = membersCollection.doc(loggedInUid);
-
-      if ((await loggedInMemberRef.get()).exists) {
-        throw new AlreadyRequestedError();
-      }
-
-      const { username, fullName } = call.body;
-      const requestingFromId = call.params.memberId;
-      const requestingFromMember = await getMemberById(
-        membersCollection,
-        requestingFromId
-      );
-      if (!requestingFromMember) {
-        throw new NotFoundError(requestingFromId);
-      }
-
-      const newOperation: OperationToInsert = {
-        creator_uid: loggedInUid,
-        op_code: OperationType.REQUEST_INVITE,
-        data: {
-          username,
-          full_name: fullName,
-          to_uid: requestingFromId
-          // TODO: Eventually we need to extract file extension from this or a similar parameter.
-          // Currently we only handle videos uploaded as invite.mp4.
-          // video_url: ctx.request.body.videoUrl
-        },
-        created_at: firestore.FieldValue.serverTimestamp()
-      };
-      const newMember = {
-        username,
-        full_name: fullName,
-        request_invite_from_member_id: requestingFromId,
-        invite_confirmed: false,
-        created_at: firestore.FieldValue.serverTimestamp(),
-        request_invite_block_at: null,
-        request_invite_block_seq: null,
-        request_invite_op_seq: null
-      };
-
-      createCoconutVideoEncodingJob(
-        config,
-        storage,
-        coconutApiKey,
-        loggedInUid
-      );
-
-      const newOperationDoc = await operationsCollection.add(newOperation);
-      await loggedInMemberRef.create(newMember);
-      return {
-        body: {
-          ...(await newOperationDoc.get()).data(),
-          id: newOperationDoc.id
-        } as Operation,
-        status: 201
-      };
-    }
-  );
 
 /**
  * Create a trust relationship to a target member from the logged in member
@@ -765,8 +511,6 @@ async function _createUninvitedMember(
 }
 
 /**
- * This endpoint begins the next version of how members will join Raha.
- *
  * For someone to become a full member of Raha, 2-3 operations must happen:
  *  1. CreateMember - This creates a Member account for the user and includes a
  *       video in which the user states their identity.
@@ -781,9 +525,7 @@ async function _createUninvitedMember(
  * member operations will have different videos. Otherwise, they can point to the
  * same video.
  *
- * Eventually, RequestInvite will be replaced by CreateMember and Verify operations.
- *
- * However, the Trust operation will continue to coexist with Verify. Trust does not
+ * The Trust operation coexists with Verify. Trust does not
  * require a video, but is also not sufficient to verify a member's identity for
  * the UBI.
  */
@@ -801,7 +543,7 @@ export const createMember = (
         const loggedInMemberRef = membersCollection.doc(loggedInUid);
 
         if ((await transaction.get(loggedInMemberRef)).exists) {
-          throw new AlreadyRequestedError();
+          throw new MemberAlreadyExistsError();
         }
 
         const {
@@ -822,7 +564,7 @@ export const createMember = (
         };
         const missingParams = (Object.keys(requiredParams) as Array<
           keyof typeof requiredParams
-        >).filter(key => !requiredParams[key]);
+        >).filter(key => requiredParams[key] === undefined);
         if (missingParams.length !== 0) {
           throw new MissingParamsError(missingParams);
         }
