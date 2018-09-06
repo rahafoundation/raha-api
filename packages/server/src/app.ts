@@ -19,17 +19,13 @@ import * as operationsRoutes from "./routes/operations";
 import * as ssoRoutes from "./routes/sso";
 
 import { config } from "./config/config";
-import {
-  coconutApiKey,
-  sendgridApiKey
-} from "./config/DO_NOT_COMMIT.secrets.config";
+import { sendgridApiKey } from "./config/DO_NOT_COMMIT.secrets.config";
 import { createApiRoute } from "./routes";
 import { HttpVerb } from "@raha/api-shared/dist/helpers/http";
 import { ApiLocation } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiCall";
 import { listOperationsApiLocation } from "@raha/api-shared/dist/routes/operations/definitions";
 import {
   trustMemberApiLocation,
-  webRequestInviteApiLocation,
   giveApiLocation,
   createMemberApiLocation,
   verifyMemberApiLocation
@@ -61,8 +57,6 @@ const storage = credentialsPath ? admin.storage() : Storage();
 const db: Firestore = admin.firestore();
 const membersCollection = db.collection("members");
 const operationsCollection = db.collection("operations");
-// TODO: rename uid to memberId in collection name
-const memberIdToVideoHashCollection = db.collection("uidToVideoHashMap");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -128,16 +122,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: membersRoutes.trust(db, membersCollection, operationsCollection)
   },
   {
-    location: webRequestInviteApiLocation,
-    handler: membersRoutes.webRequestInvite(
-      config,
-      storage,
-      coconutApiKey,
-      membersCollection,
-      operationsCollection
-    )
-  },
-  {
     location: giveApiLocation,
     handler: membersRoutes.give(db, membersCollection, operationsCollection)
   },
@@ -193,17 +177,7 @@ function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
 
 const publicRouter = createRouter(
   apiRoutes.filter(r => !r.location.authenticated)
-)
-  // Coconut video encoding endpoints are not in apiRoutes nor ApiEndpoint for
-  // now. Note: these routes explicitly prefix /api/, unlike the rest of them.
-  .post(
-    "/api/members/:memberId/notify_video_encoded",
-    membersRoutes.notifyVideoEncoded
-  )
-  .post(
-    "/api/members/:memberId/upload_video",
-    membersRoutes.uploadVideo(config, storage, memberIdToVideoHashCollection)
-  );
+);
 
 app.use(publicRouter.routes());
 app.use(publicRouter.allowedMethods());

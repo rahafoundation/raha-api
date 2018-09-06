@@ -2,25 +2,25 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-export const ERROR_CODE = "requestInvite.alreadyRequested";
-export interface AlreadyRequestedErrorBody {
+export const ERROR_CODE = "createMember.invalidInviteToken";
+export interface MemberAlreadyExistsErrorBody {
   errorCode: typeof ERROR_CODE;
 }
 
 /**
- * Member requests invite after already having done so before.
+ * There is already a Raha Member associated with the logged-in user.
  */
-export class AlreadyRequestedError extends RahaApiError<
+export class MemberAlreadyExistsError extends RahaApiError<
   typeof ERROR_CODE,
-  AlreadyRequestedErrorBody
+  MemberAlreadyExistsErrorBody
 > {
   get errorCode(): typeof ERROR_CODE {
     return ERROR_CODE;
   }
 
   constructor() {
-    super(httpStatus.BAD_REQUEST, "You have already requested an invite.", {
-      errorCode: "requestInvite.alreadyRequested"
+    super(httpStatus.BAD_REQUEST, "You have already signed up for Raha.", {
+      errorCode: ERROR_CODE
     });
 
     // this is necessary, typescript or not, for proper subclassing of builtins:
@@ -29,6 +29,6 @@ export class AlreadyRequestedError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, AlreadyRequestedError.prototype);
+    Object.setPrototypeOf(this, MemberAlreadyExistsError.prototype);
   }
 }

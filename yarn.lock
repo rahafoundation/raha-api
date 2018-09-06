@@ -593,12 +593,6 @@ astral-regex@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/astral-regex/-/astral-regex-1.0.0.tgz#6c8c3fb827dd43ee3918f27b82782ab7658a6fd9"
 
-async-busboy@^0.6.2:
-  version "0.6.2"
-  resolved "https://registry.npmjs.org/async-busboy/-/async-busboy-0.6.2.tgz#1ab713f51ee529be55e27c542323f233f574d95c"
-  dependencies:
-    busboy "^0.2.12"
-
 async-each@^1.0.0:
   version "1.0.1"
   resolved "https://registry.npmjs.org/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
@@ -891,13 +885,6 @@ bun@^0.0.12:
   dependencies:
     readable-stream "~1.0.32"
 
-busboy@^0.2.12:
-  version "0.2.14"
-  resolved "https://registry.npmjs.org/busboy/-/busboy-0.2.14.tgz#6c2a622efcf47c57bbbe1e2a9c37ad36c7925453"
-  dependencies:
-    dicer "0.2.5"
-    readable-stream "1.1.x"
-
 bytebuffer@~5:
   version "5.0.1"
   resolved "https://registry.npmjs.org/bytebuffer/-/bytebuffer-5.0.1.tgz#582eea4b1a873b6d020a48d58df85f0bba6cfddd"
@@ -1083,10 +1070,6 @@ co-body@^6.0.0:
 co@^4.6.0:
   version "4.6.0"
   resolved "https://registry.npmjs.org/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
-
-coconutjs@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/coconutjs/-/coconutjs-2.2.0.tgz#acc3cfcaede29d7043a41df3c94979fb8195ccf2"
 
 code-point-at@^1.0.0:
   version "1.1.0"
@@ -1387,13 +1370,6 @@ detect-libc@^1.0.2:
 detect-newline@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/detect-newline/-/detect-newline-2.1.0.tgz#f41f1c10be4b00e87b5f13da680759f2c5bfd3e2"
-
-dicer@0.2.5:
-  version "0.2.5"
-  resolved "https://registry.npmjs.org/dicer/-/dicer-0.2.5.tgz#5996c086bb33218c812c090bddc09cd12facb70f"
-  dependencies:
-    readable-stream "1.1.x"
-    streamsearch "0.1.2"
 
 diff-match-patch@^1.0.0:
   version "1.0.1"
@@ -4134,15 +4110,6 @@ read-pkg@^3.0.0:
     normalize-package-data "^2.3.2"
     path-type "^3.0.0"
 
-readable-stream@1.1.x:
-  version "1.1.14"
-  resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz#7cf4c54ef648e3813084c636dd2079e166c081d9"
-  dependencies:
-    core-util-is "~1.0.0"
-    inherits "~2.0.1"
-    isarray "0.0.1"
-    string_decoder "~0.10.x"
-
 readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.6, readable-stream@^2.1.5, readable-stream@^2.2.2:
   version "2.3.6"
   resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.6.tgz#b11c27d88b8ff1fbe070643cf94b0c79ae1b0aaf"
@@ -4631,10 +4598,6 @@ stream-events@^1.0.1, stream-events@^1.0.3, stream-events@^1.0.4:
 stream-shift@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
-
-streamsearch@0.1.2:
-  version "0.1.2"
-  resolved "https://registry.npmjs.org/streamsearch/-/streamsearch-0.1.2.tgz#808b9d0e56fc273d809ba57338e929919a1a9f1a"
 
 string-format-obj@^1.1.0:
   version "1.1.1"
