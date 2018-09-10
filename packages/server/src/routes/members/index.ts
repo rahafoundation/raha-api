@@ -133,9 +133,9 @@ async function movePrivateVideoToPublicVideo(
   // cannot throw an error on the thumbnail not existing.
   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
   if (privateVideoThumbnailRef.exists()) {
-    (await removeOriginal)
+    await (removeOriginal
       ? privateVideoThumbnailRef.move(publicThumbnailRef)
-      : privateVideoThumbnailRef.copy(publicThumbnailRef);
+      : privateVideoThumbnailRef.copy(publicThumbnailRef));
   }
 
   return publicVideoRef;
@@ -198,9 +198,9 @@ async function movePrivateVideoToPublicInviteVideo(
   // cannot throw an error on the thumbnail not existing.
   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
   if (privateThumbnailRef.exists()) {
-    (await removeOriginal)
+    await (removeOriginal
       ? privateThumbnailRef.move(publicThumbnailRef)
-      : privateThumbnailRef.copy(publicThumbnailRef);
+      : privateThumbnailRef.copy(publicThumbnailRef));
   }
 
   return publicVideoRef;
