@@ -126,8 +126,8 @@ async function movePrivateVideoToPublicVideo(
   }
 
   await (removeOriginal
-    ? Promise.all([privateVideoRef.move(publicVideoRef)])
-    : Promise.all([privateVideoRef.copy(publicVideoRef)]));
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
 
   // Until the iOS app gets updated and starts generating thumbnails, we
   // cannot throw an error on the thumbnail not existing.
@@ -182,7 +182,7 @@ async function movePrivateVideoToPublicInviteVideo(
     .bucket(config.privateVideoBucket)
     .file(`private-video/${videoToken}/thumbnail.jpg`);
 
-  if ((await Promise.all([privateVideoRef.exists()])).find(x => !x[0])) {
+  if (!(await privateVideoRef.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
       "Private video does not exist at expected location. Cannot move.",
@@ -191,8 +191,8 @@ async function movePrivateVideoToPublicInviteVideo(
   }
 
   await (removeOriginal
-    ? Promise.all([privateVideoRef.move(publicVideoRef)])
-    : Promise.all([privateVideoRef.copy(publicVideoRef)]));
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
 
   // Until the iOS app gets updated and starts generating thumbnails, we
   // cannot throw an error on the thumbnail not existing.
