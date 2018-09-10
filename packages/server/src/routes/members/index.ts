@@ -126,14 +126,17 @@ async function movePrivateVideoToPublicVideo(
   }
 
   await (removeOriginal
-    ? Promise.all([
-        privateVideoRef.move(publicVideoRef),
-        privateVideoThumbnailRef.move(publicThumbnailRef)
-      ])
-    : Promise.all([
-        privateVideoRef.copy(publicVideoRef),
-        privateVideoThumbnailRef.copy(publicThumbnailRef)
-      ]));
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
+
+  // Until the iOS app gets updated and starts generating thumbnails, we
+  // cannot throw an error on the thumbnail not existing.
+  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
+  if (privateVideoThumbnailRef.exists()) {
+    await (removeOriginal
+      ? privateVideoThumbnailRef.move(publicThumbnailRef)
+      : privateVideoThumbnailRef.copy(publicThumbnailRef));
+  }
 
   return publicVideoRef;
 }
@@ -179,12 +182,7 @@ async function movePrivateVideoToPublicInviteVideo(
     .bucket(config.privateVideoBucket)
     .file(`private-video/${videoToken}/thumbnail.jpg`);
 
-  if (
-    (await Promise.all([
-      privateVideoRef.exists(),
-      privateThumbnailRef.exists()
-    ])).find(x => !x[0])
-  ) {
+  if (!(await privateVideoRef.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
       "Private video does not exist at expected location. Cannot move.",
@@ -193,14 +191,17 @@ async function movePrivateVideoToPublicInviteVideo(
   }
 
   await (removeOriginal
-    ? Promise.all([
-        privateVideoRef.move(publicVideoRef),
-        privateThumbnailRef.move(publicThumbnailRef)
-      ])
-    : Promise.all([
-        privateVideoRef.copy(publicVideoRef),
-        privateThumbnailRef.copy(publicThumbnailRef)
-      ]));
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
+
+  // Until the iOS app gets updated and starts generating thumbnails, we
+  // cannot throw an error on the thumbnail not existing.
+  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
+  if (privateThumbnailRef.exists()) {
+    await (removeOriginal
+      ? privateThumbnailRef.move(publicThumbnailRef)
+      : privateThumbnailRef.copy(publicThumbnailRef));
+  }
 
   return publicVideoRef;
 }
