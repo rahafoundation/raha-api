@@ -14,7 +14,9 @@ import {
   MintApiEndpoint,
   SendInviteApiEndpoint,
   ValidateMobileNumberApiEndpoint,
-  SendAppInstallTextApiEndpoint
+  SendAppInstallTextApiEndpoint,
+  SetFcmTokenApiEndpoint,
+  ClearFcmTokenApiEndpoint
 } from "../../routes/me/definitions";
 import { ListOperationsApiEndpoint } from "../../routes/operations/definitions";
 import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
@@ -32,7 +34,9 @@ export enum ApiEndpointName {
   SEND_APP_INSTALL_TEXT = "SEND_APP_INSTALL_TEXT",
   SSO_DISCOURSE = "SSO_DISCOURSE",
   CREATE_MEMBER = "CREATE_MEMBER",
-  VERIFY_MEMBER = "CREATE_MEMBER"
+  VERIFY_MEMBER = "CREATE_MEMBER",
+  CLEAR_FCM_TOKEN = "CLEAR_FCM_TOKEN",
+  SET_FCM_TOKEN = "SET_FCM_TOKEN"
 }
 
 export enum ApiEndpointUri {
@@ -45,7 +49,9 @@ export enum ApiEndpointUri {
   SEND_APP_INSTALL_TEXT = "me/sendAppInstallText",
   SSO_DISCOURSE = "sso/discourse",
   CREATE_MEMBER = "members/createMember",
-  VERIFY_MEMBER = "members/:memberId/verify"
+  VERIFY_MEMBER = "members/:memberId/verify",
+  CLEAR_FCM_TOKEN = "me/clearFcmToken",
+  SET_FCM_TOKEN = "me/setFcmToken"
 }
 
 /**
@@ -79,7 +85,9 @@ export type ApiEndpoint =
   | SendAppInstallTextApiEndpoint
   | SSODiscourseApiEndpoint
   | CreateMemberApiEndpoint
-  | VerifyMemberApiEndpoint;
+  | VerifyMemberApiEndpoint
+  | ClearFcmTokenApiEndpoint
+  | SetFcmTokenApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";
