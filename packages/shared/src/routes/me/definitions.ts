@@ -132,3 +132,57 @@ export type SendAppInstallTextApiEndpoint = ApiEndpointDefinition<
   SendAppInstallTextApiCall,
   SendAppInstallTextApiResponse
 >;
+
+export type ClearFcmTokenApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.CLEAR_FCM_TOKEN,
+  HttpVerb.POST,
+  false
+>;
+export const clearFcmTokenApiLocation: ClearFcmTokenApiLocation = {
+  uri: ApiEndpointUri.CLEAR_FCM_TOKEN,
+  method: HttpVerb.POST,
+  authenticated: false
+};
+export type ClearFcmTokenApiCall = ApiCallDefinition<
+  ClearFcmTokenApiLocation["uri"],
+  ClearFcmTokenApiLocation["method"],
+  ClearFcmTokenApiLocation["authenticated"],
+  void,
+  { fcmToken: string }
+>;
+export type ClearFcmTokenApiResponse = ApiResponseDefinition<
+  200,
+  MessageApiResponseBody
+>;
+export type ClearFcmTokenApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.CLEAR_FCM_TOKEN,
+  ClearFcmTokenApiCall,
+  ClearFcmTokenApiResponse
+>;
+
+export type SetFcmTokenApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.SET_FCM_TOKEN,
+  HttpVerb.POST,
+  true
+>;
+export const setFcmTokenApiLocation: SetFcmTokenApiLocation = {
+  uri: ApiEndpointUri.SET_FCM_TOKEN,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type SetFcmTokenApiCall = ApiCallDefinition<
+  SetFcmTokenApiLocation["uri"],
+  SetFcmTokenApiLocation["method"],
+  SetFcmTokenApiLocation["authenticated"],
+  void,
+  { fcmToken: string }
+>;
+export type SetFcmTokenApiResponse = ApiResponseDefinition<
+  201,
+  MessageApiResponseBody
+>;
+export type SetFcmTokenApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.SET_FCM_TOKEN,
+  SetFcmTokenApiCall,
+  SetFcmTokenApiResponse
+>;

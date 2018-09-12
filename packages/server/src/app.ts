@@ -34,7 +34,9 @@ import {
   sendInviteApiLocation,
   mintApiLocation,
   validateMobileNumberApiLocation,
-  sendAppInstallTextApiLocation
+  sendAppInstallTextApiLocation,
+  clearFcmTokenApiLocation,
+  setFcmTokenApiLocation
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
 
@@ -54,9 +56,12 @@ const admin = credentialsPath ? getAdmin(credentialsPath) : getAdmin();
 // unify them.
 const storage = credentialsPath ? admin.storage() : Storage();
 
+const messaging = admin.messaging();
+
 const db: Firestore = admin.firestore();
 const membersCollection = db.collection("members");
 const operationsCollection = db.collection("operations");
+const fmcTokensCollection = db.collection("firebaseCloudMessagingTokens");
 
 sgMail.setApiKey(sendgridApiKey);
 
@@ -149,6 +154,14 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: ssoDiscourseApiLocation,
     handler: ssoRoutes.ssoDiscourse(config, membersCollection)
+  },
+  {
+    location: clearFcmTokenApiLocation,
+    handler: meRoutes.clearFcmToken(fmcTokensCollection)
+  },
+  {
+    location: setFcmTokenApiLocation,
+    handler: meRoutes.setFcmToken(membersCollection, fmcTokensCollection)
   }
 ];
 
