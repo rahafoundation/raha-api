@@ -128,7 +128,13 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: giveApiLocation,
-    handler: membersRoutes.give(db, membersCollection, operationsCollection)
+    handler: membersRoutes.give(
+      db,
+      messaging,
+      membersCollection,
+      operationsCollection,
+      fmcTokensCollection
+    )
   },
   {
     location: sendInviteApiLocation,
