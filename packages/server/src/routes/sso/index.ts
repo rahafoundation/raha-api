@@ -18,7 +18,7 @@ function getEmailForUser(
   authIdentities: { [key: string]: any },
   memberObject: DocumentSnapshot
 ): string | undefined {
-  const email = memberObject.get("email");
+  const email = memberObject.get("email_address");
   if (email) {
     return email;
   }
