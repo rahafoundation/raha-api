@@ -101,21 +101,15 @@ export const sendInvite = (
     // Deeplink invite url.
     const inviteLink = new URL(
       `/invite?t=${inviteToken}`,
-      `https://d.raha.app`
+      `https://link.raha.app`
     ).toString();
 
     const instructionsText =
-      "1. Download the app:\n" +
-      "  Android: https://play.google.com/store/apps/details?id=app.raha.mobile\n" +
-      "  iOS: https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8\n" +
-      "\n\n" +
-      `2. Click on your invite link to join: ${inviteLink}\n` +
-      `3. If you are prompted for an invite code on the camera page, paste the following code: ${inviteToken}`;
+      `Click on your invite link to join: ${inviteLink}\n` +
+      `  If you are prompted for an invite code on the camera page, paste the following code: ${inviteToken}`;
     const instructionsHtml =
-      "<ol><li>Download the app: <a href='https://play.google.com/store/apps/details?id=app.raha.mobile'>Android</a> or <a href='https://itunes.apple.com/app/raha/id1434224783?ls=1&mt=8'>iOS</a>.</li>" +
-      `<li>Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a></li>` +
-      `<li>If you are prompted for an invite code on the camera page, paste the following code: <b>${inviteToken}</b>` +
-      "</ol>";
+      `Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a>\n` +
+      `  If you are prompted for an invite code on the camera page, paste the following code: <b>${inviteToken}</b>`;
 
     const msg = {
       to: inviteEmail,
