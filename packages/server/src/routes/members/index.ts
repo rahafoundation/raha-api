@@ -14,7 +14,8 @@ import {
   OperationToBeCreated,
   OperationType,
   GiveOperation,
-  RequestVerificationOperation
+  RequestVerificationOperation,
+  VerifyOperation
 } from "@raha/api-shared/dist/models/Operation";
 import {
   GiveApiEndpoint,
@@ -739,6 +740,33 @@ export const createMember = (
     };
   });
 
+async function _notifyVerifyRecipient(
+  messaging: adminMessaging.Messaging,
+  members: CollectionReference,
+  fcmTokens: CollectionReference,
+  verifyOperation: VerifyOperation
+) {
+  const { id, creator_uid, data } = verifyOperation;
+
+  const fromMember = await members.doc(creator_uid).get();
+  const toMember = await members.doc(data.to_uid).get();
+
+  if (!fromMember.exists || !toMember.exists) {
+    throw new Error(
+      `Invalid verify operation with ID ${id}. One or both members does not exist.`
+    );
+  }
+  const toMemberId = toMember.id;
+
+  await _sendPushNotification(
+    messaging,
+    fcmTokens,
+    toMemberId,
+    "Your account has been verified!",
+    `${fromMember.get("full_name")} verified your identity on Raha!`
+  );
+}
+
 /**
  * Create a verify relationship to a target member from the logged in member
  *
@@ -751,8 +779,10 @@ export const verify = (
   config: Config,
   db: Firestore,
   storage: BucketStorage,
+  messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
+  operationsCollection: CollectionReference,
+  fcmTokensCollection: CollectionReference
 ) =>
   createApiRoute<VerifyMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
@@ -819,9 +849,22 @@ export const verify = (
       return newOperationRef;
     });
 
+    const newOperationData = (await newOperationReference.get()).data();
+
+    // Notify the recipient, but never let notification failure cause this API request to fail.
+    _notifyVerifyRecipient(
+      messaging,
+      membersCollection,
+      fcmTokensCollection,
+      newOperationData as VerifyOperation
+    ).catch(exception => {
+      // tslint:disable-next-line:no-console
+      console.error(exception);
+    });
+
     return {
       body: {
-        ...(await newOperationReference.get()).data(),
+        ...newOperationData,
         id: newOperationReference.id
       } as Operation,
       status: 201

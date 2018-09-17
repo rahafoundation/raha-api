@@ -120,8 +120,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
       config,
       db,
       storage,
+      messaging,
       membersCollection,
-      operationsCollection
+      operationsCollection,
+      fmcTokensCollection
     )
   },
   {
