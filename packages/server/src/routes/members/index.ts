@@ -227,7 +227,7 @@ async function _sendPushNotification(
     : undefined;
 
   if (fcmToken) {
-    messaging.send({
+    await messaging.send({
       // Note: May need to display an icon for the notification.
       notification: {
         title,
@@ -318,7 +318,7 @@ async function _notifyGiveRecipient(
   }
   const toMemberId = toMember.id;
 
-  _sendPushNotification(
+  await _sendPushNotification(
     messaging,
     fcmTokens,
     toMemberId,
@@ -423,17 +423,15 @@ export const give = (
     const newOperationData = (await newOperationReference.get()).data();
 
     // Notify the recipient, but never let notification failure cause this API request to fail.
-    try {
-      _notifyGiveRecipient(
-        messaging,
-        membersCollection,
-        fcmTokens,
-        newOperationData as GiveOperation
-      );
-    } catch (exception) {
+    _notifyGiveRecipient(
+      messaging,
+      membersCollection,
+      fcmTokens,
+      newOperationData as GiveOperation
+    ).catch(exception => {
       // tslint:disable-next-line:no-console
       console.error(exception);
-    }
+    });
 
     return {
       body: {
@@ -457,12 +455,12 @@ async function _notifyRequestVerificationRecipient(
 
   if (!fromMember.exists || !toMember.exists) {
     throw new Error(
-      `Invalid give operation with ID ${id}. One or both members does not exist.`
+      `Invalid request verification operation with ID ${id}. One or both members does not exist.`
     );
   }
   const toMemberId = toMember.id;
 
-  _sendPushNotification(
+  await _sendPushNotification(
     messaging,
     fcmTokens,
     toMemberId,
@@ -721,19 +719,17 @@ export const createMember = (
     );
 
     newOpsData.forEach(opData => {
-      // An error on notification should not cause the whole endpoint to fail.
-      try {
-        if (opData.op_code === OperationType.REQUEST_VERIFICATION) {
-          _notifyRequestVerificationRecipient(
-            messaging,
-            membersCollection,
-            fcmTokens,
-            opData
-          );
-        }
-      } catch (exception) {
-        // tslint:disable-next-line:no-console
-        console.error(exception);
+      if (opData.op_code === OperationType.REQUEST_VERIFICATION) {
+        // Notify the recipient, but never let notification failure cause this API request to fail.
+        _notifyRequestVerificationRecipient(
+          messaging,
+          membersCollection,
+          fcmTokens,
+          opData
+        ).catch(exception => {
+          // tslint:disable-next-line:no-console
+          console.error(exception);
+        });
       }
     });
 
