@@ -101,7 +101,7 @@ export const sendInvite = (
     // Deeplink invite url.
     const inviteLink = new URL(
       `/invite?t=${inviteToken}`,
-      `https://link.raha.app`
+      `https://to.raha.app`
     ).toString();
 
     const instructionsText =
