@@ -13,7 +13,8 @@ import {
   Operation,
   OperationToBeCreated,
   OperationType,
-  GiveOperation
+  GiveOperation,
+  RequestVerificationOperation
 } from "@raha/api-shared/dist/models/Operation";
 import {
   GiveApiEndpoint,
@@ -315,7 +316,7 @@ async function _notifyGiveRecipient(
       `Invalid give operation with ID ${id}. One or both members does not exist.`
     );
   }
-  const toMemberId = toMember.get("memberId");
+  const toMemberId = toMember.id;
 
   _sendPushNotification(
     messaging,
@@ -442,6 +443,35 @@ export const give = (
       status: 201
     };
   });
+
+async function _notifyRequestVerificationRecipient(
+  messaging: adminMessaging.Messaging,
+  members: CollectionReference,
+  fcmTokens: CollectionReference,
+  requestVerificationOperation: RequestVerificationOperation
+) {
+  const { id, creator_uid, data } = requestVerificationOperation;
+
+  const fromMember = await members.doc(creator_uid).get();
+  const toMember = await members.doc(data.to_uid).get();
+
+  if (!fromMember.exists || !toMember.exists) {
+    throw new Error(
+      `Invalid give operation with ID ${id}. One or both members does not exist.`
+    );
+  }
+  const toMemberId = toMember.id;
+
+  _sendPushNotification(
+    messaging,
+    fcmTokens,
+    toMemberId,
+    "New identity verification request!",
+    // TODO: Actually make this notification link to the verify page and update message to that below
+    // `Tap to verify ${fromMember.get("full_name")}'s account on Raha.`
+    `${fromMember.get("full_name")} wants you to verify their identity on Raha!`
+  );
+}
 
 async function _createInvitedMember(
   config: Config,
@@ -615,8 +645,10 @@ export const createMember = (
   config: Config,
   db: Firestore,
   storage: BucketStorage,
+  messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
+  operationsCollection: CollectionReference,
+  fcmTokens: CollectionReference
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReferences = await db.runTransaction(
@@ -682,12 +714,31 @@ export const createMember = (
       }
     );
 
+    const newOpsData = await Promise.all(
+      newOperationReferences.map(
+        async opRef => (await opRef.get()).data() as Operation
+      )
+    );
+
+    newOpsData.forEach(opData => {
+      // An error on notification should not cause the whole endpoint to fail.
+      try {
+        if (opData.op_code === OperationType.REQUEST_VERIFICATION) {
+          _notifyRequestVerificationRecipient(
+            messaging,
+            membersCollection,
+            fcmTokens,
+            opData
+          );
+        }
+      } catch (exception) {
+        // tslint:disable-next-line:no-console
+        console.error(exception);
+      }
+    });
+
     return {
-      body: await Promise.all(
-        newOperationReferences.map(
-          async opRef => (await opRef.get()).data() as Operation
-        )
-      ),
+      body: newOpsData,
       status: 201
     };
   });
