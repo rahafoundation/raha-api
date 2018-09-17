@@ -291,6 +291,7 @@ async function _notifyGiveRecipient(
   }
   const toMemberId = toMember.get("memberId");
   const fcmTokenData = await fcmTokens.doc(toMemberId).get();
+
   if (fcmTokenData) {
     messaging.send({
       // Note, I believe this will only display a notification if the app is in the
@@ -300,7 +301,7 @@ async function _notifyGiveRecipient(
       // Note: Foregrounded notifications may require a global notification display.
       notification: {
         title: "You received Raha!",
-        body: `${fromMember.get("fullName")} gave you ${amount} Raha${
+        body: `${fromMember.get("full_name")} gave you ${amount} Raha${
           memo ? ` for ${memo}` : ""
         }.`
       },
