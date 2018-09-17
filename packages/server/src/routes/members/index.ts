@@ -210,6 +210,32 @@ async function movePrivateVideoToPublicInviteVideo(
 
   return publicVideoRef;
 }
+/**
+ * Send a push notification. Uses Firebase Cloud Messaging.
+ */
+async function _sendPushNotification(
+  messaging: adminMessaging.Messaging,
+  fcmTokens: CollectionReference,
+  toMemberId: MemberId,
+  title: string,
+  body: string
+) {
+  const fcmTokenData = await fcmTokens.doc(toMemberId).get();
+  const fcmToken = fcmTokenData.exists
+    ? fcmTokenData.get("fcm_token")
+    : undefined;
+
+  if (fcmToken) {
+    messaging.send({
+      // Note: May need to display an icon for the notification.
+      notification: {
+        title,
+        body
+      },
+      token: fcmToken
+    });
+  }
+}
 
 /**
  * Create a trust relationship to a target member from the logged in member
@@ -270,7 +296,7 @@ export const trust = (
   });
 
 /**
- * A function to notify the recipient of a Give operation using Firebase Cloud Messaging.
+ * A function to notify the recipient of a Give operation.
  */
 async function _notifyGiveRecipient(
   messaging: adminMessaging.Messaging,
@@ -290,24 +316,16 @@ async function _notifyGiveRecipient(
     );
   }
   const toMemberId = toMember.get("memberId");
-  const fcmTokenData = await fcmTokens.doc(toMemberId).get();
 
-  if (fcmTokenData) {
-    messaging.send({
-      // Note, I believe this will only display a notification if the app is in the
-      // background. Need to add a data message and in-app handling for receiving
-      // notifications when the app is in the foreground.
-      // Note: May need to display an icon for the notification.
-      // Note: Foregrounded notifications may require a global notification display.
-      notification: {
-        title: "You received Raha!",
-        body: `${fromMember.get("full_name")} gave you ${amount} Raha${
-          memo ? ` for ${memo}` : ""
-        }.`
-      },
-      token: fcmTokenData.get("fcm_token")
-    });
-  }
+  _sendPushNotification(
+    messaging,
+    fcmTokens,
+    toMemberId,
+    "You received Raha!",
+    `${fromMember.get("full_name")} gave you ${amount} Raha${
+      memo ? ` for ${memo}` : ""
+    }.`
+  );
 }
 
 /**
