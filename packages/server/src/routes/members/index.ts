@@ -229,7 +229,6 @@ async function _sendPushNotification(
 
   if (fcmToken) {
     await messaging.send({
-      // Note: May need to display an icon for the notification.
       notification: {
         title,
         body
