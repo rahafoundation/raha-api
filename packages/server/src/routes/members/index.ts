@@ -3,12 +3,17 @@ import * as httpStatus from "http-status";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import * as Storage from "@google-cloud/storage";
 import Big from "big.js";
-import { firestore, storage as adminStorage } from "firebase-admin";
+import {
+  firestore,
+  storage as adminStorage,
+  messaging as adminMessaging
+} from "firebase-admin";
 
 import {
   Operation,
   OperationToBeCreated,
-  OperationType
+  OperationType,
+  GiveOperation
 } from "@raha/api-shared/dist/models/Operation";
 import {
   GiveApiEndpoint,
@@ -265,12 +270,55 @@ export const trust = (
   });
 
 /**
+ * A function to notify the recipient of a Give operation using Firebase Cloud Messaging.
+ */
+async function _notifyGiveRecipient(
+  messaging: adminMessaging.Messaging,
+  members: CollectionReference,
+  fcmTokens: CollectionReference,
+  giveOperation: GiveOperation
+) {
+  const { id, creator_uid, data } = giveOperation;
+  const { to_uid, amount, memo } = data;
+
+  const fromMember = await members.doc(creator_uid).get();
+  const toMember = await members.doc(to_uid).get();
+
+  if (!fromMember.exists || !toMember.exists) {
+    throw new Error(
+      `Invalid give operation with ID ${id}. One or both members does not exist.`
+    );
+  }
+  const toMemberId = toMember.get("memberId");
+  const fcmTokenData = await fcmTokens.doc(toMemberId).get();
+
+  if (fcmTokenData) {
+    messaging.send({
+      // Note, I believe this will only display a notification if the app is in the
+      // background. Need to add a data message and in-app handling for receiving
+      // notifications when the app is in the foreground.
+      // Note: May need to display an icon for the notification.
+      // Note: Foregrounded notifications may require a global notification display.
+      notification: {
+        title: "You received Raha!",
+        body: `${fromMember.get("full_name")} gave you ${amount} Raha${
+          memo ? ` for ${memo}` : ""
+        }.`
+      },
+      token: fcmTokenData.get("fcm_token")
+    });
+  }
+}
+
+/**
  * Give Raha to a target member from the logged in member.
  */
 export const give = (
   db: Firestore,
+  messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
-  operations: CollectionReference
+  operations: CollectionReference,
+  fcmTokens: CollectionReference
 ) =>
   createApiRoute<GiveApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
@@ -353,9 +401,24 @@ export const give = (
       return newOperationRef;
     });
 
+    const newOperationData = (await newOperationReference.get()).data();
+
+    // Notify the recipient, but never let notification failure cause this API request to fail.
+    try {
+      _notifyGiveRecipient(
+        messaging,
+        membersCollection,
+        fcmTokens,
+        newOperationData as GiveOperation
+      );
+    } catch (exception) {
+      // tslint:disable-next-line:no-console
+      console.error(exception);
+    }
+
     return {
       body: {
-        ...(await newOperationReference.get()).data(),
+        ...newOperationData,
         id: newOperationReference.id
       } as Operation,
       status: 201
