@@ -108,7 +108,7 @@ export const sendInvite = (
       `Click on your invite link to join: ${inviteLink}\n` +
       `  If you are prompted for an invite code on the camera page, paste the following code: ${inviteToken}`;
     const instructionsHtml =
-      `Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a>\n` +
+      `Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a><br />` +
       `  If you are prompted for an invite code on the camera page, paste the following code: <b>${inviteToken}</b>`;
 
     const msg = {
