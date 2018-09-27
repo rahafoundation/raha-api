@@ -78,10 +78,22 @@ function getPublicUrlForMemberAndToken(
   }/${memberUid}/${videoToken}/video.mp4`;
 }
 
-function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
+export function getPublicInviteVideoUrlForMember(
+  config: Config,
+  memberUid: string
+) {
   return `https://storage.googleapis.com/${
     config.publicVideoBucket
   }/${memberUid}/invite.mp4`;
+}
+
+export function getPublicInviteVideoThumbnailRefForMember(
+  config: Config,
+  memberUid: string
+) {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberUid}/invite.mp4.thumb.jpg`;
 }
 
 /**

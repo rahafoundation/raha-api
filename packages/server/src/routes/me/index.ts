@@ -36,6 +36,10 @@ import { NotRealError } from "@raha/api-shared/dist/errors/RahaApiError/me/valid
 import { DisallowedTypeError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
 import { ServerError } from "@raha/api-shared/dist/errors/RahaApiError/ServerError";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
+import {
+  getPublicInviteVideoUrlForMember,
+  getPublicInviteVideoThumbnailRefForMember
+} from "../members";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -45,12 +49,20 @@ type OperationToInsert = OperationToBeCreated & {
   created_at: firestore.FieldValue;
 };
 
+interface DynamicTemplateData {
+  inviter_fullname: string;
+  invite_link: string;
+  invite_token: string;
+  invite_video_url: string;
+  invite_video_thumbnail: string;
+}
+
 interface EmailMessage {
   to: string;
   from: string;
   subject: string;
-  text: string;
-  html: string;
+  dynamic_template_data: DynamicTemplateData;
+  template_id: string;
 }
 
 export const sendInvite = (
@@ -104,29 +116,21 @@ export const sendInvite = (
       `https://to.raha.app`
     ).toString();
 
-    const instructionsText =
-      `Click on your invite link to join: ${inviteLink}\n` +
-      `  If you are prompted for an invite code on the camera page, paste the following code: ${inviteToken}`;
-    const instructionsHtml =
-      `Click on your invite link to join: <a href="${inviteLink}">${inviteLink}</a><br />` +
-      `  If you are prompted for an invite code on the camera page, paste the following code: <b>${inviteToken}</b>`;
-
     const msg = {
       to: inviteEmail,
       from: "invites@raha.app",
       subject: `${loggedInFullName} invited you to join Raha!`,
-      text:
-        "Raha is the foundation for a global universal basic income. " +
-        "To ensure that only real humans can join, people must be invited " +
-        `by an existing member of the Raha network. ${loggedInFullName} ` +
-        "has invited you to join!\n\n" +
-        instructionsText,
-      html:
-        "<span><strong>Raha is the foundation for a global universal basic income.</strong><br /><br />" +
-        "To ensure that only real humans can join, people must be invited " +
-        `by an existing member of the Raha network. ${loggedInFullName} ` +
-        "has invited you to join!</span><br /><br />" +
-        instructionsHtml
+      dynamic_template_data: {
+        inviter_fullname: `${loggedInFullName}`,
+        invite_link: `${inviteLink}`,
+        invite_token: `${inviteToken}`,
+        invite_video_thumbnail: getPublicInviteVideoThumbnailRefForMember(
+          config,
+          inviteToken
+        ),
+        invite_video_url: getPublicInviteVideoUrlForMember(config, inviteToken)
+      },
+      template_id: "d-9b939b9d11d74d1bb25901acc4517f49"
     };
     sgMail.send(msg);
 
