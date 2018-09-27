@@ -36,10 +36,6 @@ import { NotRealError } from "@raha/api-shared/dist/errors/RahaApiError/me/valid
 import { DisallowedTypeError } from "@raha/api-shared/dist/errors/RahaApiError/me/validateMobileNumber/DisallowedTypeError";
 import { ServerError } from "@raha/api-shared/dist/errors/RahaApiError/ServerError";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
-import {
-  getPublicInviteVideoUrlForMember,
-  getPublicInviteVideoThumbnailRefForMember
-} from "../members";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -53,8 +49,9 @@ interface DynamicTemplateData {
   inviter_fullname: string;
   invite_link: string;
   invite_token: string;
-  invite_video_url: string;
-  invite_video_thumbnail: string;
+  // TODO: Re-enable once videos are publicly readable and SendGrid template uncommented.
+  // invite_video_url: string;
+  // invite_video_thumbnail: string;
 }
 
 interface EmailMessage {
@@ -123,12 +120,7 @@ export const sendInvite = (
       dynamic_template_data: {
         inviter_fullname: `${loggedInFullName}`,
         invite_link: `${inviteLink}`,
-        invite_token: `${inviteToken}`,
-        invite_video_thumbnail: getPublicInviteVideoThumbnailRefForMember(
-          config,
-          inviteToken
-        ),
-        invite_video_url: getPublicInviteVideoUrlForMember(config, inviteToken)
+        invite_token: `${inviteToken}`
       },
       template_id: "d-9b939b9d11d74d1bb25901acc4517f49"
     };
