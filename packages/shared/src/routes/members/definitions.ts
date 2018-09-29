@@ -8,10 +8,38 @@ import {
 } from "../ApiEndpoint";
 import {
   OperationApiResponseBody,
-  OperationsApiResponseBody
+  OperationsApiResponseBody,
+  MembersApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+
+export type ListMembersApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.GET_MEMBERS,
+  HttpVerb.GET,
+  false
+>;
+export const listMembersApiLocation: ListMembersApiLocation = {
+  uri: ApiEndpointUri.GET_MEMBERS,
+  method: HttpVerb.GET,
+  authenticated: false
+};
+export type ListMembersApiCall = ApiCallDefinition<
+  ListMembersApiLocation["uri"],
+  ListMembersApiLocation["method"],
+  ListMembersApiLocation["authenticated"],
+  void,
+  void
+>;
+export type ListMembersApiResponse = ApiResponseDefinition<
+  200,
+  MembersApiResponseBody
+>;
+export type ListMembersApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.GET_MEMBERS,
+  ListMembersApiCall,
+  ListMembersApiResponse
+>;
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration

@@ -28,7 +28,8 @@ import {
   trustMemberApiLocation,
   giveApiLocation,
   createMemberApiLocation,
-  verifyMemberApiLocation
+  verifyMemberApiLocation,
+  listMembersApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
 import {
   sendInviteApiLocation,
@@ -101,6 +102,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: listOperationsApiLocation,
     handler: operationsRoutes.listOperations(operationsCollection)
+  },
+  {
+    location: listMembersApiLocation,
+    handler: membersRoutes.listMembers(membersCollection)
   },
   {
     location: createMemberApiLocation,
