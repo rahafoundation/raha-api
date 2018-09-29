@@ -1,4 +1,4 @@
-import { Config } from "../../config/config";
+import { Config } from "../../config/prod.config";
 import { ValidateMobileNumberApiEndpoint } from "@raha/api-shared/dist/routes/me/definitions";
 import { createApiRoute } from "..";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";

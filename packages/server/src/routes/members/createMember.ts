@@ -22,7 +22,7 @@ import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/Mi
 import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
-import { Config } from "../../config/config";
+import { Config } from "../../config/prod.config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
