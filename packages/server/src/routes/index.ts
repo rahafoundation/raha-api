@@ -1,5 +1,7 @@
 import { ApiEndpoint } from "@raha/api-shared/dist/routes/ApiEndpoint";
 import { AuthenticatedContext, RahaApiContext } from "../app";
+import { OperationToBeCreated } from "@raha/api-shared/dist/models/Operation";
+import { firestore } from "firebase-admin";
 
 export type ApiHandler<Def extends ApiEndpoint> = (
   request: {
@@ -35,3 +37,7 @@ export function createApiRoute<Def extends ApiEndpoint>(
     return;
   };
 }
+
+export type OperationToInsert = OperationToBeCreated & {
+  created_at: firestore.FieldValue;
+};
