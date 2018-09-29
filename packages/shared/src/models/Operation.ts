@@ -17,13 +17,10 @@ export interface CreateMemberPayload {
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
 }
-export type EditMemberPayload =
-  | {
-      full_name: string;
-    }
-  | {
-      username: string;
-    };
+export interface EditMemberPayload {
+  full_name?: string;
+  username?: string;
+}
 export interface RequestVerificationPayload {
   to_uid: MemberId;
   invite_token?: string;
