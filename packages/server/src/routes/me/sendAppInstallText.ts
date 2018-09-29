@@ -4,7 +4,7 @@ import { ServerError } from "@raha/api-shared/dist/errors/RahaApiError/ServerErr
 
 import { createApiRoute } from "..";
 import { twilioClient } from "../../twilio";
-import { Config } from "../../config/prod.config";
+import { Config } from "../../config/config";
 
 export const sendAppInstallText = (config: Config) =>
   createApiRoute<SendAppInstallTextApiEndpoint>(async call => {

@@ -9,7 +9,7 @@ import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/Mi
 import { OperationType } from "@raha/api-shared/dist/models/Operation";
 
 import { createApiRoute, OperationToInsert } from "..";
-import { Config } from "../../config/prod.config";
+import { Config } from "../../config/config";
 
 interface DynamicTemplateData {
   inviter_fullname: string;

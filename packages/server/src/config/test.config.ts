@@ -27,3 +27,5 @@ export const config: Config = {
   ],
   discourseBase: "https://discuss.raha.app/"
 };
+
+export { Config } from "./prod.config";

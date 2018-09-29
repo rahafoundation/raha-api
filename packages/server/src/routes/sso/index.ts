@@ -8,7 +8,7 @@ import { SSODiscourseApiEndpoint } from "@raha/api-shared/dist/routes/sso/defini
 import { discourseSSOSecret } from "../../config/DO_NOT_COMMIT.secrets.config";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
-import { Config } from "../../config/prod.config";
+import { Config } from "../../config/config";
 
 /**
  * Throws an error if member has zero or multiple associated
