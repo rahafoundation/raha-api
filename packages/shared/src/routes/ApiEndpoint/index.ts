@@ -8,7 +8,8 @@ import {
   GiveApiEndpoint,
   TrustMemberApiEndpoint,
   CreateMemberApiEndpoint,
-  VerifyMemberApiEndpoint
+  VerifyMemberApiEndpoint,
+  ListMembersApiEndpoint
 } from "../../routes/members/definitions";
 import {
   MintApiEndpoint,
@@ -25,8 +26,9 @@ import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
  * Canonical name of an endpoint you can query.
  */
 export enum ApiEndpointName {
-  TRUST_MEMBER = "TRUST_MEMBER",
   GET_OPERATIONS = "GET_OPERATIONS",
+  GET_MEMBERS = "GET_MEMBERS",
+  TRUST_MEMBER = "TRUST_MEMBER",
   SEND_INVITE = "SEND_INVITE",
   MINT = "MINT",
   GIVE = "GIVE",
@@ -40,8 +42,9 @@ export enum ApiEndpointName {
 }
 
 export enum ApiEndpointUri {
-  TRUST_MEMBER = "members/:memberId/trust",
   GET_OPERATIONS = "operations",
+  GET_MEMBERS = "members",
+  TRUST_MEMBER = "members/:memberId/trust",
   SEND_INVITE = "me/send_invite",
   MINT = "me/mint",
   GIVE = "members/:memberId/give",
@@ -76,8 +79,9 @@ export interface ApiEndpointDefinition<
  * the server respond to it, add it to apiRoutes in app.ts as well.
  */
 export type ApiEndpoint =
-  | TrustMemberApiEndpoint
   | ListOperationsApiEndpoint
+  | ListMembersApiEndpoint
+  | TrustMemberApiEndpoint
   | SendInviteApiEndpoint
   | GiveApiEndpoint
   | MintApiEndpoint

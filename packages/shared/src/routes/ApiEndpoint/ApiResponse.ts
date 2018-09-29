@@ -1,9 +1,11 @@
 import { Operation } from "../../models/Operation";
 import { HttpStatusCode } from "../../helpers/http";
 import { ApiEndpoint } from ".";
+import { PublicMemberFields } from "../../models/Member";
 
 export type OperationApiResponseBody = Operation;
 export type OperationsApiResponseBody = Operation[];
+export type MembersApiResponseBody = PublicMemberFields[];
 export interface MessageApiResponseBody {
   message: string;
 }
