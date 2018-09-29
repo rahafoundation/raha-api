@@ -3,6 +3,7 @@ import { MemberId, MemberUsername, OperationId } from "./identifiers";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
+  EDIT_MEMBER = "EDIT_MEMBER",
   REQUEST_VERIFICATION = "REQUEST_VERIFICATION",
   VERIFY = "VERIFY",
   INVITE = "INVITE",
@@ -11,22 +12,22 @@ export enum OperationType {
   GIVE = "GIVE"
 }
 
-/**
- * TODO: make CreateMember video URLs be a part of the operation
- */
 export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
 }
+export type EditMemberPayload =
+  | {
+      full_name: string;
+    }
+  | {
+      username: string;
+    };
 export interface RequestVerificationPayload {
   to_uid: MemberId;
   invite_token?: string;
 }
-
-/**
- * TODO: make Verify thumbnail URLs be a part of the operation
- */
 export interface VerifyPayload {
   to_uid: MemberId;
   video_url: string;
@@ -80,6 +81,15 @@ export type CreateMemberOperation = SavedOperationBase &
   CreateMemberOperationMetadata;
 export type CreateMemberOperationToBeCreated = ToSaveOperationBase &
   CreateMemberOperationMetadata;
+
+interface EditMemberOperationMetadata {
+  op_code: OperationType.EDIT_MEMBER;
+  data: EditMemberPayload;
+}
+export type EditMemberOperation = SavedOperationBase &
+  EditMemberOperationMetadata;
+export type EditMemberOperationToBeCreated = ToSaveOperationBase &
+  EditMemberOperationMetadata;
 
 interface RequestVerificationMetadata {
   op_code: OperationType.REQUEST_VERIFICATION;
