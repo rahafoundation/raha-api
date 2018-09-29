@@ -139,6 +139,7 @@ export type GiveOperationToBeCreated = ToSaveOperationBase &
 
 export type Operation =
   | CreateMemberOperation
+  | EditMemberOperation
   | RequestVerificationOperation
   | VerifyOperation
   | InviteOperation
@@ -148,6 +149,7 @@ export type Operation =
 
 export type OperationToBeCreated =
   | CreateMemberOperationToBeCreated
+  | EditMemberOperationToBeCreated
   | RequestVerificationOperationToBeCreated
   | VerifyOperationToBeCreated
   | InviteOperationToBeCreated
