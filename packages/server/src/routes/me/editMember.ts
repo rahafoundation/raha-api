@@ -5,6 +5,7 @@ import { firestore } from "firebase-admin";
 import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiResponse";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { UsernameAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/me/editMember/UsernameAlreadyExistsError";
 
 import { createApiRoute } from "..";
 
@@ -22,6 +23,14 @@ export const editMember = (
 
       if (!full_name && !username) {
         throw new MissingParamsError(["full_name", "username"]);
+      }
+
+      if (
+        username &&
+        !(await transaction.get(members.where("username", "==", username)))
+          .empty
+      ) {
+        throw new UsernameAlreadyExistsError(username);
       }
 
       const updatedFields = {
