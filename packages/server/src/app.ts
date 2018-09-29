@@ -37,7 +37,8 @@ import {
   validateMobileNumberApiLocation,
   sendAppInstallTextApiLocation,
   clearFcmTokenApiLocation,
-  setFcmTokenApiLocation
+  setFcmTokenApiLocation,
+  editMemberApiLocation
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
 
@@ -118,6 +119,10 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
       operationsCollection,
       fmcTokensCollection
     )
+  },
+  {
+    location: editMemberApiLocation,
+    handler: meRoutes.editMember(db, membersCollection, operationsCollection)
   },
   {
     location: verifyMemberApiLocation,
