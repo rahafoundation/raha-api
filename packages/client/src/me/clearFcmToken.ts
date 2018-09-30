@@ -7,7 +7,7 @@ import {
 import { callApi } from "../callApi";
 
 /**
- * API call that updates the currently active FirebaseCloudMessaging
+ * API call that updates the clears the active FirebaseCloudMessaging
  * token for the currently signed-in member.
  */
 export function clearFcmToken(apiBase: string, fcmToken: string) {

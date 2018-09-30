@@ -147,7 +147,10 @@ export const mint = (
               raha_balance: newCreatorBalance.toString()
             };
       transaction
-        .update(loggedInMember.ref, memberUpdate)
+        .update(loggedInMember.ref, {
+          last_updated_at: firestore.FieldValue.serverTimestamp(),
+          ...memberUpdate
+        })
         .set(newOperationRef, newOperation);
       return newOperationRef;
     });

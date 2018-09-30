@@ -11,7 +11,34 @@ import {
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
-import { MintPayload } from "../../models/Operation";
+import { MintPayload, EditMemberPayload } from "../../models/Operation";
+
+export type EditMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.EDIT_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const editMemberApiLocation: EditMemberApiLocation = {
+  uri: ApiEndpointUri.EDIT_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type EditMemberApiCall = ApiCallDefinition<
+  EditMemberApiLocation["uri"],
+  EditMemberApiLocation["method"],
+  EditMemberApiLocation["authenticated"],
+  void,
+  EditMemberPayload
+>;
+export type EditMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+export type EditMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.EDIT_MEMBER,
+  EditMemberApiCall,
+  EditMemberApiResponse
+>;
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration
