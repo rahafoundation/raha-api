@@ -4,6 +4,8 @@ import { MemberId, MemberUsername, OperationId } from "./identifiers";
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
   EDIT_MEMBER = "EDIT_MEMBER",
+  FLAG_MEMBER = "FLAG_MEMBER",
+  RESOLVE_FLAG_MEMBER = "RESOLVE_FLAG_MEMBER",
   REQUEST_VERIFICATION = "REQUEST_VERIFICATION",
   VERIFY = "VERIFY",
   INVITE = "INVITE",
@@ -20,6 +22,15 @@ export interface CreateMemberPayload {
 export interface EditMemberPayload {
   full_name?: string;
   username?: string;
+}
+export interface FlagMemberPayload {
+  to_uid: MemberId;
+  reason: string;
+}
+export interface ResolveFlagMemberPayload {
+  to_uid: MemberId;
+  flag_operation_id: OperationId;
+  reason: string;
 }
 export interface RequestVerificationPayload {
   to_uid: MemberId;
@@ -88,6 +99,24 @@ export type EditMemberOperation = SavedOperationBase &
 export type EditMemberOperationToBeCreated = ToSaveOperationBase &
   EditMemberOperationMetadata;
 
+interface FlagMemberOperationMetadata {
+  op_code: OperationType.FLAG_MEMBER;
+  data: FlagMemberPayload;
+}
+export type FlagMemberOperation = SavedOperationBase &
+  FlagMemberOperationMetadata;
+export type FlagMemberOperationToBeCreated = ToSaveOperationBase &
+  FlagMemberOperationMetadata;
+
+interface ResolveFlagMemberOperationMetadata {
+  op_code: OperationType.RESOLVE_FLAG_MEMBER;
+  data: ResolveFlagMemberPayload;
+}
+export type ResolveFlagMemberOperation = SavedOperationBase &
+  ResolveFlagMemberOperationMetadata;
+export type ResolveFlagMemberOperationToBeCreated = ToSaveOperationBase &
+  ResolveFlagMemberOperationMetadata;
+
 interface RequestVerificationMetadata {
   op_code: OperationType.REQUEST_VERIFICATION;
   data: RequestVerificationPayload;
@@ -140,6 +169,8 @@ export type GiveOperationToBeCreated = ToSaveOperationBase &
 export type Operation =
   | CreateMemberOperation
   | EditMemberOperation
+  | FlagMemberOperation
+  | ResolveFlagMemberOperation
   | RequestVerificationOperation
   | VerifyOperation
   | InviteOperation
@@ -150,6 +181,8 @@ export type Operation =
 export type OperationToBeCreated =
   | CreateMemberOperationToBeCreated
   | EditMemberOperationToBeCreated
+  | FlagMemberOperationToBeCreated
+  | ResolveFlagMemberOperationToBeCreated
   | RequestVerificationOperationToBeCreated
   | VerifyOperationToBeCreated
   | InviteOperationToBeCreated
