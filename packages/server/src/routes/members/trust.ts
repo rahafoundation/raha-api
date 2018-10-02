@@ -50,11 +50,7 @@ export const trust = (
         created_at: firestore.FieldValue.serverTimestamp()
       };
       const newOperationRef = operationsCollection.doc();
-      if (memberToTrust.get("request_invite_from_member_id") === loggedInUid) {
-        transaction.update(memberToTrust.ref, {
-          invite_confirmed: true
-        });
-      }
+
       transaction.set(newOperationRef, newOperation);
 
       return newOperationRef;
