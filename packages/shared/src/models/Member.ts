@@ -1,3 +1,5 @@
+import { OperationId } from "./identifiers";
+
 export interface PublicMemberFields {
   id: string;
   created_at: Date;
@@ -5,6 +7,7 @@ export interface PublicMemberFields {
   identity_video_url: string;
   invite_confirmed: boolean;
   username: string;
+  operationsFlaggingThisMember: OperationId[];
 }
 
 export interface PrivateMemberFields {

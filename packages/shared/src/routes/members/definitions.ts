@@ -13,6 +13,11 @@ import {
 } from "../ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+import {
+  FlagMemberPayload,
+  ResolveFlagMemberPayload
+} from "../../models/Operation";
+import { Omit } from "../../helpers/Omit";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -149,16 +154,69 @@ export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["uri"],
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
-  { memberId: string },
+  { memberId: MemberId },
   { videoToken: string }
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
 >;
-
 export type VerifyMemberApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.CREATE_MEMBER,
   VerifyMemberApiCall,
   VerifyMemberApiResponse
+>;
+
+export type FlagMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.FLAG_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const flagMemberApiLocation: FlagMemberApiLocation = {
+  uri: ApiEndpointUri.FLAG_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type FlagMemberApiCall = ApiCallDefinition<
+  FlagMemberApiLocation["uri"],
+  FlagMemberApiLocation["method"],
+  FlagMemberApiLocation["authenticated"],
+  { memberId: MemberId },
+  Omit<FlagMemberPayload, "to_uid">
+>;
+export type FlagMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+export type FlagMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.FLAG_MEMBER,
+  FlagMemberApiCall,
+  FlagMemberApiResponse
+>;
+
+export type ResolveFlagMemberApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.RESOLVE_FLAG_MEMBER,
+  HttpVerb.POST,
+  true
+>;
+export const resolveFlagMemberApiLocation: ResolveFlagMemberApiLocation = {
+  uri: ApiEndpointUri.RESOLVE_FLAG_MEMBER,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type ResolveFlagMemberApiCall = ApiCallDefinition<
+  ResolveFlagMemberApiLocation["uri"],
+  ResolveFlagMemberApiLocation["method"],
+  ResolveFlagMemberApiLocation["authenticated"],
+  { memberId: MemberId },
+  Omit<ResolveFlagMemberPayload, "to_uid">
+>;
+export type ResolveFlagMemberApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+export type ResolveFlagMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.RESOLVE_FLAG_MEMBER,
+  ResolveFlagMemberApiCall,
+  ResolveFlagMemberApiResponse
 >;

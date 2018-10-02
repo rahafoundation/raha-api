@@ -9,7 +9,9 @@ import {
   TrustMemberApiEndpoint,
   CreateMemberApiEndpoint,
   VerifyMemberApiEndpoint,
-  ListMembersApiEndpoint
+  ListMembersApiEndpoint,
+  FlagMemberApiEndpoint,
+  ResolveFlagMemberApiEndpoint
 } from "../../routes/members/definitions";
 import {
   MintApiEndpoint,
@@ -27,37 +29,49 @@ import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
  * Canonical name of an endpoint you can query.
  */
 export enum ApiEndpointName {
+  // operations
   GET_OPERATIONS = "GET_OPERATIONS",
+  // members
   GET_MEMBERS = "GET_MEMBERS",
-  EDIT_MEMBER = "EDIT_MEMBER",
+  CREATE_MEMBER = "CREATE_MEMBER",
   TRUST_MEMBER = "TRUST_MEMBER",
+  GIVE = "GIVE",
+  VERIFY_MEMBER = "VERIFY_MEMBER",
+  FLAG_MEMBER = "FLAG_MEMBER",
+  RESOLVE_FLAG_MEMBER = "RESOLVE_FLAG_MEMBER",
+  // me
+  EDIT_MEMBER = "EDIT_MEMBER",
   SEND_INVITE = "SEND_INVITE",
   MINT = "MINT",
-  GIVE = "GIVE",
   VALIDATE_MOBILE_NUMBER = "VALIDATE_MOBILE_NUMBER",
   SEND_APP_INSTALL_TEXT = "SEND_APP_INSTALL_TEXT",
-  SSO_DISCOURSE = "SSO_DISCOURSE",
-  CREATE_MEMBER = "CREATE_MEMBER",
-  VERIFY_MEMBER = "CREATE_MEMBER",
   CLEAR_FCM_TOKEN = "CLEAR_FCM_TOKEN",
-  SET_FCM_TOKEN = "SET_FCM_TOKEN"
+  SET_FCM_TOKEN = "SET_FCM_TOKEN",
+  // sso
+  SSO_DISCOURSE = "SSO_DISCOURSE"
 }
 
 export enum ApiEndpointUri {
+  // operations
   GET_OPERATIONS = "operations",
+  // members
   GET_MEMBERS = "members",
+  CREATE_MEMBER = "members/createMember",
   TRUST_MEMBER = "members/:memberId/trust",
+  GIVE = "members/:memberId/give",
+  VERIFY_MEMBER = "members/:memberId/verify",
+  FLAG_MEMBER = "members/:memberId/flag",
+  RESOLVE_FLAG_MEMBER = "members/:memberId/resolveFlag",
+  // me
   EDIT_MEMBER = "me/edit",
   SEND_INVITE = "me/send_invite",
   MINT = "me/mint",
-  GIVE = "members/:memberId/give",
   VALIDATE_MOBILE_NUMBER = "me/validateMobileNumber",
   SEND_APP_INSTALL_TEXT = "me/sendAppInstallText",
-  SSO_DISCOURSE = "sso/discourse",
-  CREATE_MEMBER = "members/createMember",
-  VERIFY_MEMBER = "members/:memberId/verify",
   CLEAR_FCM_TOKEN = "me/clearFcmToken",
-  SET_FCM_TOKEN = "me/setFcmToken"
+  SET_FCM_TOKEN = "me/setFcmToken",
+  // sso
+  SSO_DISCOURSE = "sso/discourse"
 }
 
 /**
@@ -82,20 +96,26 @@ export interface ApiEndpointDefinition<
  * the server respond to it, add it to apiRoutes in app.ts as well.
  */
 export type ApiEndpoint =
+  // operations
   | ListOperationsApiEndpoint
+  // members
   | ListMembersApiEndpoint
+  | CreateMemberApiEndpoint
   | TrustMemberApiEndpoint
-  | SendInviteApiEndpoint
   | GiveApiEndpoint
+  | VerifyMemberApiEndpoint
+  | FlagMemberApiEndpoint
+  | ResolveFlagMemberApiEndpoint
+  // me
+  | EditMemberApiEndpoint
+  | SendInviteApiEndpoint
   | MintApiEndpoint
   | ValidateMobileNumberApiEndpoint
   | SendAppInstallTextApiEndpoint
-  | SSODiscourseApiEndpoint
-  | CreateMemberApiEndpoint
-  | EditMemberApiEndpoint
-  | VerifyMemberApiEndpoint
   | ClearFcmTokenApiEndpoint
-  | SetFcmTokenApiEndpoint;
+  | SetFcmTokenApiEndpoint
+  // sso
+  | SSODiscourseApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";
