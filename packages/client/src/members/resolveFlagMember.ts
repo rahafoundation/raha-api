@@ -18,7 +18,7 @@ import {
  * @param flagOperationId
  * @param reason
  */
-export function flagMember(
+export function resolveFlagMember(
   apiBase: string,
   authToken: string,
   memberId: MemberId,
