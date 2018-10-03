@@ -29,7 +29,9 @@ import {
   giveApiLocation,
   createMemberApiLocation,
   verifyMemberApiLocation,
-  listMembersApiLocation
+  listMembersApiLocation,
+  flagMemberApiLocation,
+  resolveFlagMemberApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
 import {
   sendInviteApiLocation,
@@ -100,10 +102,12 @@ interface RouteHandler<Location extends ApiLocation> {
  * routes/routes/ApiEndpoint/index.ts.
  */
 const apiRoutes: Array<RouteHandler<ApiLocation>> = [
+  // operations
   {
     location: listOperationsApiLocation,
     handler: operationsRoutes.listOperations(operationsCollection)
   },
+  // members
   {
     location: listMembersApiLocation,
     handler: membersRoutes.listMembers(membersCollection)
@@ -111,22 +115,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: createMemberApiLocation,
     handler: membersRoutes.createMember(
-      config,
-      db,
-      storage,
-      messaging,
-      membersCollection,
-      operationsCollection,
-      fmcTokensCollection
-    )
-  },
-  {
-    location: editMemberApiLocation,
-    handler: meRoutes.editMember(db, membersCollection, operationsCollection)
-  },
-  {
-    location: verifyMemberApiLocation,
-    handler: membersRoutes.verify(
       config,
       db,
       storage,
@@ -151,6 +139,39 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     )
   },
   {
+    location: verifyMemberApiLocation,
+    handler: membersRoutes.verify(
+      config,
+      db,
+      storage,
+      messaging,
+      membersCollection,
+      operationsCollection,
+      fmcTokensCollection
+    )
+  },
+  {
+    location: flagMemberApiLocation,
+    handler: membersRoutes.flagMember(
+      db,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  {
+    location: resolveFlagMemberApiLocation,
+    handler: membersRoutes.resolveFlagMember(
+      db,
+      membersCollection,
+      operationsCollection
+    )
+  },
+  // me
+  {
+    location: editMemberApiLocation,
+    handler: meRoutes.editMember(db, membersCollection, operationsCollection)
+  },
+  {
     location: sendInviteApiLocation,
     handler: meRoutes.sendInvite(
       config,
@@ -172,16 +193,17 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: meRoutes.sendAppInstallText(config)
   },
   {
-    location: ssoDiscourseApiLocation,
-    handler: ssoRoutes.ssoDiscourse(config, membersCollection)
-  },
-  {
     location: clearFcmTokenApiLocation,
     handler: meRoutes.clearFcmToken(fmcTokensCollection)
   },
   {
     location: setFcmTokenApiLocation,
     handler: meRoutes.setFcmToken(membersCollection, fmcTokensCollection)
+  },
+  // sso
+  {
+    location: ssoDiscourseApiLocation,
+    handler: ssoRoutes.ssoDiscourse(config, membersCollection)
   }
 ];
 
