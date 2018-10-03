@@ -10,6 +10,7 @@ export { give } from "./give";
 export { createMember } from "./createMember";
 export { verify } from "./verify";
 export { trust } from "./trust";
+export { flagMember, resolveFlagMember } from "./flag";
 
 export const listMembers = (membersCollection: CollectionReference) =>
   createApiRoute<ListMembersApiEndpoint>(async () => {
@@ -22,7 +23,8 @@ export const listMembers = (membersCollection: CollectionReference) =>
         full_name: member.get("full_name"),
         identity_video_url: member.get("identity_video_url"),
         invite_confirmed: member.get("invite_confirmed"),
-        username: member.get("username")
+        username: member.get("username"),
+        operationsFlaggingThisMember: member.get("operationsFlaggingThisMember")
       })
     );
     return {
