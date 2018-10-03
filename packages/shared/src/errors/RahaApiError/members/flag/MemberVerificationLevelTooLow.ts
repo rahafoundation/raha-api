@@ -20,7 +20,7 @@ export class MemberVerificationLevelTooLowError extends RahaApiError<
 
   constructor() {
     super(
-      httpStatus.BAD_REQUEST,
+      httpStatus.FORBIDDEN,
       "A member must be verified by 5 people before flagging other members.",
       {
         errorCode: ERROR_CODE

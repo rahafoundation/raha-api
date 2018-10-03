@@ -20,7 +20,7 @@ export class MemberIsFlaggedError extends RahaApiError<
 
   constructor() {
     super(
-      httpStatus.BAD_REQUEST,
+      httpStatus.FORBIDDEN,
       "A member cannot flag another member if their own account is flagged.",
       {
         errorCode: ERROR_CODE
