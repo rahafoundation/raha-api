@@ -40,20 +40,27 @@ export const validateMobileNumber = (config: Config) =>
 
     const allowedPhoneTypes = ["mobile"];
 
-    if (
-      !phoneNumberLookup ||
-      !phoneNumberLookup.phoneNumber ||
-      !phoneNumberLookup.carrier ||
-      !phoneNumberLookup.carrier.type
-    ) {
+    if (!phoneNumberLookup || !phoneNumberLookup.phoneNumber) {
       throw new NotRealError(mobileNumber);
     }
 
-    if (!allowedPhoneTypes.includes(phoneNumberLookup.carrier.type)) {
-      throw new DisallowedTypeError(
-        mobileNumber,
-        phoneNumberLookup.carrier.type
-      );
+    // Twilio cannot currently provide us with carrier info for Canadian numbers, so we are letting them through for now.
+    // As of 10/5/2018, we have initiated a support request with Twilio to get access to this info.
+    // https://support.twilio.com/hc/en-us/articles/360004563433-Twilio-Lookups-API-is-Not-Returning-Carrier-Data-for-Canadian-Phone-Numbers
+    if (
+      !phoneNumberLookup.countryCode ||
+      phoneNumberLookup.countryCode !== "CA"
+    ) {
+      if (!phoneNumberLookup.carrier || !phoneNumberLookup.carrier.type) {
+        throw new NotRealError(mobileNumber);
+      }
+
+      if (!allowedPhoneTypes.includes(phoneNumberLookup.carrier.type)) {
+        throw new DisallowedTypeError(
+          mobileNumber,
+          phoneNumberLookup.carrier.type
+        );
+      }
     }
 
     return { body: { message: phoneNumberLookup.phoneNumber }, status: 200 };
