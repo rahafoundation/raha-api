@@ -50,7 +50,7 @@ export const editMember = (
         .create(newOperationRef, newOperationData)
         .update(loggedInMember.ref, {
           last_updated_at: firestore.FieldValue.serverTimestamp(),
-          updatedFields
+          ...updatedFields
         });
 
       return newOperationRef;
