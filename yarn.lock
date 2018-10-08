@@ -199,7 +199,7 @@
 
 "@sendgrid/client@^6.3.0":
   version "6.3.0"
-  resolved "https://registry.npmjs.org/@sendgrid/client/-/client-6.3.0.tgz#25c34b11bec392ab43ca7e52fb35e4105fb00901"
+  resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-6.3.0.tgz#25c34b11bec392ab43ca7e52fb35e4105fb00901"
   dependencies:
     "@sendgrid/helpers" "^6.3.0"
     "@types/request" "^2.0.3"
