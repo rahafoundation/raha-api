@@ -21,6 +21,7 @@ yarn install
     instructions at:
     https://firebase.google.com/docs/admin/setup#add_firebase_to_your_app to get
     them. DO NOT COMMIT THESE CREDENTIALS.
+1.  Run `yarn use-test-config` for Raha Test and `yarn use-prod-config` for Raha prod.
 1.  Run the dev server (this refreshes on changes automatically):
 
 ```bash
