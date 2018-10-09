@@ -127,6 +127,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
     videoToken: string;
     username: string;
     inviteToken?: string;
+    subscribeToNewsletter?: boolean;
   }
 >;
 export type CreateMemberApiResponse = ApiResponseDefinition<
