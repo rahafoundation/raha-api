@@ -422,6 +422,7 @@ export const createMember = (
     });
 
     _addEmailToMailingLists(
+      config,
       sgClient,
       call.body.emailAddress,
       call.body.subscribeToNewsletter
@@ -434,6 +435,7 @@ export const createMember = (
   });
 
 async function _addEmailToMailingLists(
+  config: Config,
   sgClient: SgClient,
   emailAddress: string,
   subscribeToNewsletter?: boolean
@@ -452,17 +454,19 @@ async function _addEmailToMailingLists(
     }
     const recipient_id = persisted_recipients[0];
 
-    const APP_REGISTRATION = "5460644";
     await sgClient.request({
       method: "POST",
-      url: `/v3/contactdb/lists/${APP_REGISTRATION}/recipients/${recipient_id}`
+      url: `/v3/contactdb/lists/${
+        config.sendGrid.appRegistrationListId
+      }/recipients/${recipient_id}`
     });
 
     if (subscribeToNewsletter) {
-      const UPDATE_NEWSLETTER = "5460649";
       await sgClient.request({
         method: "POST",
-        url: `/v3/contactdb/lists/${UPDATE_NEWSLETTER}/recipients/${recipient_id}`
+        url: `/v3/contactdb/lists/${
+          config.sendGrid.updateNewsletterListId
+        }/recipients/${recipient_id}`
       });
     }
   } catch (exception) {
