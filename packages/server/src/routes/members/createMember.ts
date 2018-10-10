@@ -425,6 +425,7 @@ export const createMember = (
       config,
       sgClient,
       call.body.emailAddress,
+      call.body.fullName,
       call.body.subscribeToNewsletter
     );
 
@@ -438,6 +439,7 @@ async function _addEmailToMailingLists(
   config: Config,
   sgClient: SgClient,
   emailAddress: string,
+  fullName: string,
   subscribeToNewsletter?: boolean
 ) {
   // Don't fail CREATE_MEMBER due to SendGrid API.
@@ -445,7 +447,7 @@ async function _addEmailToMailingLists(
     const response = await sgClient.request({
       method: "POST",
       url: "/v3/contactdb/recipients",
-      body: [{ email: emailAddress }]
+      body: [{ email: emailAddress, full_name: fullName }]
     });
 
     const persisted_recipients = response[1].persisted_recipients;
