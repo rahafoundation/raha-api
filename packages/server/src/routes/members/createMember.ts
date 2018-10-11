@@ -26,6 +26,15 @@ import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
+interface SgClient {
+  request: (
+    request: {
+      method: string;
+      url: string;
+      body?: any;
+    }
+  ) => Promise<[any, { persisted_recipients: string[] }]>;
+}
 
 function getPublicInviteVideoRef(
   config: Config,
@@ -324,7 +333,8 @@ export const createMember = (
   messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference,
-  fcmTokens: CollectionReference
+  fcmTokens: CollectionReference,
+  sgClient: SgClient
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReferences = await db.runTransaction(
@@ -411,8 +421,65 @@ export const createMember = (
       }
     });
 
+    _addEmailToMailingLists(
+      config,
+      sgClient,
+      call.body.emailAddress,
+      call.body.fullName,
+      call.body.subscribeToNewsletter
+    );
+
     return {
       body: newOpsData,
       status: 201
     };
   });
+
+async function _addEmailToMailingLists(
+  config: Config,
+  sgClient: SgClient,
+  emailAddress: string,
+  fullName: string,
+  subscribeToNewsletter?: boolean
+) {
+  // Don't fail CREATE_MEMBER due to SendGrid API.
+  try {
+    const response = await sgClient.request({
+      method: "POST",
+      url: "/v3/contactdb/recipients",
+      body: [{ email: emailAddress, full_name: fullName }]
+    });
+
+    const persisted_recipients = response[1].persisted_recipients;
+    if (persisted_recipients.length === 0) {
+      throw new Error(`SendGrid could not add recipient`);
+    }
+    const recipient_id = persisted_recipients[0];
+
+    await sgClient.request({
+      method: "POST",
+      url: `/v3/contactdb/lists/${
+        config.sendGrid.appRegistrationListId
+      }/recipients/${recipient_id}`
+    });
+
+    if (subscribeToNewsletter) {
+      await sgClient.request({
+        method: "POST",
+        url: `/v3/contactdb/lists/${
+          config.sendGrid.updateNewsletterListId
+        }/recipients/${recipient_id}`
+      });
+    }
+  } catch (exception) {
+    // tslint:disable-next-line:no-console
+    console.error(
+      "Failed adding ",
+      emailAddress,
+      " ( newsletter:",
+      !!subscribeToNewsletter,
+      "): ",
+      exception
+    );
+  }
+}

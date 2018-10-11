@@ -13,6 +13,8 @@ import { callApi } from "../callApi";
  * @param videoToken Video token of the invite, of the new member either identifying themselves or
  * being invited by the existing member.
  * @param inviteToken: Token identifying associated invite operation.
+ * @param subscribeToNewsletter Whether user wants to be subscribed to the
+ * update newsletter
  */
 export function createMember(
   apiBase: string,
@@ -21,7 +23,8 @@ export function createMember(
   emailAddress: string,
   username: string,
   videoToken: string,
-  inviteToken?: string
+  inviteToken?: string,
+  subscribeToNewsletter?: boolean
 ) {
   const apiCall: CreateMemberApiCall = {
     location: createMemberApiLocation,
@@ -32,7 +35,8 @@ export function createMember(
         username,
         emailAddress,
         videoToken,
-        inviteToken
+        inviteToken,
+        subscribeToNewsletter
       }
     }
   };
