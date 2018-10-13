@@ -23,79 +23,79 @@ import { createApiRoute, OperationToInsert } from "..";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
 
-function getPublicUrlForMemberAndToken(
-  config: Config,
-  memberUid: string,
-  videoToken: string
-) {
-  return `https://storage.googleapis.com/${
-    config.publicVideoBucket
-  }/${memberUid}/${videoToken}/video.mp4`;
-}
+// function getPublicUrlForMemberAndToken(
+//   config: Config,
+//   memberUid: string,
+//   videoToken: string
+// ) {
+//   return `https://storage.googleapis.com/${
+//     config.publicVideoBucket
+//   }/${memberUid}/${videoToken}/video.mp4`;
+// }
 
 /**
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
  * TODO: Remove all other video handling functions. This should be all that we need.
  */
-async function movePrivateVideoToPublicVideo(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string,
-  videoToken: string,
-  removeOriginal: boolean
-) {
-  const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
-  const publicVideoBucket = (storage as Storage.Storage).bucket(
-    config.publicVideoBucket
-  );
-  const publicVideoRef = publicVideoBucket.file(newVideoPath);
-  const publicThumbnailRef = publicVideoBucket.file(
-    `${newVideoPath}.thumb.jpg`
-  );
+// async function movePrivateVideoToPublicVideo(
+//   config: Config,
+//   storage: BucketStorage,
+//   memberUid: string,
+//   videoToken: string,
+//   removeOriginal: boolean
+// ) {
+//   const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
+//   const publicVideoBucket = (storage as Storage.Storage).bucket(
+//     config.publicVideoBucket
+//   );
+//   const publicVideoRef = publicVideoBucket.file(newVideoPath);
+//   const publicThumbnailRef = publicVideoBucket.file(
+//     `${newVideoPath}.thumb.jpg`
+//   );
 
-  if ((await publicVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
+//   if ((await publicVideoRef.exists())[0]) {
+//     throw new HttpApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Video already exists at intended storage destination. Cannot overwrite.",
+//       {}
+//     );
+//   }
 
-  const privateVideoPath = `private-video/${videoToken}`;
-  const privateVideoBucket = (storage as Storage.Storage).bucket(
-    config.privateVideoBucket
-  );
-  const privateVideoRef = privateVideoBucket.file(
-    `${privateVideoPath}/video.mp4`
-  );
-  const privateVideoThumbnailRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`${privateVideoPath}/thumbnail.jpg`);
+//   const privateVideoPath = `private-video/${videoToken}`;
+//   const privateVideoBucket = (storage as Storage.Storage).bucket(
+//     config.privateVideoBucket
+//   );
+//   const privateVideoRef = privateVideoBucket.file(
+//     `${privateVideoPath}/video.mp4`
+//   );
+//   const privateVideoThumbnailRef = (storage as Storage.Storage)
+//     .bucket(config.privateVideoBucket)
+//     .file(`${privateVideoPath}/thumbnail.jpg`);
 
-  if (!(await privateVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Private video does not exist at expected location. Cannot move.",
-      {}
-    );
-  }
+//   if (!(await privateVideoRef.exists())[0]) {
+//     throw new HttpApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Private video does not exist at expected location. Cannot move.",
+//       {}
+//     );
+//   }
 
-  await (removeOriginal
-    ? privateVideoRef.move(publicVideoRef)
-    : privateVideoRef.copy(publicVideoRef));
+//   await (removeOriginal
+//     ? privateVideoRef.move(publicVideoRef)
+//     : privateVideoRef.copy(publicVideoRef));
 
-  // Until the iOS app gets updated and starts generating thumbnails, we
-  // cannot throw an error on the thumbnail not existing.
-  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-  if ((await privateVideoThumbnailRef.exists())[0]) {
-    await (removeOriginal
-      ? privateVideoThumbnailRef.move(publicThumbnailRef)
-      : privateVideoThumbnailRef.copy(publicThumbnailRef));
-  }
+//   // Until the iOS app gets updated and starts generating thumbnails, we
+//   // cannot throw an error on the thumbnail not existing.
+//   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
+//   if ((await privateVideoThumbnailRef.exists())[0]) {
+//     await (removeOriginal
+//       ? privateVideoThumbnailRef.move(publicThumbnailRef)
+//       : privateVideoThumbnailRef.copy(publicThumbnailRef));
+//   }
 
-  return publicVideoRef;
-}
+//   return publicVideoRef;
+// }
 
 async function _notifyVerifyRecipient(
   messaging: adminMessaging.Messaging,
@@ -153,10 +153,10 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      const { videoToken } = call.body;
+      const { videoUrl } = call.body;
 
-      if (!videoToken) {
-        throw new MissingParamsError(["videoToken"]);
+      if (!videoUrl) {
+        throw new MissingParamsError(["videoUrl"]);
       }
 
       const existingVerifyOperations = await transaction.get(
@@ -171,12 +171,6 @@ export const verify = (
         // TODO What should we do with the video in this case?
         return existingVerifyOperations.docs[0].ref;
       }
-
-      const videoUrl = getPublicUrlForMemberAndToken(
-        config,
-        loggedInUid,
-        videoToken
-      );
 
       const newOperation: OperationToInsert = {
         creator_uid: loggedInUid,
@@ -195,13 +189,13 @@ export const verify = (
       }
       transaction.set(newOperationRef, newOperation);
 
-      await movePrivateVideoToPublicVideo(
-        config,
-        storage,
-        loggedInUid,
-        videoToken,
-        true
-      );
+      // await movePrivateVideoToPublicVideo(
+      //   config,
+      //   storage,
+      //   loggedInUid,
+      //   videoToken,
+      //   true
+      // );
 
       return newOperationRef;
     });

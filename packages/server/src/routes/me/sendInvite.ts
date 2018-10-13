@@ -1,4 +1,5 @@
 import { URL } from "url";
+import cryptoRandomString = require("crypto-random-string");
 
 import { CollectionReference } from "@google-cloud/firestore";
 import { firestore } from "firebase-admin";
@@ -38,7 +39,7 @@ export const sendInvite = (
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
 
-    const { inviteEmail, videoToken, isJointVideo } = call.body;
+    const { inviteEmail, videoUrl, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
@@ -46,7 +47,7 @@ export const sendInvite = (
 
     const requiredParams = {
       inviteEmail,
-      videoToken,
+      videoUrl,
       isJointVideo
     };
     const missingParams = (Object.keys(requiredParams) as Array<
@@ -56,8 +57,7 @@ export const sendInvite = (
       throw new MissingParamsError(missingParams);
     }
 
-    // TODO generate this server side somewhere.
-    const inviteToken = videoToken;
+    const inviteToken = cryptoRandomString(10);
 
     const newInvite: OperationToInsert = {
       creator_uid: loggedInMemberId,
@@ -66,7 +66,7 @@ export const sendInvite = (
       data: {
         invite_token: inviteToken,
         is_joint_video: isJointVideo,
-        video_token: inviteToken
+        video_url: videoUrl
       }
     };
     await operations.doc().create(newInvite);
