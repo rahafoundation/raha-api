@@ -124,7 +124,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
   {
     fullName: string;
     emailAddress: string;
-    videoToken: string;
+    videoUrl: string;
     username: string;
     inviteToken?: string;
   }
@@ -155,7 +155,7 @@ export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: MemberId },
-  { videoToken: string }
+  { videoUrl: string }
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,

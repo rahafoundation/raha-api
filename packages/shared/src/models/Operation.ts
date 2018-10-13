@@ -18,6 +18,7 @@ export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
+  video_url: string;
 }
 export interface EditMemberPayload {
   full_name?: string;
@@ -43,7 +44,7 @@ export interface VerifyPayload {
 export interface InvitePayload {
   invite_token: string;
   is_joint_video: boolean;
-  video_token: string;
+  video_url: string;
 }
 export interface TrustPayload {
   to_uid: MemberId;
