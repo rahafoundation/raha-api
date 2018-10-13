@@ -5,25 +5,36 @@ import {
 } from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
+import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
 
 /**
  * API call for a non-member to join Raha and create a new member.
  * @param fullName Full name of new member
  * @param username New username for the new member. Must be unique
- * @param videoUrl Video of the new member either identifying themselves. If a
- * joint video from a previous invitation, should match the videoUrl field of
- * an existing invite operation.
+ * @param videoReference Video of the new member either identifying themselves.
+ * If a joint video from a previous invitation, should match the videoReference
+ * field of an existing invite operation.
  * @param inviteToken: Token identifying associated invite operation.
  */
-export function createMember(
-  apiBase: string,
-  authToken: string,
-  fullName: string,
-  emailAddress: string,
-  username: string,
-  videoUrl: string,
-  inviteToken?: string
-) {
+export function createMember(args: {
+  apiBase: string;
+  authToken: string;
+  fullName: string;
+  emailAddress: string;
+  username: string;
+  videoReference: VideoReference;
+  inviteToken?: string;
+}) {
+  const {
+    apiBase,
+    authToken,
+    fullName,
+    emailAddress,
+    username,
+    videoReference,
+    inviteToken
+  } = args;
+
   const apiCall: CreateMemberApiCall = {
     location: createMemberApiLocation,
     request: {
@@ -32,7 +43,7 @@ export function createMember(
         fullName,
         username,
         emailAddress,
-        videoUrl,
+        videoReference,
         inviteToken
       }
     }
