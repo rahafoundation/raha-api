@@ -153,10 +153,10 @@ export const verify = (
         throw new NotFoundError(toVerifyMemberId);
       }
 
-      const { videoUrl } = call.body;
+      const { videoReference } = call.body;
 
-      if (!videoUrl) {
-        throw new MissingParamsError(["videoUrl"]);
+      if (!videoReference) {
+        throw new MissingParamsError(["videoReference"]);
       }
 
       const existingVerifyOperations = await transaction.get(
@@ -177,7 +177,7 @@ export const verify = (
         op_code: OperationType.VERIFY,
         data: {
           to_uid: toVerifyMemberId,
-          video_url: videoUrl
+          videoReference
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };

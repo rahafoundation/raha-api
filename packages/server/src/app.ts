@@ -174,7 +174,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: sendInviteApiLocation,
     handler: meRoutes.sendInvite(
-      config,
       sgMail,
       membersCollection,
       operationsCollection

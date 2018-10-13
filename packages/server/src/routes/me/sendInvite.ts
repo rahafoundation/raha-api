@@ -17,8 +17,7 @@ interface DynamicTemplateData {
   invite_link: string;
   invite_token: string;
   // TODO: Re-enable once videos are publicly readable and SendGrid template uncommented.
-  // invite_video_url: string;
-  // invite_video_thumbnail: string;
+  // inviteVideoReference: VideoReference;
 }
 
 interface EmailMessage {
@@ -30,7 +29,6 @@ interface EmailMessage {
 }
 
 export const sendInvite = (
-  config: Config,
   sgMail: { send: (message: EmailMessage) => void },
   members: CollectionReference,
   operations: CollectionReference
@@ -39,7 +37,7 @@ export const sendInvite = (
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
 
-    const { inviteEmail, videoUrl, isJointVideo } = call.body;
+    const { inviteEmail, videoReference, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
@@ -47,7 +45,7 @@ export const sendInvite = (
 
     const requiredParams = {
       inviteEmail,
-      videoUrl,
+      videoReference,
       isJointVideo
     };
     const missingParams = (Object.keys(requiredParams) as Array<
@@ -66,7 +64,7 @@ export const sendInvite = (
       data: {
         invite_token: inviteToken,
         is_joint_video: isJointVideo,
-        video_url: videoUrl
+        videoReference
       }
     };
     await operations.doc().create(newInvite);

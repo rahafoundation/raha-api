@@ -21,7 +21,7 @@ export const listMembers = (membersCollection: CollectionReference) =>
         id: member.id,
         created_at: member.get("created_at"),
         full_name: member.get("full_name"),
-        identity_video_url: member.get("identity_video_url"),
+        identityVideoReference: member.get("identityVideoReference"),
         invite_confirmed: member.get("invite_confirmed"),
         username: member.get("username"),
         operationsFlaggingThisMember: member.get("operationsFlaggingThisMember")

@@ -24,6 +24,7 @@ import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
+import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
 
@@ -143,9 +144,7 @@ async function _notifyRequestVerificationRecipient(
   );
 }
 
-async function _createInvitedMember(parameters: {
-  config: Config;
-  storage: BucketStorage;
+async function _createInvitedMember(args: {
   transaction: FirebaseFirestore.Transaction;
   membersCollection: CollectionReference;
   operationsCollection: CollectionReference;
@@ -153,12 +152,10 @@ async function _createInvitedMember(parameters: {
   fullName: string;
   emailAddress: string;
   username: string;
-  videoUrl: string;
+  videoReference: VideoReference;
   inviteToken: string;
 }) {
   const {
-    config,
-    storage,
     transaction,
     membersCollection,
     operationsCollection,
@@ -166,9 +163,9 @@ async function _createInvitedMember(parameters: {
     fullName,
     emailAddress,
     username,
-    videoUrl,
+    videoReference,
     inviteToken
-  } = parameters;
+  } = args;
 
   const inviteOperations = await operationsCollection
     .where("op_code", "==", OperationType.INVITE)
@@ -207,7 +204,7 @@ async function _createInvitedMember(parameters: {
       username,
       full_name: fullName,
       request_invite_from_member_id: requestInviteFromMemberId,
-      video_url: videoUrl
+      videoReference
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
@@ -230,7 +227,7 @@ async function _createInvitedMember(parameters: {
     email_address_is_verified: false,
     request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
-    identity_video_url: videoUrl,
+    identityVideoReference: videoReference,
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -257,9 +254,7 @@ async function _createInvitedMember(parameters: {
   return [createMemberOperationRef, requestVerificationOperationRef];
 }
 
-async function _createUninvitedMember(parameters: {
-  config: Config;
-  storage: BucketStorage;
+async function _createUninvitedMember(args: {
   transaction: FirebaseFirestore.Transaction;
   membersCollection: CollectionReference;
   operationsCollection: CollectionReference;
@@ -267,11 +262,9 @@ async function _createUninvitedMember(parameters: {
   fullName: string;
   emailAddress: string;
   username: string;
-  videoUrl: string;
+  videoReference: VideoReference;
 }) {
   const {
-    config,
-    storage,
     transaction,
     membersCollection,
     operationsCollection,
@@ -279,8 +272,8 @@ async function _createUninvitedMember(parameters: {
     fullName,
     emailAddress,
     username,
-    videoUrl
-  } = parameters;
+    videoReference
+  } = args;
 
   const newCreateMemberOperation: OperationToInsert = {
     creator_uid: loggedInUid,
@@ -288,7 +281,7 @@ async function _createUninvitedMember(parameters: {
     data: {
       username,
       full_name: fullName,
-      video_url: videoUrl
+      videoReference
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
@@ -300,7 +293,7 @@ async function _createUninvitedMember(parameters: {
     email_address: emailAddress || null,
     email_address_is_verified: false,
     invite_confirmed: false,
-    identity_video_url: videoUrl,
+    identityVideoReference: videoReference,
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -363,7 +356,7 @@ export const createMember = (
           username,
           fullName,
           emailAddress,
-          videoUrl,
+          videoReference,
           inviteToken
         } = call.body;
 
@@ -373,7 +366,7 @@ export const createMember = (
           // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
           // Updated client will have version number 0.0.6 for Android.
           // emailAddress
-          videoUrl
+          videoReference
         };
         const missingParams = (Object.keys(requiredParams) as Array<
           keyof typeof requiredParams
@@ -384,8 +377,6 @@ export const createMember = (
 
         const opRefs = inviteToken
           ? _createInvitedMember({
-              config,
-              storage,
               transaction,
               membersCollection,
               operationsCollection,
@@ -393,12 +384,10 @@ export const createMember = (
               fullName,
               emailAddress,
               username,
-              videoUrl,
+              videoReference,
               inviteToken
             })
           : _createUninvitedMember({
-              config,
-              storage,
               transaction,
               membersCollection,
               operationsCollection,
@@ -406,7 +395,7 @@ export const createMember = (
               fullName,
               emailAddress,
               username,
-              videoUrl
+              videoReference
             });
 
         return opRefs;
