@@ -18,6 +18,7 @@ import {
   ResolveFlagMemberPayload
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
+import { VideoReference } from "../../models/VideoReference";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -124,7 +125,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
   {
     fullName: string;
     emailAddress: string;
-    videoUrl: string;
+    videoReference: VideoReference;
     username: string;
     inviteToken?: string;
   }
@@ -155,7 +156,7 @@ export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: MemberId },
-  { videoUrl: string }
+  { videoReference: VideoReference }
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,

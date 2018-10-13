@@ -1,5 +1,6 @@
 // TODO: change all to_uid to to_member_id
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
+import { VideoReference } from "./VideoReference";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
@@ -18,7 +19,7 @@ export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
-  video_url: string;
+  videoReference: VideoReference;
 }
 export interface EditMemberPayload {
   full_name?: string;
@@ -39,12 +40,12 @@ export interface RequestVerificationPayload {
 }
 export interface VerifyPayload {
   to_uid: MemberId;
-  video_url: string;
+  videoReference: VideoReference;
 }
 export interface InvitePayload {
   invite_token: string;
   is_joint_video: boolean;
-  video_url: string;
+  videoReference: VideoReference;
 }
 export interface TrustPayload {
   to_uid: MemberId;

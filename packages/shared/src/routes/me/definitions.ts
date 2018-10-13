@@ -12,6 +12,7 @@ import {
 } from "../ApiEndpoint/ApiResponse";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import { MintPayload, EditMemberPayload } from "../../models/Operation";
+import { VideoReference } from "../../models/VideoReference";
 
 export type EditMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.EDIT_MEMBER,
@@ -58,7 +59,7 @@ export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string; videoUrl: string; isJointVideo: boolean }
+  { inviteEmail: string; videoReference: VideoReference; isJointVideo: boolean }
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,

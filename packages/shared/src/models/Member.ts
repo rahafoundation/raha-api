@@ -1,10 +1,11 @@
 import { OperationId } from "./identifiers";
+import { VideoReference } from "./VideoReference";
 
 export interface PublicMemberFields {
   id: string;
   created_at: Date;
   full_name: string;
-  identity_video_url: string;
+  identityVideoReference: VideoReference;
   invite_confirmed: boolean;
   username: string;
   operationsFlaggingThisMember: OperationId[];
