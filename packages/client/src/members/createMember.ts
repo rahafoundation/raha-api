@@ -10,8 +10,9 @@ import { callApi } from "../callApi";
  * API call for a non-member to join Raha and create a new member.
  * @param fullName Full name of new member
  * @param username New username for the new member. Must be unique
- * @param videoToken Video token of the invite, of the new member either identifying themselves or
- * being invited by the existing member.
+ * @param videoUrl Video of the new member either identifying themselves. If a
+ * joint video from a previous invitation, should match the videoUrl field of
+ * an existing invite operation.
  * @param inviteToken: Token identifying associated invite operation.
  */
 export function createMember(
@@ -20,7 +21,7 @@ export function createMember(
   fullName: string,
   emailAddress: string,
   username: string,
-  videoToken: string,
+  videoUrl: string,
   inviteToken?: string
 ) {
   const apiCall: CreateMemberApiCall = {
@@ -31,7 +32,7 @@ export function createMember(
         fullName,
         username,
         emailAddress,
-        videoToken,
+        videoUrl,
         inviteToken
       }
     }

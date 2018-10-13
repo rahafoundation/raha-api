@@ -9,13 +9,13 @@ import { callApi } from "../callApi";
 /**
  * API call that sends an invite to join Raha to the provided email address.
  * @param inviteEmail Email address of invited new member
- * @param videoToken Token identifying invite video taken, if available
+ * @param videoUrl Location of the video corresponding to this invite, if taken
  */
 export function sendInvite(
   apiBase: string,
   authToken: string,
   inviteEmail: string,
-  videoToken: string,
+  videoUrl: string,
   isJointVideo: boolean
 ) {
   const apiCall: SendInviteApiCall = {
@@ -24,7 +24,7 @@ export function sendInvite(
       params: undefined,
       body: {
         inviteEmail,
-        videoToken,
+        videoUrl,
         isJointVideo
       }
     }
