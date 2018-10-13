@@ -255,6 +255,10 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
+"@types/crypto-random-string@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@types/crypto-random-string/-/crypto-random-string-1.0.0.tgz#92d3c49e2d8c085e6f4d9b7609ddac0852a8b8f5"
+
 "@types/duplexify@^3.5.0":
   version "3.5.0"
   resolved "https://registry.npmjs.org/@types/duplexify/-/duplexify-3.5.0.tgz#c1e8a2c4e05f2a5545c61c31283b76f92d48b007"

@@ -18,6 +18,7 @@
     "@types/big.js": "^4.0.4",
     "@types/url-join": "^0.8.2",
     "big.js": "^5.0.3",
+    "crypto-random-string": "^1.0.0",
     "discourse-sso": "rahafoundation/discourse_sso_node",
     "firebase-admin": "^5.12.0",
     "http-status": "^1.2.0",
@@ -38,6 +39,7 @@
     "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
   },
   "devDependencies": {
+    "@types/crypto-random-string": "^1.0.0",
     "@types/jest": "^23.3.0",
     "@types/koa": "^2.0.45",
     "@types/koa-bodyparser": "^4.2.0",
