@@ -2,17 +2,17 @@ import * as httpStatus from "http-status";
 
 import { RahaApiError } from "../..";
 
-export const ERROR_CODE = "flagMember.memberVerificationLevelTooLow";
-export interface MemberVerificationLevelTooLowErrorBody {
+export const ERROR_CODE = "flagMember.memberCantResolveFlag";
+export interface MemberCantResolveFlagErrorBody {
   errorCode: typeof ERROR_CODE;
 }
 
 /**
- * A member must be verified by 5 people before flagging other members.
+ * Member cannot flag according to the logic defined in abilities.
  */
-export class MemberVerificationLevelTooLowError extends RahaApiError<
+export class MemberCantResolveFlagError extends RahaApiError<
   typeof ERROR_CODE,
-  MemberVerificationLevelTooLowErrorBody
+  MemberCantResolveFlagErrorBody
 > {
   get errorCode(): typeof ERROR_CODE {
     return ERROR_CODE;
@@ -21,7 +21,7 @@ export class MemberVerificationLevelTooLowError extends RahaApiError<
   constructor() {
     super(
       httpStatus.FORBIDDEN,
-      "A member must be verified by 5 people before flagging other members.",
+      "Member does not have the ability to resolve flag.",
       {
         errorCode: ERROR_CODE
       }
@@ -33,6 +33,6 @@ export class MemberVerificationLevelTooLowError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, MemberVerificationLevelTooLowError.prototype);
+    Object.setPrototypeOf(this, MemberCantResolveFlagError.prototype);
   }
 }
