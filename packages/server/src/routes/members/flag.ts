@@ -1,9 +1,11 @@
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import { firestore } from "firebase-admin";
+import { firestore, messaging as adminMessaging } from "firebase-admin";
 
 import {
   OperationType,
-  Operation
+  Operation,
+  FlagMemberOperation,
+  ResolveFlagMemberOperation
 } from "@raha/api-shared/dist/models/Operation";
 import { OperationId } from "@raha/api-shared/dist/models/identifiers";
 import {
@@ -13,18 +15,68 @@ import {
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 
 import { OperationToInsert, createApiRoute } from "..";
-import {
-  canCreateOperation,
-  validateAbilityToCreateOperation
-} from "../../helpers/abilities";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import { sendPushNotification } from "../../helpers/sendPushNotification";
+
+function _flagOperationIsFlagMemberOperation(
+  flagOperation: FlagMemberOperation | ResolveFlagMemberOperation
+): flagOperation is FlagMemberOperation {
+  return (
+    (flagOperation as ResolveFlagMemberOperation).data.flag_operation_id ===
+    undefined
+  );
+}
+
+async function _notifyFlagMemberRecipient(
+  messaging: adminMessaging.Messaging,
+  members: CollectionReference,
+  fcmTokens: CollectionReference,
+  flagOperation: FlagMemberOperation | ResolveFlagMemberOperation
+) {
+  const { id, creator_uid, data } = flagOperation;
+
+  const fromMember = await members.doc(creator_uid).get();
+  const toMember = await members.doc(data.to_uid).get();
+
+  if (!fromMember.exists || !toMember.exists) {
+    throw new Error(
+      `Invalid flagMember operation with ID ${id}. One or both members does not exist.`
+    );
+  }
+  const toMemberId = toMember.id;
+
+  const isFlagMemberOperation = _flagOperationIsFlagMemberOperation(
+    flagOperation
+  );
+  const notificationTitle = isFlagMemberOperation
+    ? "Your account has been flagged."
+    : "A flag on your account has been resolved!";
+  const notificationBody = isFlagMemberOperation
+    ? `${fromMember.get(
+        "full_name"
+      )} raised an issue with your account. See your profile to learn more.`
+    : `Congratulations! ${fromMember.get(
+        "full_name"
+      )} resolved a flag on your account.`;
+
+  await sendPushNotification(
+    messaging,
+    fcmTokens,
+    toMemberId,
+    notificationTitle,
+    notificationBody
+  );
+}
 
 /**
  * Flag the targeted member.
  */
 export const flagMember = (
   db: Firestore,
+  messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
+  operationsCollection: CollectionReference,
+  fcmTokensCollection: CollectionReference
 ) =>
   createApiRoute<FlagMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
@@ -73,9 +125,19 @@ export const flagMember = (
       return newOperationRef;
     });
 
+    const newOperationData = (await newOperationReference.get()).data();
+
+    // Notify the recipient, but never let notification failure cause this API request to fail.
+    _notifyFlagMemberRecipient(
+      messaging,
+      membersCollection,
+      fcmTokensCollection,
+      newOperationData as FlagMemberOperation
+    );
+
     return {
       body: {
-        ...(await newOperationReference.get()).data(),
+        ...newOperationData,
         id: newOperationReference.id
       } as Operation,
       status: 201
@@ -87,8 +149,10 @@ export const flagMember = (
  */
 export const resolveFlagMember = (
   db: Firestore,
+  messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
-  operationsCollection: CollectionReference
+  operationsCollection: CollectionReference,
+  fcmTokensCollection: CollectionReference
 ) =>
   createApiRoute<ResolveFlagMemberApiEndpoint>(
     async (call, loggedInMemberToken) => {
