@@ -1,12 +1,14 @@
 /**
  * This provides functions to determine whether a given member can perform a given operation type.
  */
-import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import {
   DocumentSnapshot,
   CollectionReference,
   Transaction
 } from "@google-cloud/firestore";
+
+import { OperationType } from "@raha/api-shared/dist/models/Operation";
+import { MemberDoesNotHaveRequiredAbilityError } from "@raha/api-shared/dist/errors/RahaApiError/MemberDoesNotHaveRequiredAbility";
 
 export const VERIFICATIONS_REQUIRED_TO_FLAG = 5;
 
@@ -101,5 +103,19 @@ export async function canCreateOperation(
       return true;
     }
     return false;
+  }
+}
+
+/**
+ * Throws an error if the member is unable to create the specified operation.
+ */
+export async function validateAbilityToCreateOperation(
+  operationType: OperationType,
+  operations: CollectionReference,
+  transaction?: Transaction,
+  member?: DocumentSnapshot
+) {
+  if (!canCreateOperation(operationType, operations, transaction, member)) {
+    throw new MemberDoesNotHaveRequiredAbilityError(operationType);
   }
 }

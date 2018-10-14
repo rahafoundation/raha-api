@@ -11,11 +11,12 @@ import {
   ResolveFlagMemberApiEndpoint
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
-import { MemberCantFlagError } from "@raha/api-shared/dist/errors/RahaApiError/members/flag/MemberCantFlag";
-import { MemberCantResolveFlagError } from "@raha/api-shared/dist/errors/RahaApiError/members/flag/MemberCantResolveFlag";
 
 import { OperationToInsert, createApiRoute } from "..";
-import { canCreateOperation } from "../../helpers/abilities";
+import {
+  canCreateOperation,
+  validateAbilityToCreateOperation
+} from "../../helpers/abilities";
 
 /**
  * Flag the targeted member.
@@ -36,16 +37,12 @@ export const flagMember = (
         membersCollection.doc(toFlagMemberid)
       );
 
-      if (
-        !(await canCreateOperation(
-          OperationType.FLAG_MEMBER,
-          operationsCollection,
-          transaction,
-          loggedInMember
-        ))
-      ) {
-        throw new MemberCantFlagError();
-      }
+      await validateAbilityToCreateOperation(
+        OperationType.FLAG_MEMBER,
+        operationsCollection,
+        transaction,
+        loggedInMember
+      );
 
       if (!toFlagMember) {
         throw new NotFoundError(toFlagMemberid);
@@ -112,16 +109,12 @@ export const resolveFlagMember = (
             operationsCollection.doc(flag_operation_id)
           );
 
-          if (
-            !canCreateOperation(
-              OperationType.RESOLVE_FLAG_MEMBER,
-              operationsCollection,
-              transaction,
-              loggedInMember
-            )
-          ) {
-            throw new MemberCantResolveFlagError();
-          }
+          await validateAbilityToCreateOperation(
+            OperationType.RESOLVE_FLAG_MEMBER,
+            operationsCollection,
+            transaction,
+            loggedInMember
+          );
 
           if (!flaggedMember) {
             throw new NotFoundError(flaggedMemberid);

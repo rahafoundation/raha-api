@@ -1,29 +1,32 @@
 import * as httpStatus from "http-status";
 
-import { RahaApiError } from "../..";
+import { RahaApiError } from ".";
+import { OperationType } from "../../models/Operation";
 
-export const ERROR_CODE = "flagMember.memberCantResolveFlag";
-export interface MemberCantResolveFlagErrorBody {
+export const ERROR_CODE = "memberDoesNotHaveRequiredAbility";
+export interface MemberDoesNotHaveRequiredAbilityErrorBody {
   errorCode: typeof ERROR_CODE;
+  operationType: OperationType;
 }
 
 /**
- * Member cannot flag according to the logic defined in abilities.
+ * Member does not have ability required for desired action.
  */
-export class MemberCantResolveFlagError extends RahaApiError<
+export class MemberDoesNotHaveRequiredAbilityError extends RahaApiError<
   typeof ERROR_CODE,
-  MemberCantResolveFlagErrorBody
+  MemberDoesNotHaveRequiredAbilityErrorBody
 > {
   get errorCode(): typeof ERROR_CODE {
     return ERROR_CODE;
   }
 
-  constructor() {
+  constructor(operationType: OperationType) {
     super(
       httpStatus.FORBIDDEN,
-      "Member does not have the ability to resolve flag.",
+      `Member does not have the ability to perform operation: ${operationType}`,
       {
-        errorCode: ERROR_CODE
+        errorCode: ERROR_CODE,
+        operationType
       }
     );
 
@@ -33,6 +36,9 @@ export class MemberCantResolveFlagError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, MemberCantResolveFlagError.prototype);
+    Object.setPrototypeOf(
+      this,
+      MemberDoesNotHaveRequiredAbilityError.prototype
+    );
   }
 }
