@@ -157,16 +157,20 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     location: flagMemberApiLocation,
     handler: membersRoutes.flagMember(
       db,
+      messaging,
       membersCollection,
-      operationsCollection
+      operationsCollection,
+      fmcTokensCollection
     )
   },
   {
     location: resolveFlagMemberApiLocation,
     handler: membersRoutes.resolveFlagMember(
       db,
+      messaging,
       membersCollection,
-      operationsCollection
+      operationsCollection,
+      fmcTokensCollection
     )
   },
   // me
