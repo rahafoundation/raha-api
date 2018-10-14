@@ -20,6 +20,7 @@ import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { Config } from "../../config/config";
 import { createApiRoute, OperationToInsert } from "..";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
 
@@ -144,6 +145,17 @@ export const verify = (
   createApiRoute<VerifyMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMember = await transaction.get(
+        membersCollection.doc(loggedInUid)
+      );
+
+      await validateAbilityToCreateOperation(
+        OperationType.VERIFY,
+        operationsCollection,
+        transaction,
+        loggedInMember
+      );
+
       const toVerifyMemberId = call.params.memberId;
       const memberToVerify = await transaction.get(
         membersCollection.doc(toVerifyMemberId)
