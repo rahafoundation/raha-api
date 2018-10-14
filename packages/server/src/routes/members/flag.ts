@@ -27,7 +27,7 @@ function _flagOperationIsFlagMemberOperation(
   );
 }
 
-async function _notifyFlagMemberRecipient(
+async function _notifyFlagRecipient(
   messaging: adminMessaging.Messaging,
   members: CollectionReference,
   fcmTokens: CollectionReference,
@@ -128,7 +128,7 @@ export const flagMember = (
     const newOperationData = (await newOperationReference.get()).data();
 
     // Notify the recipient, but never let notification failure cause this API request to fail.
-    _notifyFlagMemberRecipient(
+    _notifyFlagRecipient(
       messaging,
       membersCollection,
       fcmTokensCollection,
