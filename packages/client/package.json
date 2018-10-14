@@ -12,7 +12,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@raha/api-shared": "^0.1.14",
+    "@raha/api-shared": "^0.1.16",
     "big.js": "^5.0.3",
     "url-join": "^4.0.0"
   },
