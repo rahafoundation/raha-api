@@ -24,6 +24,7 @@ import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
 interface SgClient {
@@ -341,6 +342,12 @@ export const createMember = (
       async transaction => {
         const loggedInUid = loggedInMemberToken.uid;
         const loggedInMemberRef = membersCollection.doc(loggedInUid);
+
+        await validateAbilityToCreateOperation(
+          OperationType.CREATE_MEMBER,
+          operationsCollection,
+          transaction
+        );
 
         if ((await transaction.get(loggedInMemberRef)).exists) {
           throw new MemberAlreadyExistsError();

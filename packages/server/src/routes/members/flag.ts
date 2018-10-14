@@ -1,9 +1,4 @@
-import {
-  CollectionReference,
-  Firestore,
-  Transaction,
-  DocumentSnapshot
-} from "@google-cloud/firestore";
+import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import { firestore } from "firebase-admin";
 
 import {
@@ -16,37 +11,12 @@ import {
   ResolveFlagMemberApiEndpoint
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
-import { MemberIsFlaggedError } from "@raha/api-shared/dist/errors/RahaApiError/members/flag/MemberIsFlagged";
-import { MemberVerificationLevelTooLowError } from "@raha/api-shared/dist/errors/RahaApiError/members/flag/MemberVerificationLevelTooLow";
 
 import { OperationToInsert, createApiRoute } from "..";
-
-/**
- * Right now "good standing" is somewhat arbitrarily defined as:
- *  * verified by 5+ people
- *  * not themselves flagged
- */
-async function _validateMemberStanding(
-  transaction: Transaction,
-  member: DocumentSnapshot,
-  operationsCollection: CollectionReference
-) {
-  const operationsFlaggingMember: OperationId[] | undefined = member.get(
-    "operationsFlaggingThisMember"
-  );
-  if (operationsFlaggingMember && operationsFlaggingMember.length > 0) {
-    throw new MemberIsFlaggedError();
-  }
-  if (
-    (await transaction.get(
-      operationsCollection
-        .where("op_code", "==", OperationType.VERIFY)
-        .where("data.to_uid", "==", member.id)
-    )).size < 5
-  ) {
-    throw new MemberVerificationLevelTooLowError();
-  }
-}
+import {
+  canCreateOperation,
+  validateAbilityToCreateOperation
+} from "../../helpers/abilities";
 
 /**
  * Flag the targeted member.
@@ -67,10 +37,11 @@ export const flagMember = (
         membersCollection.doc(toFlagMemberid)
       );
 
-      await _validateMemberStanding(
+      await validateAbilityToCreateOperation(
+        OperationType.FLAG_MEMBER,
+        operationsCollection,
         transaction,
-        loggedInMember,
-        operationsCollection
+        loggedInMember
       );
 
       if (!toFlagMember) {
@@ -138,10 +109,11 @@ export const resolveFlagMember = (
             operationsCollection.doc(flag_operation_id)
           );
 
-          await _validateMemberStanding(
+          await validateAbilityToCreateOperation(
+            OperationType.RESOLVE_FLAG_MEMBER,
+            operationsCollection,
             transaction,
-            loggedInMember,
-            operationsCollection
+            loggedInMember
           );
 
           if (!flaggedMember) {

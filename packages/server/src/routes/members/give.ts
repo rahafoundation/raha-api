@@ -14,6 +14,7 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { createApiRoute, OperationToInsert } from "..";
 import { getMemberById } from "../../collections/members";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
@@ -66,6 +67,13 @@ export const give = (
       const loggedInMemberId = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(
         membersCollection.doc(loggedInMemberId)
+      );
+
+      await validateAbilityToCreateOperation(
+        OperationType.GIVE,
+        operations,
+        transaction,
+        loggedInMember
       );
 
       const memberToGiveToId = call.params.memberId;

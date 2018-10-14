@@ -1,29 +1,32 @@
 import * as httpStatus from "http-status";
 
-import { RahaApiError } from "../..";
+import { RahaApiError } from ".";
+import { OperationType } from "../../models/Operation";
 
-export const ERROR_CODE = "flagMember.memberVerificationLevelTooLow";
-export interface MemberVerificationLevelTooLowErrorBody {
+export const ERROR_CODE = "memberDoesNotHaveRequiredAbility";
+export interface MemberDoesNotHaveRequiredAbilityErrorBody {
   errorCode: typeof ERROR_CODE;
+  operationType: OperationType;
 }
 
 /**
- * A member must be verified by 5 people before flagging other members.
+ * Member does not have ability required for desired action.
  */
-export class MemberVerificationLevelTooLowError extends RahaApiError<
+export class MemberDoesNotHaveRequiredAbilityError extends RahaApiError<
   typeof ERROR_CODE,
-  MemberVerificationLevelTooLowErrorBody
+  MemberDoesNotHaveRequiredAbilityErrorBody
 > {
   get errorCode(): typeof ERROR_CODE {
     return ERROR_CODE;
   }
 
-  constructor() {
+  constructor(operationType: OperationType) {
     super(
       httpStatus.FORBIDDEN,
-      "A member must be verified by 5 people before flagging other members.",
+      `Member does not have the ability to perform operation: ${operationType}`,
       {
-        errorCode: ERROR_CODE
+        errorCode: ERROR_CODE,
+        operationType
       }
     );
 
@@ -33,6 +36,9 @@ export class MemberVerificationLevelTooLowError extends RahaApiError<
     // TODO: once react-scripts 2.0 is out, we can use Babel Macros to do this automatically.
     // https://github.com/facebook/create-react-app/projects/3
     // https://github.com/loganfsmyth/babel-plugin-transform-builtin-extend
-    Object.setPrototypeOf(this, MemberVerificationLevelTooLowError.prototype);
+    Object.setPrototypeOf(
+      this,
+      MemberDoesNotHaveRequiredAbilityError.prototype
+    );
   }
 }
