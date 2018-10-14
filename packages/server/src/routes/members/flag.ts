@@ -225,9 +225,19 @@ export const resolveFlagMember = (
         }
       );
 
+      const newOperationData = (await newOperationReference.get()).data();
+
+      // Notify the recipient, but never let notification failure cause this API request to fail.
+      _notifyFlagRecipient(
+        messaging,
+        membersCollection,
+        fcmTokensCollection,
+        newOperationData as ResolveFlagMemberOperation
+      );
+
       return {
         body: {
-          ...(await newOperationReference.get()).data(),
+          ...newOperationData,
           id: newOperationReference.id
         } as Operation,
         status: 201
