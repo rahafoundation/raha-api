@@ -28,7 +28,8 @@ export async function isVerified(
 }
 
 export function isFlagged(member: DocumentSnapshot) {
-  return member.get("operationsFlaggingThisMember").size > 0;
+  const operationsFlaggingThisMember = member.get("operationsFlaggingThisMember");
+  return !!operationsFlaggingThisMember && operationsFlaggingThisMember.size > 0;
 }
 
 /**
