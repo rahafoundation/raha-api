@@ -8,16 +8,38 @@ import {
   OperationType
 } from "@raha/api-shared/dist/models/Operation";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
-import { GiveApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
+import {
+  GiveApiEndpoint,
+  GiveContentType,
+  GiveContent
+} from "@raha/api-shared/dist/routes/members/definitions";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 
 import { createApiRoute, OperationToInsert } from "..";
 import { getMemberById } from "../../collections/members";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
+import { Member } from "@raha/api-shared/dist/models/Member";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
+function _notificationMessageForGive(
+  senderName: string,
+  amount: string,
+  content?: GiveContent
+) {
+  const prefix = `${senderName} gave you ${amount} Raha`;
+  if (!content) {
+    return prefix;
+  }
+
+  switch (content.type) {
+    case GiveContentType.TEXT:
+      return `${prefix} for ${content.content}`;
+    case GiveContentType.VIDEO:
+      return `${prefix} with a video 📹`;
+  }
+}
 /**
  * A function to notify the recipient of a Give operation.
  */
@@ -28,7 +50,7 @@ async function _notifyGiveRecipient(
   giveOperation: GiveOperation
 ) {
   const { id, creator_uid, data } = giveOperation;
-  const { to_uid, amount, memo } = data;
+  const { to_uid, amount, content } = data;
 
   const fromMember = await members.doc(creator_uid).get();
   const toMember = await members.doc(to_uid).get();
@@ -38,16 +60,13 @@ async function _notifyGiveRecipient(
       `Invalid give operation with ID ${id}. One or both members does not exist.`
     );
   }
-  const toMemberId = toMember.id;
 
   await sendPushNotification(
     messaging,
     fcmTokens,
-    toMemberId,
+    toMember.id,
     "You received Raha!",
-    `${fromMember.get("full_name")} gave you ${amount} Raha${
-      memo ? ` for ${memo}` : ""
-    }.`
+    _notificationMessageForGive(fromMember.get("full_name"), amount, content)
   );
 }
 
@@ -77,7 +96,7 @@ export const give = (
         throw new NotFoundError(memberToGiveToId);
       }
 
-      const { amount, memo } = call.body;
+      const { amount, content } = call.body;
 
       const donationRecipientId =
         memberToGiveTo.get("donation_to") || DEFAULT_DONATION_RECIPIENT_UID;
@@ -111,15 +130,13 @@ export const give = (
         throw new InsufficientBalanceError();
       }
 
-      const transactionMemo: string = memo ? memo : "";
-
       const newOperation: OperationToInsert = {
         creator_uid: loggedInMemberId,
         op_code: OperationType.GIVE,
         data: {
           to_uid: memberToGiveToId,
           amount: toAmount.toString(),
-          memo: transactionMemo,
+          content,
           donation_to: donationRecipient.id,
           donation_amount: donationAmount.toString()
         },
