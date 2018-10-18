@@ -15,7 +15,8 @@ import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import {
   FlagMemberPayload,
-  ResolveFlagMemberPayload
+  ResolveFlagMemberPayload,
+  GiveContent
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
 import { VideoReference } from "../../models/VideoReference";
@@ -90,12 +91,13 @@ export const giveApiLocation: GiveApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+
 export type GiveApiCall = ApiCallDefinition<
   GiveApiLocation["uri"],
   GiveApiLocation["method"],
   GiveApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; memo?: string }
+  { amount: string; content?: GiveContent }
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,
