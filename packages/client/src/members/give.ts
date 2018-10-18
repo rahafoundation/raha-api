@@ -4,7 +4,8 @@ import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import {
   GiveApiEndpoint,
   GiveApiCall,
-  giveApiLocation
+  giveApiLocation,
+  GiveContent
 } from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
@@ -20,14 +21,14 @@ export function give(
   authToken: string,
   memberId: MemberId,
   amount: Big,
-  memo?: string
+  content?: GiveContent
 ) {
   const apiCall: GiveApiCall = {
     location: giveApiLocation,
     request: {
       params: { memberId },
       // TODO: should this be round down to some precision?
-      body: { amount: amount.toString(), memo }
+      body: { amount: amount.toString(), content }
     }
   };
   return callApi<GiveApiEndpoint>(apiBase, apiCall, authToken);
