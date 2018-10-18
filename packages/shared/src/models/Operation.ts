@@ -64,10 +64,28 @@ export interface MintReferralBonusPayload {
   invited_member_id: MemberId;
 }
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
+
+export enum GiveContentType {
+  VIDEO = "video",
+  TEXT = "text"
+}
+/**
+ * Expected shape of content field in a Give call's body
+ */
+export interface GiveContentDefinition<Type extends GiveContentType, Content> {
+  type: Type;
+  content: Content;
+}
+/**
+ * Possible content fields in any Give call's body
+ */
+export type GiveContent =
+  | GiveContentDefinition<GiveContentType.VIDEO, VideoReference>
+  | GiveContentDefinition<GiveContentType.TEXT, string>;
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
-  memo: string;
+  content: GiveContent | undefined;
   donation_to: MemberId;
   donation_amount: string;
 }
