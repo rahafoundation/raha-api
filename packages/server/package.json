@@ -25,6 +25,7 @@
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.4.0",
+    "raha-api-shared-0.1.13": "npm:@raha/api-shared@0.1.13",
     "twilio": "^3.17.6"
   },
   "scripts": {
