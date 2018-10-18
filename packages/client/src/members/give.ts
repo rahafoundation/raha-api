@@ -4,9 +4,9 @@ import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import {
   GiveApiEndpoint,
   GiveApiCall,
-  giveApiLocation,
-  GiveContent
+  giveApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
+import { GiveContent } from "@raha/api-shared/dist/models/Operation";
 
 import { callApi } from "../callApi";
 
