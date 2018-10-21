@@ -9,6 +9,8 @@
     "ordered-imports": false,
     // also meaningless
     "member-ordering": false,
+    // we use console.log which records to Google Cloud Console
+    "no-console": false,
     // Often, like in .reduce calls, this is useful
     "no-object-literal-type-assertion": false,
     // submodule imports are often useful
