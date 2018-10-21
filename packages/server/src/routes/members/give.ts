@@ -15,16 +15,7 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { createApiRoute, OperationToInsert } from "..";
 import { getMemberById } from "../../collections/members";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
-import {
-  GiveApiEndpoint,
-  GiveApiCall,
-  GiveApiResponse
-} from "@raha/api-shared/dist/routes/members/definitions";
-import { GiveApiCall as LegacyGiveApiCall } from "raha-api-shared-0.1.13/dist/routes/members/definitions";
-import {
-  ApiEndpointName,
-  ApiEndpointDefinition
-} from "@raha/api-shared/dist/routes/ApiEndpoint";
+import { GiveApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;

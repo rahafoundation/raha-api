@@ -6,7 +6,6 @@ import {
 import * as Storage from "@google-cloud/storage";
 import { OperationToInsert, createApiRoute } from "..";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import * as httpStatus from "http-status";
 
 import {
   OperationType,
