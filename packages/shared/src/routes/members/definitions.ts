@@ -19,7 +19,7 @@ import {
   GiveContent
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
-import { VideoReference } from "../../models/VideoReference";
+import { VideoReference } from "../../models/MediaReference";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -97,7 +97,7 @@ export type GiveApiCall = ApiCallDefinition<
   GiveApiLocation["method"],
   GiveApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; content?: GiveContent }
+  { amount: string; memo?: string; content?: GiveContent }
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,

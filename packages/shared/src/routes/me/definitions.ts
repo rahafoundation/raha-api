@@ -12,7 +12,7 @@ import {
 } from "../ApiEndpoint/ApiResponse";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import { MintPayload, EditMemberPayload } from "../../models/Operation";
-import { VideoReference } from "../../models/VideoReference";
+import { VideoReference } from "../../models/MediaReference";
 
 export type EditMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.EDIT_MEMBER,

@@ -1,5 +1,5 @@
 import { OperationId } from "./identifiers";
-import { VideoReference } from "./VideoReference";
+import { VideoReference } from "./MediaReference";
 
 export interface PublicMemberFields {
   id: string;
