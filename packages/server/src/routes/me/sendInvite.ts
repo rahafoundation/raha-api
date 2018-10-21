@@ -2,7 +2,7 @@ import { URL } from "url";
 import cryptoRandomString = require("crypto-random-string");
 
 import { CollectionReference } from "@google-cloud/firestore";
-import { firestore } from "firebase-admin";
+import { firestore, auth } from "firebase-admin";
 
 import { SendInviteApiEndpoint } from "@raha/api-shared/dist/routes/me/definitions";
 import { InviterMustBeInvitedError } from "@raha/api-shared/dist/errors/RahaApiError/me/sendInvite/InviterMustBeInvited";
@@ -20,7 +20,7 @@ interface DynamicTemplateData {
   // inviteVideoReference: VideoReference;
 }
 
-interface EmailMessage {
+export interface EmailMessage {
   to: string;
   from: string;
   subject: string;

@@ -1,7 +1,8 @@
 import {
   firestore,
   storage as adminStorage,
-  messaging as adminMessaging
+  messaging as adminMessaging,
+  auth
 } from "firebase-admin";
 import * as Storage from "@google-cloud/storage";
 import { OperationToInsert, createApiRoute } from "..";
@@ -18,101 +19,17 @@ import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiErr
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
-import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
+import {
+  CreateMemberApiEndpoint,
+  CreateMemberApiResponse
+} from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
-import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
-type BucketStorage = adminStorage.Storage | Storage.Storage;
-
-// function getPublicInviteVideoRef(
-//   config: Config,
-//   storage: BucketStorage,
-//   uid: string
-// ): Storage.File {
-//   return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
-// }
-
-// function getPublicInviteVideoThumbnailRef(
-//   config: Config,
-//   storage: BucketStorage,
-//   uid: string
-// ): Storage.File {
-//   return getPublicVideoBucketRef(config, storage).file(
-//     `${uid}/invite.mp4.thumb.jpg`
-//   );
-// }
-
-// function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
-//   return (storage as Storage.Storage).bucket(config.publicVideoBucket);
-// }
-
-/**
- * Expects the video to be at /private-video/<videoToken>/video.mp4.
- * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
- * TODO: Remove this once all invite videos have been moved to tokenized locations
- * and tokens recorded on operations/members.
- */
-// async function movePrivateVideoToPublicInviteVideo(
-//   config: Config,
-//   storage: BucketStorage,
-//   memberUid: string,
-//   videoToken: string,
-//   removeOriginal: boolean
-// ) {
-//   const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
-//   const publicThumbnailRef = getPublicInviteVideoThumbnailRef(
-//     config,
-//     storage,
-//     memberUid
-//   );
-
-//   if (
-//     (await Promise.all([
-//       publicVideoRef.exists(),
-//       publicThumbnailRef.exists()
-//     ])).find(x => x[0])
-//   ) {
-//     throw new HttpApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Video already exists at intended storage destination. Cannot overwrite.",
-//       {}
-//     );
-//   }
-
-//   const privateVideoRef = (storage as Storage.Storage)
-//     .bucket(config.privateVideoBucket)
-//     .file(`private-video/${videoToken}/video.mp4`);
-
-//   const privateThumbnailRef = (storage as Storage.Storage)
-//     .bucket(config.privateVideoBucket)
-//     .file(`private-video/${videoToken}/thumbnail.jpg`);
-
-//   if (!(await privateVideoRef.exists())[0]) {
-//     throw new HttpApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Private video does not exist at expected location. Cannot move.",
-//       {}
-//     );
-//   }
-
-//   await (removeOriginal
-//     ? privateVideoRef.move(publicVideoRef)
-//     : privateVideoRef.copy(publicVideoRef));
-
-//   // Until the iOS app gets updated and starts generating thumbnails, we
-//   // cannot throw an error on the thumbnail not existing.
-//   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-//   if ((await privateThumbnailRef.exists())[0]) {
-//     await (removeOriginal
-//       ? privateThumbnailRef.move(publicThumbnailRef)
-//       : privateThumbnailRef.copy(publicThumbnailRef));
-//   }
-
-//   return publicVideoRef;
-// }
+export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
 async function _notifyRequestVerificationRecipient(
   messaging: adminMessaging.Messaging,
@@ -239,17 +156,6 @@ async function _createInvitedMember(args: {
   );
   transaction.create(membersCollection.doc(loggedInUid), newMember);
 
-  // TODO: delete once definitely being stored in public video buckets.
-  // movePrivateVideoToPublicInviteVideo(
-  //   config,
-  //   storage,
-  //   loggedInUid,
-  //   videoToken,
-  //   // If the videoToken == the videoToken of the identity video, then we want to leave
-  //   // the private video in place so that the verifier can confirm it.
-  //   videoToken !== inviteVideoToken
-  // );
-
   return [createMemberOperationRef, requestVerificationOperationRef];
 }
 
@@ -301,15 +207,6 @@ async function _createUninvitedMember(args: {
   const newMemberRef = membersCollection.doc(loggedInUid);
   transaction.create(newMemberRef, newMember);
 
-  // TODO: delete once definitely being stored in public video buckets.
-  // movePrivateVideoToPublicInviteVideo(
-  //   config,
-  //   storage,
-  //   loggedInUid,
-  //   videoToken,
-  //   true
-  // );
-
   return [createMemberOperationRef];
 }
 
@@ -341,89 +238,112 @@ export const createMember = (
   operationsCollection: CollectionReference,
   fcmTokens: CollectionReference
 ) =>
-  createApiRoute<CreateMemberApiEndpoint>(async (call, loggedInMemberToken) => {
-    const newOperationReferences = await db.runTransaction(
-      async transaction => {
-        const loggedInUid = loggedInMemberToken.uid;
-        const loggedInMemberRef = membersCollection.doc(loggedInUid);
-
-        if ((await transaction.get(loggedInMemberRef)).exists) {
-          throw new MemberAlreadyExistsError();
-        }
-
-        const {
-          username,
-          fullName,
-          emailAddress,
-          videoReference,
-          inviteToken
-        } = call.body;
-
-        const requiredParams = {
-          username,
-          fullName,
-          // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
-          // Updated client will have version number 0.0.6 for Android.
-          // emailAddress
-          videoReference
-        };
-        const missingParams = (Object.keys(requiredParams) as Array<
-          keyof typeof requiredParams
-        >).filter(key => requiredParams[key] === undefined);
-        if (missingParams.length !== 0) {
-          throw new MissingParamsError(missingParams);
-        }
-
-        const opRefs = inviteToken
-          ? _createInvitedMember({
-              transaction,
-              membersCollection,
-              operationsCollection,
-              loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoReference,
-              inviteToken
-            })
-          : _createUninvitedMember({
-              transaction,
-              membersCollection,
-              operationsCollection,
-              loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoReference
-            });
-
-        return opRefs;
-      }
-    );
-
-    const newOpsData = await Promise.all(
-      newOperationReferences.map(
-        async opRef => (await opRef.get()).data() as Operation
-      )
-    );
-
-    newOpsData.forEach(opData => {
-      if (opData.op_code === OperationType.REQUEST_VERIFICATION) {
-        // Notify the recipient, but never let notification failure cause this API request to fail.
-        _notifyRequestVerificationRecipient(
+  createApiRoute<CreateMemberApiEndpoint>(
+    async (request, loggedInMemberToken) => {
+      // START LEGACY REQUEST HANDLING
+      // delete once all clients use videoReference/we drop support for
+      // videoToken
+      const isLegacyRequest = "videoToken" in (request.body as any);
+      if (isLegacyRequest) {
+        return legacyCreateMember(
+          config,
+          db,
+          storage,
           messaging,
           membersCollection,
+          operationsCollection,
           fcmTokens,
-          opData
-        ).catch(exception => {
-          // tslint:disable-next-line:no-console
-          console.error(exception);
-        });
+          request,
+          loggedInMemberToken
+        ) as any;
       }
-    });
+      // END LEGACY REQUEST HANDLING
 
-    return {
-      body: newOpsData,
-      status: 201
-    };
-  });
+      const newOperationReferences = await db.runTransaction(
+        async transaction => {
+          const loggedInUid = loggedInMemberToken.uid;
+          const loggedInMemberRef = membersCollection.doc(loggedInUid);
+
+          if ((await transaction.get(loggedInMemberRef)).exists) {
+            throw new MemberAlreadyExistsError();
+          }
+
+          const {
+            username,
+            fullName,
+            emailAddress,
+            videoReference,
+            inviteToken
+          } = request.body;
+
+          const requiredParams = {
+            username,
+            fullName,
+            videoReference
+
+            // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
+            // Updated client will have version number 0.0.6 for Android.
+            // emailAddress
+          };
+
+          const missingParams = (Object.keys(requiredParams) as Array<
+            keyof typeof requiredParams
+          >).filter(key => requiredParams[key] === undefined);
+          if (missingParams.length !== 0) {
+            throw new MissingParamsError(missingParams);
+          }
+
+          const opRefs = inviteToken
+            ? _createInvitedMember({
+                transaction,
+                membersCollection,
+                operationsCollection,
+                loggedInUid,
+                fullName,
+                emailAddress,
+                username,
+                videoReference,
+                inviteToken
+              })
+            : _createUninvitedMember({
+                transaction,
+                membersCollection,
+                operationsCollection,
+                loggedInUid,
+                fullName,
+                emailAddress,
+                username,
+                videoReference
+              });
+
+          return opRefs;
+        }
+      );
+
+      const newOpsData = await Promise.all(
+        newOperationReferences.map(
+          async opRef => (await opRef.get()).data() as Operation
+        )
+      );
+
+      newOpsData.forEach(opData => {
+        if (opData.op_code === OperationType.REQUEST_VERIFICATION) {
+          // Notify the recipient, but never let notification failure cause this API request to fail.
+          _notifyRequestVerificationRecipient(
+            messaging,
+            membersCollection,
+            fcmTokens,
+            opData
+          ).catch(exception => {
+            // tslint:disable-next-line:no-console
+            console.error(exception);
+          });
+        }
+      });
+
+      return {
+        body: newOpsData,
+        status: 201
+      };
+    }
+  );
