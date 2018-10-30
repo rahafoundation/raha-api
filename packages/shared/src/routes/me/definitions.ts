@@ -10,8 +10,9 @@ import {
   OperationApiResponseBody,
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
-import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
+import { ApiLocationDefinition, ApiCall } from "../ApiEndpoint/ApiCall";
 import { MintPayload, EditMemberPayload } from "../../models/Operation";
+import { VideoReference } from "../../models/MediaReference";
 
 export type EditMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.EDIT_MEMBER,
@@ -53,22 +54,48 @@ export const sendInviteApiLocation: SendInviteApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface SendInviteApiBody {
+  inviteEmail: string;
+  isJointVideo: boolean;
+  videoReference: VideoReference;
+}
 export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["uri"],
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string; videoToken: string; isJointVideo: boolean }
+  SendInviteApiBody
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
   MessageApiResponseBody
 >;
-export type SendInviteApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.SEND_INVITE,
-  SendInviteApiCall,
-  SendInviteApiResponse
+// START LEGACY TYPES---------------
+export interface LegacySendInviteApiBody {
+  inviteEmail: string;
+  isJointVideo: boolean;
+  videoToken: string;
+}
+export type LegacySendInviteApiCall = ApiCallDefinition<
+  SendInviteApiLocation["uri"],
+  SendInviteApiLocation["method"],
+  SendInviteApiLocation["authenticated"],
+  void,
+  LegacySendInviteApiBody
 >;
+// END LEGACY TYPES---------------
+// TODO: remove legacy api endpoint definition from below
+export type SendInviteApiEndpoint =
+  | ApiEndpointDefinition<
+      ApiEndpointName.SEND_INVITE,
+      SendInviteApiCall,
+      SendInviteApiResponse
+    >
+  | ApiEndpointDefinition<
+      ApiEndpointName.SEND_INVITE,
+      LegacySendInviteApiCall,
+      SendInviteApiResponse
+    >;
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration

@@ -9,7 +9,9 @@ import {
 import {
   OperationApiResponseBody,
   OperationsApiResponseBody,
-  MembersApiResponseBody
+  MembersApiResponseBody,
+  LegacyOperationApiResponseBody,
+  LegacyOperationsApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
@@ -18,6 +20,7 @@ import {
   ResolveFlagMemberPayload
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
+import { VideoReference } from "../../models/MediaReference";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -116,30 +119,59 @@ export const createMemberApiLocation: CreateMemberApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface CreateMemberApiCallBody {
+  fullName: string;
+  emailAddress: string;
+  username: string;
+  inviteToken?: string;
+  subscribeToNewsletter?: boolean;
+  videoToken: string;
+}
 export type CreateMemberApiCall = ApiCallDefinition<
   CreateMemberApiLocation["uri"],
   CreateMemberApiLocation["method"],
   CreateMemberApiLocation["authenticated"],
   void,
-  {
-    fullName: string;
-    emailAddress: string;
-    videoToken: string;
-    username: string;
-    inviteToken?: string;
-    subscribeToNewsletter?: boolean;
-  }
+  CreateMemberApiCallBody
 >;
 export type CreateMemberApiResponse = ApiResponseDefinition<
   201,
   OperationsApiResponseBody
 >;
 
-export type CreateMemberApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.CREATE_MEMBER,
-  CreateMemberApiCall,
-  CreateMemberApiResponse
+// START LEGACY TYPES-------------
+export interface LegacyCreateMemberApiCallBody {
+  fullName: string;
+  emailAddress: string;
+  username: string;
+  inviteToken?: string;
+  subscribeToNewsletter?: boolean;
+  videoReference: VideoReference;
+}
+export type LegacyCreateMemberApiCall = ApiCallDefinition<
+  CreateMemberApiLocation["uri"],
+  CreateMemberApiLocation["method"],
+  CreateMemberApiLocation["authenticated"],
+  void,
+  LegacyCreateMemberApiCallBody
 >;
+export type LegacyCreateMemberApiResponse = ApiResponseDefinition<
+  201,
+  LegacyOperationsApiResponseBody
+>;
+// END LEGACY TYPES-------------
+// TODO: remove legacy endpoint definition below
+export type CreateMemberApiEndpoint =
+  | ApiEndpointDefinition<
+      ApiEndpointName.CREATE_MEMBER,
+      CreateMemberApiCall,
+      CreateMemberApiResponse
+    >
+  | ApiEndpointDefinition<
+      ApiEndpointName.CREATE_MEMBER,
+      LegacyCreateMemberApiCall,
+      LegacyCreateMemberApiResponse
+    >;
 
 export type VerifyMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.VERIFY_MEMBER,
@@ -151,22 +183,48 @@ export const verifyMemberApiLocation: VerifyMemberApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface VerifyMemberApiCallBody {
+  videoReference: string;
+}
 export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["uri"],
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: MemberId },
-  { videoToken: string }
+  VerifyMemberApiCallBody
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
 >;
-export type VerifyMemberApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.CREATE_MEMBER,
-  VerifyMemberApiCall,
-  VerifyMemberApiResponse
+// START LEGACY TYPES-------------
+export type LegacyVerifyMemberApiCall = ApiCallDefinition<
+  VerifyMemberApiLocation["uri"],
+  VerifyMemberApiLocation["method"],
+  VerifyMemberApiLocation["authenticated"],
+  { memberId: MemberId },
+  LegacyVerifyMemberApiCallBody
 >;
+export type LegacyVerifyMemberApiResponse = ApiResponseDefinition<
+  201,
+  LegacyOperationApiResponseBody
+>;
+export interface LegacyVerifyMemberApiCallBody {
+  videoToken: string;
+}
+// END LEGACY TYPES-----------
+// TODO: remove legacy api definition below
+export type VerifyMemberApiEndpoint =
+  | ApiEndpointDefinition<
+      ApiEndpointName.CREATE_MEMBER,
+      VerifyMemberApiCall,
+      VerifyMemberApiResponse
+    >
+  | ApiEndpointDefinition<
+      ApiEndpointName.CREATE_MEMBER,
+      LegacyVerifyMemberApiCall,
+      LegacyVerifyMemberApiResponse
+    >;
 
 export type FlagMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.FLAG_MEMBER,
