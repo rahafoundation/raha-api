@@ -23,6 +23,12 @@ import {
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
 
+function _notificationSuffixForGiveMedia(content: MediaReference[]) {
+  // if any videos are attached, say that; else says image
+  return content.find(c => c.kind === MediaReferenceKind.VIDEO)
+    ? "and attached a video."
+    : "and attached an image.";
+}
 function _notificationMessageForGive(
   senderName: string,
   amount: string,
@@ -32,7 +38,7 @@ function _notificationMessageForGive(
   const prefix = `${senderName} gave you ${amount} Raha`;
   const suffixes = [
     memo ? `for "${memo}"` : undefined,
-    content ? "and attached media! 🖼" : undefined
+    content ? _notificationSuffixForGiveMedia(content) : undefined
   ];
   return [prefix, ...suffixes.filter(p => !!p)].join(" ");
 }
