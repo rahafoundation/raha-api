@@ -240,25 +240,6 @@ export const createMember = (
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(
     async (request, loggedInMemberToken) => {
-      // START LEGACY REQUEST HANDLING
-      // delete once all clients use videoReference/we drop support for
-      // videoToken
-      const isLegacyRequest = "videoToken" in (request.body as any);
-      if (isLegacyRequest) {
-        return legacyCreateMember(
-          config,
-          db,
-          storage,
-          messaging,
-          membersCollection,
-          operationsCollection,
-          fcmTokens,
-          request,
-          loggedInMemberToken
-        ) as any;
-      }
-      // END LEGACY REQUEST HANDLING
-
       const newOperationReferences = await db.runTransaction(
         async transaction => {
           const loggedInUid = loggedInMemberToken.uid;
