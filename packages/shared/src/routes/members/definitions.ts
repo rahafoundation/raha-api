@@ -15,11 +15,10 @@ import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import {
   FlagMemberPayload,
-  ResolveFlagMemberPayload,
-  GiveContent
+  ResolveFlagMemberPayload
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
-import { VideoReference } from "../../models/MediaReference";
+import { VideoReference, MediaReference } from "../../models/MediaReference";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -97,7 +96,7 @@ export type GiveApiCall = ApiCallDefinition<
   GiveApiLocation["method"],
   GiveApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; memo?: string; content?: GiveContent }
+  { amount: string; memo?: string; content?: MediaReference[] }
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,

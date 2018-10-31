@@ -1,6 +1,10 @@
 // TODO: change all to_uid to to_member_id
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
-import { VideoReference, ImageReference } from "./MediaReference";
+import {
+  VideoReference,
+  ImageReference,
+  MediaReference
+} from "./MediaReference";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
@@ -69,25 +73,12 @@ export enum GiveContentType {
   VIDEO = "video",
   IMAGE = "image"
 }
-/**
- * Expected shape of content field in a Give call's body
- */
-export interface GiveContentDefinition<Type extends GiveContentType, Content> {
-  type: Type;
-  content: Content;
-}
-/**
- * Possible content fields in any Give call's body
- */
-export type GiveContent = Array<
-  | GiveContentDefinition<GiveContentType.VIDEO, VideoReference>
-  | GiveContentDefinition<GiveContentType.IMAGE, ImageReference>
->;
+
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
   memo: string | undefined;
-  content: GiveContent | undefined;
+  content: MediaReference[] | undefined;
   donation_to: MemberId;
   donation_amount: string;
 }

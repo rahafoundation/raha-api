@@ -5,9 +5,7 @@ import Big from "big.js";
 import {
   GiveOperation,
   Operation,
-  OperationType,
-  GiveContent,
-  GiveContentType
+  OperationType
 } from "@raha/api-shared/dist/models/Operation";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
@@ -17,6 +15,10 @@ import { createApiRoute, OperationToInsert } from "..";
 import { getMemberById } from "../../collections/members";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import {
+  MediaReference,
+  MediaReferenceKind
+} from "@raha/api-shared/dist/models/MediaReference";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
@@ -25,7 +27,7 @@ function _notificationMessageForGive(
   senderName: string,
   amount: string,
   memo?: string,
-  content?: GiveContent
+  content?: MediaReference[]
 ) {
   const prefix = `${senderName} gave you ${amount} Raha`;
   const suffixes = [
@@ -34,6 +36,7 @@ function _notificationMessageForGive(
   ];
   return [prefix, ...suffixes.filter(p => !!p)].join(" ");
 }
+
 /**
  * A function to notify the recipient of a Give operation.
  */

@@ -6,9 +6,9 @@ import {
   GiveApiCall,
   giveApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
-import { GiveContent } from "@raha/api-shared/dist/models/Operation";
 
 import { callApi } from "../callApi";
+import { MediaReference } from "@raha/api-shared/dist/models/MediaReference";
 
 /**
  * API call to give Raha from the logged in member to another member.
