@@ -13,13 +13,17 @@ import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
  * @param memberId ID of member to verify
  * @param videoReference Location of client-uploaded verification video
  */
-export function verify(args: {
+export function verify({
+  apiBase,
+  authToken,
+  memberId,
+  videoReference
+}: {
   apiBase: string;
   authToken: string;
   memberId: MemberId;
   videoReference: VideoReference;
 }) {
-  const { apiBase, authToken, memberId, videoReference } = args;
   const apiCall: VerifyMemberApiCall = {
     location: verifyMemberApiLocation,
     request: {

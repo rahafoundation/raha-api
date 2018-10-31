@@ -16,13 +16,19 @@ import { callApi } from "../callApi";
  * @param amount Amount of Raha to give
  * @param memo Optional reason explaining why Raha was given
  */
-export function give(
-  apiBase: string,
-  authToken: string,
-  memberId: MemberId,
-  amount: Big,
-  content?: GiveContent
-) {
+export function give({
+  apiBase,
+  authToken,
+  memberId,
+  amount,
+  content
+}: {
+  apiBase: string;
+  authToken: string;
+  memberId: MemberId;
+  amount: Big;
+  content?: MediaReference[];
+}) {
   const apiCall: GiveApiCall = {
     location: giveApiLocation,
     request: {

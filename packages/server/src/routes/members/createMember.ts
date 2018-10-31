@@ -165,7 +165,17 @@ async function _notifyRequestVerificationRecipient(
   );
 }
 
-async function _createInvitedMember(args: {
+async function _createInvitedMember({
+  transaction,
+  membersCollection,
+  operationsCollection,
+  loggedInUid,
+  fullName,
+  emailAddress,
+  username,
+  videoReference,
+  inviteToken
+}: {
   transaction: FirebaseFirestore.Transaction;
   membersCollection: CollectionReference;
   operationsCollection: CollectionReference;
@@ -176,18 +186,6 @@ async function _createInvitedMember(args: {
   videoReference: VideoReference;
   inviteToken: string;
 }) {
-  const {
-    transaction,
-    membersCollection,
-    operationsCollection,
-    loggedInUid,
-    fullName,
-    emailAddress,
-    username,
-    videoReference,
-    inviteToken
-  } = args;
-
   const inviteOperations = await operationsCollection
     .where("op_code", "==", OperationType.INVITE)
     .where("data.invite_token", "==", inviteToken)

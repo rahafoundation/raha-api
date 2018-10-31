@@ -10,20 +10,19 @@ import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 /**
  * API call that sends an invite to join Raha to the provided email address.
  */
-export function sendInvite(args: {
+export function sendInvite({
+  apiBase,
+  authToken,
+  inviteEmail,
+  videoReference,
+  isJointVideo
+}: {
   apiBase: string;
   authToken: string;
   inviteEmail: string;
   videoReference: VideoReference;
   isJointVideo: boolean;
 }) {
-  const {
-    apiBase,
-    authToken,
-    inviteEmail,
-    videoReference,
-    isJointVideo
-  } = args;
   const apiCall: SendInviteApiCall = {
     location: sendInviteApiLocation,
     request: {

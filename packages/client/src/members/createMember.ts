@@ -18,7 +18,16 @@ import { callApi } from "../callApi";
  * @param subscribeToNewsletter Whether user wants to be subscribed to the
  * update newsletter
  */
-export function createMember(args: {
+export function createMember({
+  apiBase,
+  authToken,
+  fullName,
+  emailAddress,
+  username,
+  videoReference,
+  inviteToken,
+  subscribeToNewsletter
+}: {
   apiBase: string;
   authToken: string;
   fullName: string;
@@ -28,17 +37,6 @@ export function createMember(args: {
   inviteToken?: string;
   subscribeToNewsletter?: boolean;
 }) {
-  const {
-    apiBase,
-    authToken,
-    fullName,
-    emailAddress,
-    username,
-    videoReference,
-    inviteToken,
-    subscribeToNewsletter
-  } = args;
-
   const apiCall: CreateMemberApiCall = {
     location: createMemberApiLocation,
     request: {
