@@ -5,7 +5,7 @@ import {
 } from "@raha/api-shared/dist/routes/me/definitions";
 
 import { callApi } from "../callApi";
-import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 /**
  * API call that sends an invite to join Raha to the provided email address.

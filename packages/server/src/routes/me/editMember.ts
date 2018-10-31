@@ -8,6 +8,7 @@ import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/Mi
 import { UsernameAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/me/editMember/UsernameAlreadyExistsError";
 
 import { createApiRoute } from "..";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 export const editMember = (
   db: Firestore,
@@ -18,6 +19,13 @@ export const editMember = (
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(members.doc(loggedInUid));
+
+      await validateAbilityToCreateOperation(
+        OperationType.EDIT_MEMBER,
+        operations,
+        transaction,
+        loggedInMember
+      );
 
       const { full_name, username } = call.body;
 

@@ -52,14 +52,28 @@ export const validateMobileNumber = (config: Config) =>
       phoneNumberLookup.countryCode !== "CA"
     ) {
       if (!phoneNumberLookup.carrier || !phoneNumberLookup.carrier.type) {
+        console.info("Rejected number without carrier info:", mobileNumber);
         throw new NotRealError(mobileNumber);
       }
 
       if (!allowedPhoneTypes.includes(phoneNumberLookup.carrier.type)) {
-        throw new DisallowedTypeError(
-          mobileNumber,
-          phoneNumberLookup.carrier.type
-        );
+        // Republic Wireless is a carrier that uses VoIP numbers but does not
+        // actually give its users more than one number at a time. We're making a
+        // special exception.
+        if (
+          !phoneNumberLookup.carrier.name ||
+          !phoneNumberLookup.carrier.name.startsWith("Republic Wireless")
+        ) {
+          console.info(
+            "Rejected disallowed number type:",
+            mobileNumber,
+            phoneNumberLookup.carrier
+          );
+          throw new DisallowedTypeError(
+            mobileNumber,
+            phoneNumberLookup.carrier.type
+          );
+        }
       }
     }
 

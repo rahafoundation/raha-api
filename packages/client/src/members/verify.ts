@@ -6,7 +6,7 @@ import {
 } from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
-import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 /**
  * API call to create a new verify connection from the logged in member to the given member

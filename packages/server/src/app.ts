@@ -7,6 +7,7 @@ import * as bodyParser from "koa-bodyparser";
 import * as cors from "@koa/cors";
 import * as Router from "koa-router";
 import * as sgMail from "@sendgrid/mail";
+import * as sgClient from "@sendgrid/client";
 import { Firestore } from "@google-cloud/firestore";
 import * as adminLib from "firebase-admin";
 
@@ -68,6 +69,7 @@ const operationsCollection = db.collection("operations");
 const fmcTokensCollection = db.collection("firebaseCloudMessagingTokens");
 
 sgMail.setApiKey(sendgridApiKey);
+sgClient.setApiKey(sendgridApiKey);
 
 const app = new Koa();
 
@@ -121,7 +123,8 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
       messaging,
       membersCollection,
       operationsCollection,
-      fmcTokensCollection
+      fmcTokensCollection,
+      sgClient
     )
   },
   {
@@ -154,16 +157,20 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     location: flagMemberApiLocation,
     handler: membersRoutes.flagMember(
       db,
+      messaging,
       membersCollection,
-      operationsCollection
+      operationsCollection,
+      fmcTokensCollection
     )
   },
   {
     location: resolveFlagMemberApiLocation,
     handler: membersRoutes.resolveFlagMember(
       db,
+      messaging,
       membersCollection,
-      operationsCollection
+      operationsCollection,
+      fmcTokensCollection
     )
   },
   // me

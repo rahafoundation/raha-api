@@ -10,6 +10,7 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { TrustMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 
 import { OperationToInsert, createApiRoute } from "..";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 /**
  * Create a trust relationship to a target member from the logged in member
@@ -22,6 +23,17 @@ export const trust = (
   createApiRoute<TrustMemberApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
+      const loggedInMember = await transaction.get(
+        membersCollection.doc(loggedInUid)
+      );
+
+      await validateAbilityToCreateOperation(
+        OperationType.TRUST,
+        operationsCollection,
+        transaction,
+        loggedInMember
+      );
+
       const memberToTrustId = call.params.memberId;
       const memberToTrust = await transaction.get(
         membersCollection.doc(memberToTrustId)

@@ -11,6 +11,7 @@ import { OperationType } from "@raha/api-shared/dist/models/Operation";
 
 import { createApiRoute, OperationToInsert } from "..";
 import { Config } from "../../config/config";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 interface DynamicTemplateData {
   inviter_fullname: string;
@@ -36,6 +37,13 @@ export const sendInvite = (
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInMemberId = loggedInMemberToken.uid;
     const loggedInMember = await members.doc(loggedInMemberId).get();
+
+    await validateAbilityToCreateOperation(
+      OperationType.INVITE,
+      operations,
+      undefined,
+      loggedInMember
+    );
 
     const { inviteEmail, videoReference, isJointVideo } = call.body;
 

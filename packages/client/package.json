@@ -1,6 +1,6 @@
 {
   "name": "@raha/api",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "API Client for Raha",
   "files": [
     "dist/**/*"
@@ -12,7 +12,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@raha/api-shared": "^0.1.13",
+    "@raha/api-shared": "^0.1.16",
     "big.js": "^5.0.3",
     "url-join": "^4.0.0"
   },

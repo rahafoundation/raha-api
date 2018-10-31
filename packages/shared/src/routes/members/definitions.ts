@@ -130,6 +130,7 @@ export type CreateMemberApiCall = ApiCallDefinition<
     videoReference: VideoReference;
     username: string;
     inviteToken?: string;
+    subscribeToNewsletter?: boolean;
   }
 >;
 export type CreateMemberApiResponse = ApiResponseDefinition<

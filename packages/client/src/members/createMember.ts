@@ -3,9 +3,9 @@ import {
   CreateMemberApiCall,
   createMemberApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 import { callApi } from "../callApi";
-import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
 
 /**
  * API call for a non-member to join Raha and create a new member.
@@ -15,6 +15,8 @@ import { VideoReference } from "@raha/api-shared/dist/models/VideoReference";
  * If a joint video from a previous invitation, should match the videoReference
  * field of an existing invite operation.
  * @param inviteToken: Token identifying associated invite operation.
+ * @param subscribeToNewsletter Whether user wants to be subscribed to the
+ * update newsletter
  */
 export function createMember(args: {
   apiBase: string;
@@ -24,6 +26,7 @@ export function createMember(args: {
   username: string;
   videoReference: VideoReference;
   inviteToken?: string;
+  subscribeToNewsletter?: boolean;
 }) {
   const {
     apiBase,
@@ -32,7 +35,8 @@ export function createMember(args: {
     emailAddress,
     username,
     videoReference,
-    inviteToken
+    inviteToken,
+    subscribeToNewsletter
   } = args;
 
   const apiCall: CreateMemberApiCall = {
@@ -44,7 +48,8 @@ export function createMember(args: {
         username,
         emailAddress,
         videoReference,
-        inviteToken
+        inviteToken,
+        subscribeToNewsletter
       }
     }
   };

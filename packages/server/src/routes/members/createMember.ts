@@ -1,12 +1,12 @@
 import {
   firestore,
   storage as adminStorage,
-  messaging as adminMessaging,
-  auth
+  messaging as adminMessaging
 } from "firebase-admin";
 import * as Storage from "@google-cloud/storage";
 import { OperationToInsert, createApiRoute } from "..";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
+import * as httpStatus from "http-status";
 
 import {
   OperationType,
@@ -24,12 +24,117 @@ import {
   CreateMemberApiResponse
 } from "@raha/api-shared/dist/routes/members/definitions";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
-import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
+
+type BucketStorage = adminStorage.Storage | Storage.Storage;
+interface SgClient {
+  request: (
+    request: {
+      method: string;
+      url: string;
+      body?: any;
+    }
+  ) => Promise<[any, { persisted_recipients: string[] }]>;
+}
+
+function getPublicInviteVideoRef(
+  config: Config,
+  storage: BucketStorage,
+  uid: string
+): Storage.File {
+  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
+}
+
+function getPublicInviteVideoThumbnailRef(
+  config: Config,
+  storage: BucketStorage,
+  uid: string
+): Storage.File {
+  return getPublicVideoBucketRef(config, storage).file(
+    `${uid}/invite.mp4.thumb.jpg`
+  );
+}
+
+function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberUid}/invite.mp4`;
+}
+
+function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
+  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
+}
+
+/**
+ * Expects the video to be at /private-video/<videoToken>/video.mp4.
+ * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
+ * TODO: Remove this once all invite videos have been moved to tokenized locations
+ * and tokens recorded on operations/members.
+ */
+async function movePrivateVideoToPublicInviteVideo(
+  config: Config,
+  storage: BucketStorage,
+  memberUid: string,
+  videoToken: string,
+  removeOriginal: boolean
+) {
+  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
+  const publicThumbnailRef = getPublicInviteVideoThumbnailRef(
+    config,
+    storage,
+    memberUid
+  );
+
+  if (
+    (await Promise.all([
+      publicVideoRef.exists(),
+      publicThumbnailRef.exists()
+    ])).find(x => x[0])
+  ) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
+    );
+  }
+
+  const privateVideoRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`private-video/${videoToken}/video.mp4`);
+
+  const privateThumbnailRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`private-video/${videoToken}/thumbnail.jpg`);
+
+  if (!(await privateVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Private video does not exist at expected location. Cannot move.",
+      {}
+    );
+  }
+
+  await (removeOriginal
+    ? privateVideoRef.move(publicVideoRef)
+    : privateVideoRef.copy(publicVideoRef));
+
+  // Until the iOS app gets updated and starts generating thumbnails, we
+  // cannot throw an error on the thumbnail not existing.
+  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
+  if ((await privateThumbnailRef.exists())[0]) {
+    await (removeOriginal
+      ? privateThumbnailRef.move(publicThumbnailRef)
+      : privateThumbnailRef.copy(publicThumbnailRef));
+  }
+
+  return publicVideoRef;
+}
 
 async function _notifyRequestVerificationRecipient(
   messaging: adminMessaging.Messaging,
@@ -236,7 +341,8 @@ export const createMember = (
   messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference,
-  fcmTokens: CollectionReference
+  fcmTokens: CollectionReference,
+  sgClient: SgClient
 ) =>
   createApiRoute<CreateMemberApiEndpoint>(
     async (request, loggedInMemberToken) => {
@@ -244,6 +350,12 @@ export const createMember = (
         async transaction => {
           const loggedInUid = loggedInMemberToken.uid;
           const loggedInMemberRef = membersCollection.doc(loggedInUid);
+
+          await validateAbilityToCreateOperation(
+            OperationType.CREATE_MEMBER,
+            operationsCollection,
+            transaction
+          );
 
           if ((await transaction.get(loggedInMemberRef)).exists) {
             throw new MemberAlreadyExistsError();
@@ -322,9 +434,66 @@ export const createMember = (
         }
       });
 
+      _addEmailToMailingLists(
+        config,
+        sgClient,
+        request.body.emailAddress,
+        request.body.fullName,
+        request.body.subscribeToNewsletter
+      );
+
       return {
         body: newOpsData,
         status: 201
       };
     }
   );
+
+async function _addEmailToMailingLists(
+  config: Config,
+  sgClient: SgClient,
+  emailAddress: string,
+  fullName: string,
+  subscribeToNewsletter?: boolean
+) {
+  // Don't fail CREATE_MEMBER due to SendGrid API.
+  try {
+    const response = await sgClient.request({
+      method: "POST",
+      url: "/v3/contactdb/recipients",
+      body: [{ email: emailAddress, full_name: fullName }]
+    });
+
+    const persisted_recipients = response[1].persisted_recipients;
+    if (persisted_recipients.length === 0) {
+      throw new Error(`SendGrid could not add recipient`);
+    }
+    const recipient_id = persisted_recipients[0];
+
+    await sgClient.request({
+      method: "POST",
+      url: `/v3/contactdb/lists/${
+        config.sendGrid.appRegistrationListId
+      }/recipients/${recipient_id}`
+    });
+
+    if (subscribeToNewsletter) {
+      await sgClient.request({
+        method: "POST",
+        url: `/v3/contactdb/lists/${
+          config.sendGrid.updateNewsletterListId
+        }/recipients/${recipient_id}`
+      });
+    }
+  } catch (exception) {
+    // tslint:disable-next-line:no-console
+    console.error(
+      "Failed adding ",
+      emailAddress,
+      " ( newsletter:",
+      !!subscribeToNewsletter,
+      "): ",
+      exception
+    );
+  }
+}

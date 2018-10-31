@@ -19,6 +19,7 @@ import { MintInvalidTypeError } from "@raha/api-shared/dist/errors/RahaApiError/
 import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoint/ApiResponse";
 
 import { createApiRoute } from "..";
+import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -105,6 +106,13 @@ export const mint = (
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(members.doc(loggedInUid));
+
+      await validateAbilityToCreateOperation(
+        OperationType.MINT,
+        operations,
+        transaction,
+        loggedInMember
+      );
 
       const { type, amount } = call.body;
       // Round to 2 decimal places and using rounding mode 0 = round down.
