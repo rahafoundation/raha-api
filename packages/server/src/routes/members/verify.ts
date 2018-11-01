@@ -14,6 +14,8 @@ import {
 import { VerifyMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { MediaReferenceKind } from "@raha/api-shared/dist/models/MediaReference";
+import { InvalidParamsError } from "@raha/api-shared/dist/errors/RahaApiError/InvalidParamsError";
 
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { Config } from "../../config/config";
@@ -89,6 +91,19 @@ export const verify = (
 
       if (!videoReference) {
         throw new MissingParamsError(["videoReference"]);
+      }
+
+      if (
+        videoReference.kind !== MediaReferenceKind.VIDEO ||
+        !videoReference.content.url ||
+        !videoReference.content.thumbnailUrl
+      ) {
+        throw new InvalidParamsError([
+          {
+            name: "videoReference",
+            message: "Invalid video reference. Missing expected fields"
+          }
+        ]);
       }
 
       const existingVerifyOperations = await transaction.get(
