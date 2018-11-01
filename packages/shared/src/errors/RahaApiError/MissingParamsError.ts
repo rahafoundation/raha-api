@@ -3,7 +3,7 @@ import * as httpStatus from "http-status";
 import { RahaApiError } from ".";
 import { getHttpStatusText } from "../../helpers/http";
 
-export const ERROR_CODE = "notFound";
+export const ERROR_CODE = "missingParams";
 export interface MissingParamsErrorBody {
   errorCode: typeof ERROR_CODE;
   missingParams: string[];
@@ -22,7 +22,7 @@ export class MissingParamsError extends RahaApiError<
 
   constructor(missingParams: string[]) {
     super(httpStatus.BAD_REQUEST, getHttpStatusText(httpStatus.NOT_FOUND), {
-      errorCode: "notFound",
+      errorCode: "missingParams",
       missingParams
     });
 
