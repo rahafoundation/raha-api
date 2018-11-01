@@ -21,20 +21,23 @@ export function give({
   authToken,
   memberId,
   amount,
-  content
+  metadata
 }: {
   apiBase: string;
   authToken: string;
   memberId: MemberId;
   amount: Big;
-  content?: MediaReference[];
+  metadata?: {
+    memo?: string;
+    attachments?: MediaReference[];
+  };
 }) {
   const apiCall: GiveApiCall = {
     location: giveApiLocation,
     request: {
       params: { memberId },
       // TODO: should this be round down to some precision?
-      body: { amount: amount.toString(), content }
+      body: { amount: amount.toString(), metadata }
     }
   };
   return callApi<GiveApiEndpoint>(apiBase, apiCall, authToken);

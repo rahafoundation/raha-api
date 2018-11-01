@@ -33,12 +33,12 @@ function _notificationMessageForGive(
   senderName: string,
   amount: string,
   memo?: string,
-  content?: MediaReference[]
+  attachments?: MediaReference[]
 ) {
   const prefix = `${senderName} gave you ${amount} Raha`;
   const suffixes = [
     memo ? `for "${memo}"` : undefined,
-    content ? _notificationSuffixForGiveMedia(content) : undefined
+    attachments ? _notificationSuffixForGiveMedia(attachments) : undefined
   ];
   return [prefix, ...suffixes.filter(p => !!p)].join(" ");
 }
@@ -53,7 +53,7 @@ async function _notifyGiveRecipient(
   giveOperation: GiveOperation
 ) {
   const { id, creator_uid, data } = giveOperation;
-  const { to_uid, amount, content, memo } = data;
+  const { to_uid, amount, metadata } = data;
 
   const fromMember = await members.doc(creator_uid).get();
   const toMember = await members.doc(to_uid).get();
@@ -72,8 +72,8 @@ async function _notifyGiveRecipient(
     _notificationMessageForGive(
       fromMember.get("full_name"),
       amount,
-      memo,
-      content
+      metadata ? metadata.memo : undefined,
+      metadata ? metadata.attachments : undefined
     )
   );
 }
@@ -151,8 +151,12 @@ export const give = (
           amount: toAmount.toString(),
           donation_to: donationRecipient.id,
           donation_amount: donationAmount.toString(),
-          memo: "memo" in request.body ? request.body.memo : undefined,
-          content: "content" in request.body ? request.body.content : undefined
+          metadata: request.body.metadata
+            ? {
+                memo: request.body.metadata.memo,
+                attachments: request.body.metadata.attachments
+              }
+            : undefined
         },
         created_at: firestore.FieldValue.serverTimestamp()
       };

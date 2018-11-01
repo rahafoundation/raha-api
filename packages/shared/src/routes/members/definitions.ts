@@ -96,7 +96,10 @@ export type GiveApiCall = ApiCallDefinition<
   GiveApiLocation["method"],
   GiveApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; memo?: string; content?: MediaReference[] }
+  {
+    amount: string;
+    metadata?: { memo?: string; attachments?: MediaReference[] };
+  }
 >;
 export type GiveApiResponse = ApiResponseDefinition<
   201,

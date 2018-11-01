@@ -1,10 +1,6 @@
 // TODO: change all to_uid to to_member_id
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
-import {
-  VideoReference,
-  ImageReference,
-  MediaReference
-} from "./MediaReference";
+import { VideoReference, MediaReference } from "./MediaReference";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
@@ -69,16 +65,15 @@ export interface MintReferralBonusPayload {
 }
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
 
-export enum GiveContentType {
-  VIDEO = "video",
-  IMAGE = "image"
+export interface GivePayloadMetadata {
+  memo: string | undefined;
+  attachments: MediaReference[] | undefined;
 }
 
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
-  memo: string | undefined;
-  content: MediaReference[] | undefined;
+  metadata: GivePayloadMetadata | undefined;
   donation_to: MemberId;
   donation_amount: string;
 }
