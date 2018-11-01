@@ -4,7 +4,6 @@ import {
   messaging as adminMessaging
 } from "firebase-admin";
 import * as Storage from "@google-cloud/storage";
-import * as httpStatus from "http-status";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 
 import {
@@ -15,88 +14,11 @@ import {
 import { VerifyMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
-import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { Config } from "../../config/config";
 import { createApiRoute, OperationToInsert } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
-
-type BucketStorage = adminStorage.Storage | Storage.Storage;
-
-// function getPublicUrlForMemberAndToken(
-//   config: Config,
-//   memberUid: string,
-//   videoToken: string
-// ) {
-//   return `https://storage.googleapis.com/${
-//     config.publicVideoBucket
-//   }/${memberUid}/${videoToken}/video.mp4`;
-// }
-
-/**
- * Expects the video to be at /private-video/<videoToken>/video.mp4.
- * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
- * TODO: Remove all other video handling functions. This should be all that we need.
- */
-// async function movePrivateVideoToPublicVideo(
-//   config: Config,
-//   storage: BucketStorage,
-//   memberUid: string,
-//   videoToken: string,
-//   removeOriginal: boolean
-// ) {
-//   const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
-//   const publicVideoBucket = (storage as Storage.Storage).bucket(
-//     config.publicVideoBucket
-//   );
-//   const publicVideoRef = publicVideoBucket.file(newVideoPath);
-//   const publicThumbnailRef = publicVideoBucket.file(
-//     `${newVideoPath}.thumb.jpg`
-//   );
-
-//   if ((await publicVideoRef.exists())[0]) {
-//     throw new HttpApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Video already exists at intended storage destination. Cannot overwrite.",
-//       {}
-//     );
-//   }
-
-//   const privateVideoPath = `private-video/${videoToken}`;
-//   const privateVideoBucket = (storage as Storage.Storage).bucket(
-//     config.privateVideoBucket
-//   );
-//   const privateVideoRef = privateVideoBucket.file(
-//     `${privateVideoPath}/video.mp4`
-//   );
-//   const privateVideoThumbnailRef = (storage as Storage.Storage)
-//     .bucket(config.privateVideoBucket)
-//     .file(`${privateVideoPath}/thumbnail.jpg`);
-
-//   if (!(await privateVideoRef.exists())[0]) {
-//     throw new HttpApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Private video does not exist at expected location. Cannot move.",
-//       {}
-//     );
-//   }
-
-//   await (removeOriginal
-//     ? privateVideoRef.move(publicVideoRef)
-//     : privateVideoRef.copy(publicVideoRef));
-
-//   // Until the iOS app gets updated and starts generating thumbnails, we
-//   // cannot throw an error on the thumbnail not existing.
-//   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-//   if ((await privateVideoThumbnailRef.exists())[0]) {
-//     await (removeOriginal
-//       ? privateVideoThumbnailRef.move(publicThumbnailRef)
-//       : privateVideoThumbnailRef.copy(publicThumbnailRef));
-//   }
-
-//   return publicVideoRef;
-// }
 
 async function _notifyVerifyRecipient(
   messaging: adminMessaging.Messaging,
@@ -134,9 +56,7 @@ async function _notifyVerifyRecipient(
  * to the API.
  */
 export const verify = (
-  config: Config,
   db: Firestore,
-  storage: BucketStorage,
   messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference,
@@ -200,14 +120,6 @@ export const verify = (
         });
       }
       transaction.set(newOperationRef, newOperation);
-
-      // await movePrivateVideoToPublicVideo(
-      //   config,
-      //   storage,
-      //   loggedInUid,
-      //   videoToken,
-      //   true
-      // );
 
       return newOperationRef;
     });

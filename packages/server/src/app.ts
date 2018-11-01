@@ -119,7 +119,6 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
     handler: membersRoutes.createMember(
       config,
       db,
-      storage,
       messaging,
       membersCollection,
       operationsCollection,
@@ -144,9 +143,7 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: verifyMemberApiLocation,
     handler: membersRoutes.verify(
-      config,
       db,
-      storage,
       messaging,
       membersCollection,
       operationsCollection,

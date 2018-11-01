@@ -1,12 +1,6 @@
-import {
-  firestore,
-  storage as adminStorage,
-  messaging as adminMessaging
-} from "firebase-admin";
-import * as Storage from "@google-cloud/storage";
+import { firestore, messaging as adminMessaging } from "firebase-admin";
 import { OperationToInsert, createApiRoute } from "..";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import * as httpStatus from "http-status";
 
 import {
   OperationType,
@@ -19,20 +13,13 @@ import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiErr
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
-import {
-  CreateMemberApiEndpoint,
-  CreateMemberApiResponse
-} from "@raha/api-shared/dist/routes/members/definitions";
-import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
+import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
 import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
-export type BucketStorage = adminStorage.Storage | Storage.Storage;
-
-type BucketStorage = adminStorage.Storage | Storage.Storage;
 interface SgClient {
   request: (
     request: {
@@ -41,99 +28,6 @@ interface SgClient {
       body?: any;
     }
   ) => Promise<[any, { persisted_recipients: string[] }]>;
-}
-
-function getPublicInviteVideoRef(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
-}
-
-function getPublicInviteVideoThumbnailRef(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    `${uid}/invite.mp4.thumb.jpg`
-  );
-}
-
-function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
-  return `https://storage.googleapis.com/${
-    config.publicVideoBucket
-  }/${memberUid}/invite.mp4`;
-}
-
-function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
-  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
-}
-
-/**
- * Expects the video to be at /private-video/<videoToken>/video.mp4.
- * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
- * TODO: Remove this once all invite videos have been moved to tokenized locations
- * and tokens recorded on operations/members.
- */
-async function movePrivateVideoToPublicInviteVideo(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string,
-  videoToken: string,
-  removeOriginal: boolean
-) {
-  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
-  const publicThumbnailRef = getPublicInviteVideoThumbnailRef(
-    config,
-    storage,
-    memberUid
-  );
-
-  if (
-    (await Promise.all([
-      publicVideoRef.exists(),
-      publicThumbnailRef.exists()
-    ])).find(x => x[0])
-  ) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
-
-  const privateVideoRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/video.mp4`);
-
-  const privateThumbnailRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/thumbnail.jpg`);
-
-  if (!(await privateVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Private video does not exist at expected location. Cannot move.",
-      {}
-    );
-  }
-
-  await (removeOriginal
-    ? privateVideoRef.move(publicVideoRef)
-    : privateVideoRef.copy(publicVideoRef));
-
-  // Until the iOS app gets updated and starts generating thumbnails, we
-  // cannot throw an error on the thumbnail not existing.
-  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-  if ((await privateThumbnailRef.exists())[0]) {
-    await (removeOriginal
-      ? privateThumbnailRef.move(publicThumbnailRef)
-      : privateThumbnailRef.copy(publicThumbnailRef));
-  }
-
-  return publicVideoRef;
 }
 
 async function _notifyRequestVerificationRecipient(
@@ -335,7 +229,6 @@ async function _createUninvitedMember(args: {
 export const createMember = (
   config: Config,
   db: Firestore,
-  storage: BucketStorage,
   messaging: adminMessaging.Messaging,
   membersCollection: CollectionReference,
   operationsCollection: CollectionReference,
