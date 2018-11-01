@@ -1,9 +1,4 @@
-import {
-  firestore,
-  storage as adminStorage,
-  messaging as adminMessaging
-} from "firebase-admin";
-import * as Storage from "@google-cloud/storage";
+import { firestore, messaging as adminMessaging } from "firebase-admin";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
 
 import {
@@ -18,7 +13,6 @@ import { MediaReferenceKind } from "@raha/api-shared/dist/models/MediaReference"
 import { InvalidParamsError } from "@raha/api-shared/dist/errors/RahaApiError/InvalidParamsError";
 
 import { sendPushNotification } from "../../helpers/sendPushNotification";
-import { Config } from "../../config/config";
 import { createApiRoute, OperationToInsert } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
