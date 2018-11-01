@@ -65,7 +65,7 @@ export interface MintReferralBonusPayload {
 }
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
 
-export interface GivePayloadMetadata {
+export interface RahaGivePayloadMetadata {
   memo: string | undefined;
   attachments: MediaReference[] | undefined;
 }
@@ -73,7 +73,11 @@ export interface GivePayloadMetadata {
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
-  metadata: GivePayloadMetadata | undefined;
+  metadata:
+    | {
+        raha: RahaGivePayloadMetadata | undefined;
+      }
+    | undefined;
   donation_to: MemberId;
   donation_amount: string;
 }

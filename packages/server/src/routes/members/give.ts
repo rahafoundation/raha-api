@@ -72,8 +72,8 @@ async function _notifyGiveRecipient(
     _notificationMessageForGive(
       fromMember.get("full_name"),
       amount,
-      metadata ? metadata.memo : undefined,
-      metadata ? metadata.attachments : undefined
+      metadata && metadata.raha ? metadata.raha.memo : undefined,
+      metadata && metadata.raha ? metadata.raha.attachments : undefined
     )
   );
 }
@@ -153,8 +153,10 @@ export const give = (
           donation_amount: donationAmount.toString(),
           metadata: request.body.metadata
             ? {
-                memo: request.body.metadata.memo,
-                attachments: request.body.metadata.attachments
+                raha: {
+                  memo: request.body.metadata.memo,
+                  attachments: request.body.metadata.attachments
+                }
               }
             : undefined
         },
