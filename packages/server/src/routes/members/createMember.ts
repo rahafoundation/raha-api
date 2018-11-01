@@ -14,7 +14,10 @@ import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoun
 import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
-import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
+import {
+  VideoReference,
+  validateVideoReference
+} from "@raha/api-shared/dist/models/MediaReference";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
@@ -276,6 +279,11 @@ export const createMember = (
           if (missingParams.length !== 0) {
             throw new MissingParamsError(missingParams);
           }
+
+          validateVideoReference({
+            fieldName: "videoReference",
+            videoReference
+          });
 
           const opRefs = inviteToken
             ? _createInvitedMember({

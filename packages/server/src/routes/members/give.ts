@@ -10,6 +10,7 @@ import {
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { GiveApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
+import { InvalidParamsError } from "@raha/api-shared/dist/errors/RahaApiError/InvalidParamsError";
 
 import { createApiRoute, OperationToInsert } from "..";
 import { getMemberById } from "../../collections/members";
@@ -17,8 +18,10 @@ import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import {
   MediaReference,
-  MediaReferenceKind
+  MediaReferenceKind,
+  validateMediaReference
 } from "@raha/api-shared/dist/models/MediaReference";
+import { isString } from "util";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
@@ -101,6 +104,29 @@ export const give = (
         loggedInMember
       );
       const memberToGiveToId = request.params.memberId;
+
+      // validate expected metadata
+      if (request.body.metadata) {
+        if (
+          request.body.metadata.memo &&
+          !isString(request.body.metadata.memo)
+        ) {
+          throw new InvalidParamsError([
+            {
+              name: "metadata.memo",
+              message: `memo expected to be string, instead got ${JSON.stringify(
+                request.body.metadata.memo
+              )}`
+            }
+          ]);
+        }
+
+        if (request.body.metadata.attachments) {
+          request.body.metadata.attachments.forEach(mediaReference => {
+            validateMediaReference(mediaReference, "metadata.attachments");
+          });
+        }
+      }
 
       const memberToGiveTo = await getMemberById(
         membersCollection,

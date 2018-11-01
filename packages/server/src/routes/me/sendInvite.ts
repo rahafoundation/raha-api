@@ -12,6 +12,7 @@ import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute, OperationToInsert } from "..";
 import { Config } from "../../config/config";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import { validateVideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 interface DynamicTemplateData {
   inviter_fullname: string;
@@ -62,6 +63,8 @@ export const sendInvite = (
     if (missingParams.length !== 0) {
       throw new MissingParamsError(missingParams);
     }
+
+    validateVideoReference({ fieldName: "videoReference", videoReference });
 
     const inviteToken = cryptoRandomString(10);
 
