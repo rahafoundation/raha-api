@@ -5,6 +5,7 @@ import {
 } from "@raha/api-shared/dist/routes/members/definitions";
 
 import { callApi } from "../callApi";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 /**
  * API call for a non-member to join Raha and create a new member.
@@ -22,7 +23,7 @@ export function createMember(
   fullName: string,
   emailAddress: string,
   username: string,
-  videoToken: string,
+  videoReference: VideoReference,
   inviteToken?: string,
   subscribeToNewsletter?: boolean
 ) {
@@ -34,7 +35,7 @@ export function createMember(
         fullName,
         username,
         emailAddress,
-        videoToken,
+        videoReference,
         inviteToken,
         subscribeToNewsletter
       }

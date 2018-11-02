@@ -5,17 +5,18 @@ import {
 } from "@raha/api-shared/dist/routes/me/definitions";
 
 import { callApi } from "../callApi";
+import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
 
 /**
  * API call that sends an invite to join Raha to the provided email address.
  * @param inviteEmail Email address of invited new member
- * @param videoToken Token identifying invite video taken, if available
+ * @param videoReference Token identifying invite video taken, if available
  */
 export function sendInvite(
   apiBase: string,
   authToken: string,
   inviteEmail: string,
-  videoToken: string,
+  videoReference: VideoReference,
   isJointVideo: boolean
 ) {
   const apiCall: SendInviteApiCall = {
@@ -24,7 +25,7 @@ export function sendInvite(
       params: undefined,
       body: {
         inviteEmail,
-        videoToken,
+        videoReference,
         isJointVideo
       }
     }
