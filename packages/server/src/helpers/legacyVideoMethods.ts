@@ -8,35 +8,32 @@ import { Config } from "../config/prod.config";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
-export function inviteVideosPaths(
-  inviteToken: string
+const REFERENCE_ID_DIRNAME = "byReferenceId";
+
+/**
+ * Get videos by video reference ID
+ */
+export function videoPaths(
+  videoReferenceId: string
 ): { video: string; thumbnail: string } {
   return {
-    video: `inviteVideos/${inviteToken}/video.mp4`,
-    thumbnail: `inviteVideos/${inviteToken}/thumbnail.jpg`
+    video: `${REFERENCE_ID_DIRNAME}/${videoReferenceId}/video.mp4`,
+    thumbnail: `${REFERENCE_ID_DIRNAME}/${videoReferenceId}/thumbnail.jpg`
   };
 }
 /**
  * Invites thrown into a public bucket
  */
-export function getPublicInviteVideoRef(
+export function getPublicVideoRef(
   config: Config,
   storage: BucketStorage,
-  inviteToken: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    inviteVideosPaths(inviteToken).video
-  );
-}
-
-export function getPublicInviteVideoThumbnailRef(
-  config: Config,
-  storage: BucketStorage,
-  inviteToken: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    inviteVideosPaths(inviteToken).thumbnail
-  );
+  videoReferenceId: string
+): { video: Storage.File; thumbnail: Storage.File } {
+  const paths = videoPaths(videoReferenceId);
+  return {
+    video: getPublicVideoBucketRef(config, storage).file(paths.video),
+    thumbnail: getPublicVideoBucketRef(config, storage).file(paths.thumbnail)
+  };
 }
 
 /**
@@ -91,16 +88,14 @@ export function getPublicVideoBucketRef(
 }
 
 export async function moveVideo(
-  targetVideoRef: Storage.File,
-  targetThumbnailRef: Storage.File,
-  sourceVideoRef: Storage.File,
-  sourceThumbnailRef: Storage.File,
+  targetVideoRefs: { video: Storage.File; thumbnail: Storage.File },
+  sourceVideoRefs: { video: Storage.File; thumbnail: Storage.File },
   removeOriginal: boolean
 ): Promise<void> {
   if (
     (await Promise.all([
-      targetVideoRef.exists(),
-      targetThumbnailRef.exists()
+      targetVideoRefs.video.exists(),
+      targetVideoRefs.thumbnail.exists()
     ])).find(x => x[0])
   ) {
     throw new HttpApiError(
@@ -111,7 +106,7 @@ export async function moveVideo(
   }
 
   // we don't enforce thumbnail being present
-  if (!(await sourceVideoRef.exists())[0]) {
+  if (!(await sourceVideoRefs.video.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
       "Private video does not exist at expected location. Cannot move.",
@@ -120,50 +115,57 @@ export async function moveVideo(
   }
 
   await (removeOriginal
-    ? sourceVideoRef.move(targetVideoRef)
-    : sourceVideoRef.copy(targetVideoRef));
+    ? sourceVideoRefs.video.move(targetVideoRefs.video)
+    : sourceVideoRefs.video.copy(targetVideoRefs.video));
 
   // Until the iOS app gets updated and starts generating thumbnails, we
   // cannot throw an error on the thumbnail not existing.
   // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-  if ((await sourceThumbnailRef.exists())[0]) {
+  if ((await sourceVideoRefs.thumbnail.exists())[0]) {
     await (removeOriginal
-      ? sourceThumbnailRef.move(targetThumbnailRef)
-      : sourceThumbnailRef.copy(targetThumbnailRef));
+      ? sourceVideoRefs.thumbnail.move(targetVideoRefs.thumbnail)
+      : sourceVideoRefs.thumbnail.copy(targetVideoRefs.thumbnail));
   }
 }
 
 /**
- * For migration from legacy in sendInvite and migration scripts
+ * For migration from legacy in sendInvite and migration scripts.
+ *
+ * Invite videos used to be stored in a private bucket, addressed by a "video
+ * token" selected by the client app, which in turn was saved as the
+ * inviteToken. Now, we will generate a separate videoReferenceId, copy the
+ * private video to that location, and refer to that new public video in a
+ * videoReference object on the new invite operation.
  */
-export async function movePrivateInviteVideoToPublicBucket(
-  config: Config,
-  storage: BucketStorage,
-  inviteToken: string,
-  privateVideoToken: string,
-  removeOriginal: boolean
-): Promise<void> {
-  const targetVideoRef = getPublicInviteVideoRef(config, storage, inviteToken);
-  const targetThumbnailRef = getPublicInviteVideoThumbnailRef(
+export async function movePrivateInviteVideoToPublicBucket({
+  config,
+  storage,
+  newVideoReferenceId,
+  privateVideoToken,
+  removeOriginal
+}: {
+  config: Config;
+  storage: BucketStorage;
+  newVideoReferenceId: string;
+  privateVideoToken: string;
+  removeOriginal: boolean;
+}): Promise<void> {
+  const targetVideoRefs = getPublicVideoRef(
     config,
     storage,
-    inviteToken
+    newVideoReferenceId
   );
-  const privateVideoRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${privateVideoToken}/video.mp4`);
+  const privateVideoRefs = {
+    video: (storage as Storage.Storage)
+      .bucket(config.privateVideoBucket)
+      .file(`private-video/${privateVideoToken}/video.mp4`),
 
-  const privateThumbnailRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${privateVideoToken}/thumbnail.jpg`);
+    thumbnail: (storage as Storage.Storage)
+      .bucket(config.privateVideoBucket)
+      .file(`private-video/${privateVideoToken}/thumbnail.jpg`)
+  };
 
-  return moveVideo(
-    targetVideoRef,
-    targetThumbnailRef,
-    privateVideoRef,
-    privateThumbnailRef,
-    removeOriginal
-  );
+  return moveVideo(targetVideoRefs, privateVideoRefs, removeOriginal);
 }
 
 /**
@@ -179,32 +181,26 @@ export async function movePrivateVideoToPublicInviteVideo(
   videoToken: string,
   removeOriginal: boolean
 ): Promise<void> {
-  const publicVideoRef = getPublicInviteVideoRefForMember(
-    config,
-    storage,
-    memberUid
-  );
-  const publicThumbnailRef = getPublicInviteVideoThumbnailRefForMember(
-    config,
-    storage,
-    memberUid
-  );
+  const publicVideoRefs = {
+    video: getPublicInviteVideoRefForMember(config, storage, memberUid),
+    thumbnail: getPublicInviteVideoThumbnailRefForMember(
+      config,
+      storage,
+      memberUid
+    )
+  };
 
-  const privateVideoRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/video.mp4`);
+  const privateVideoRefs = {
+    video: (storage as Storage.Storage)
+      .bucket(config.privateVideoBucket)
+      .file(`private-video/${videoToken}/video.mp4`),
 
-  const privateThumbnailRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/thumbnail.jpg`);
+    thumbnail: (storage as Storage.Storage)
+      .bucket(config.privateVideoBucket)
+      .file(`private-video/${videoToken}/thumbnail.jpg`)
+  };
 
-  await moveVideo(
-    publicVideoRef,
-    publicThumbnailRef,
-    privateVideoRef,
-    privateThumbnailRef,
-    removeOriginal
-  );
+  await moveVideo(publicVideoRefs, privateVideoRefs, removeOriginal);
 }
 
 export function getPublicUrlForPath(config: Config, path: string): string {
