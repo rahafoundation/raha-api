@@ -11,9 +11,12 @@ import { VideoReference } from "@raha/api-shared/dist/models/MediaReference";
  * API call for a non-member to join Raha and create a new member.
  * @param fullName Full name of new member
  * @param username New username for the new member. Must be unique
- * @param videoToken Video token of the invite, of the new member either identifying themselves or
- * being invited by the existing member.
- * @param inviteToken: Token identifying associated invite operation.
+ * @param videoReference Reference to the associated video for this invite.
+ * Expected to be publically accessible. If from a joint invite, it points to
+ * the video of the new member being invited in person. Otherwise, it points to
+ * a video of the new member identifying themselves.
+ * @param inviteToken: Token identifying associated invite operation, if
+ * invited.
  * @param subscribeToNewsletter Whether user wants to be subscribed to the
  * update newsletter
  */
