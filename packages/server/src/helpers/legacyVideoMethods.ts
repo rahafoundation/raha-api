@@ -8,6 +8,14 @@ import { Config } from "../config/prod.config";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
+export function inviteVideosPaths(
+  inviteToken: string
+): { video: string; thumbnail: string } {
+  return {
+    video: `inviteVideos/${inviteToken}/video.mp4`,
+    thumbnail: `inviteVideos/${inviteToken}/thumbnail.jpg`
+  };
+}
 /**
  * Invites thrown into a public bucket
  */
@@ -17,7 +25,7 @@ export function getPublicInviteVideoRef(
   inviteToken: string
 ): Storage.File {
   return getPublicVideoBucketRef(config, storage).file(
-    `invites/${inviteToken}/video.mp4`
+    inviteVideosPaths(inviteToken).video
   );
 }
 
@@ -27,7 +35,7 @@ export function getPublicInviteVideoThumbnailRef(
   inviteToken: string
 ): Storage.File {
   return getPublicVideoBucketRef(config, storage).file(
-    `invites/${inviteToken}/thumbnail.jpg`
+    inviteVideosPaths(inviteToken).thumbnail
   );
 }
 
@@ -199,4 +207,16 @@ export async function movePrivateVideoToPublicInviteVideo(
     privateThumbnailRef,
     removeOriginal
   );
+}
+
+export function getPublicUrlForPath(config: Config, path: string): string {
+  return `https://storage.googleapis.com/${config.publicVideoBucket}/${path}`;
+}
+
+export function getPublicUrlForMemberAndToken(
+  config: Config,
+  memberUid: string,
+  videoToken: string
+): string {
+  return getPublicUrlForPath(config, `${memberUid}/${videoToken}/video.mp4`);
 }
