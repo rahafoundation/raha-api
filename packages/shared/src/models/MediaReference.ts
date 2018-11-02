@@ -9,7 +9,7 @@ export enum MediaReferenceKind {
 }
 
 export interface MediaReferenceContent<Kind extends MediaReferenceKind> {
-  kind: MediaReferenceKind;
+  kind: Kind;
   url: string;
 }
 

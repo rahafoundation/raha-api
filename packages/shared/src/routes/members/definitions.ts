@@ -125,7 +125,7 @@ export interface CreateMemberApiCallBody {
   username: string;
   inviteToken?: string;
   subscribeToNewsletter?: boolean;
-  videoToken: string;
+  videoReference: VideoReference;
 }
 export type CreateMemberApiCall = ApiCallDefinition<
   CreateMemberApiLocation["uri"],
@@ -146,7 +146,7 @@ export interface LegacyCreateMemberApiCallBody {
   username: string;
   inviteToken?: string;
   subscribeToNewsletter?: boolean;
-  videoReference: VideoReference;
+  videoToken: string;
 }
 export type LegacyCreateMemberApiCall = ApiCallDefinition<
   CreateMemberApiLocation["uri"],
@@ -184,7 +184,7 @@ export const verifyMemberApiLocation: VerifyMemberApiLocation = {
   authenticated: true
 };
 export interface VerifyMemberApiCallBody {
-  videoReference: string;
+  videoReference: VideoReference;
 }
 export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["uri"],
