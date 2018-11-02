@@ -107,7 +107,7 @@ export interface GivePayload {
   amount: string;
   donation_to: MemberId;
   donation_amount: string;
-  metadata: DirectGiveMetadata | TipMetadata;
+  metadata?: DirectGiveMetadata | TipMetadata;
 
   // Deprecated in favor of metadata
   memo: string;
