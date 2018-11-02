@@ -10,7 +10,7 @@ import {
   OperationApiResponseBody,
   MessageApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
-import { ApiLocationDefinition, ApiCall } from "../ApiEndpoint/ApiCall";
+import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import { MintPayload, EditMemberPayload } from "../../models/Operation";
 import { VideoReference } from "../../models/MediaReference";
 
@@ -70,32 +70,12 @@ export type SendInviteApiResponse = ApiResponseDefinition<
   201,
   MessageApiResponseBody
 >;
-// START LEGACY TYPES---------------
-export interface LegacySendInviteApiBody {
-  inviteEmail: string;
-  isJointVideo: boolean;
-  videoToken: string;
-}
-export type LegacySendInviteApiCall = ApiCallDefinition<
-  SendInviteApiLocation["uri"],
-  SendInviteApiLocation["method"],
-  SendInviteApiLocation["authenticated"],
-  void,
-  LegacySendInviteApiBody
+
+export type SendInviteApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.SEND_INVITE,
+  SendInviteApiCall,
+  SendInviteApiResponse
 >;
-// END LEGACY TYPES---------------
-// TODO: remove legacy api endpoint definition from below
-export type SendInviteApiEndpoint =
-  | ApiEndpointDefinition<
-      ApiEndpointName.SEND_INVITE,
-      SendInviteApiCall,
-      SendInviteApiResponse
-    >
-  | ApiEndpointDefinition<
-      ApiEndpointName.SEND_INVITE,
-      LegacySendInviteApiCall,
-      SendInviteApiResponse
-    >;
 
 /*
  * TODO: find a better way to narrow the types precisely than this repetitive type declaration

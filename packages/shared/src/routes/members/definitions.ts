@@ -9,9 +9,7 @@ import {
 import {
   OperationApiResponseBody,
   OperationsApiResponseBody,
-  MembersApiResponseBody,
-  LegacyOperationApiResponseBody,
-  LegacyOperationsApiResponseBody
+  MembersApiResponseBody
 } from "../ApiEndpoint/ApiResponse";
 import { HttpVerb } from "../../helpers/http";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
@@ -139,39 +137,11 @@ export type CreateMemberApiResponse = ApiResponseDefinition<
   OperationsApiResponseBody
 >;
 
-// START LEGACY TYPES-------------
-export interface LegacyCreateMemberApiCallBody {
-  fullName: string;
-  emailAddress: string;
-  username: string;
-  inviteToken?: string;
-  subscribeToNewsletter?: boolean;
-  videoToken: string;
-}
-export type LegacyCreateMemberApiCall = ApiCallDefinition<
-  CreateMemberApiLocation["uri"],
-  CreateMemberApiLocation["method"],
-  CreateMemberApiLocation["authenticated"],
-  void,
-  LegacyCreateMemberApiCallBody
+export type CreateMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.CREATE_MEMBER,
+  CreateMemberApiCall,
+  CreateMemberApiResponse
 >;
-export type LegacyCreateMemberApiResponse = ApiResponseDefinition<
-  201,
-  LegacyOperationsApiResponseBody
->;
-// END LEGACY TYPES-------------
-// TODO: remove legacy endpoint definition below
-export type CreateMemberApiEndpoint =
-  | ApiEndpointDefinition<
-      ApiEndpointName.CREATE_MEMBER,
-      CreateMemberApiCall,
-      CreateMemberApiResponse
-    >
-  | ApiEndpointDefinition<
-      ApiEndpointName.CREATE_MEMBER,
-      LegacyCreateMemberApiCall,
-      LegacyCreateMemberApiResponse
-    >;
 
 export type VerifyMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.VERIFY_MEMBER,
@@ -197,34 +167,11 @@ export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,
   OperationApiResponseBody
 >;
-// START LEGACY TYPES-------------
-export type LegacyVerifyMemberApiCall = ApiCallDefinition<
-  VerifyMemberApiLocation["uri"],
-  VerifyMemberApiLocation["method"],
-  VerifyMemberApiLocation["authenticated"],
-  { memberId: MemberId },
-  LegacyVerifyMemberApiCallBody
+export type VerifyMemberApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.CREATE_MEMBER,
+  VerifyMemberApiCall,
+  VerifyMemberApiResponse
 >;
-export type LegacyVerifyMemberApiResponse = ApiResponseDefinition<
-  201,
-  LegacyOperationApiResponseBody
->;
-export interface LegacyVerifyMemberApiCallBody {
-  videoToken: string;
-}
-// END LEGACY TYPES-----------
-// TODO: remove legacy api definition below
-export type VerifyMemberApiEndpoint =
-  | ApiEndpointDefinition<
-      ApiEndpointName.CREATE_MEMBER,
-      VerifyMemberApiCall,
-      VerifyMemberApiResponse
-    >
-  | ApiEndpointDefinition<
-      ApiEndpointName.CREATE_MEMBER,
-      LegacyVerifyMemberApiCall,
-      LegacyVerifyMemberApiResponse
-    >;
 
 export type FlagMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.FLAG_MEMBER,

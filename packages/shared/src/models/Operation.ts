@@ -1,7 +1,6 @@
 // TODO: change all to_uid to to_member_id
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
 import { VideoReference } from "./MediaReference";
-import { Omit } from "../helpers/Omit";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
@@ -22,6 +21,16 @@ export interface CreateMemberPayload {
   username: MemberUsername;
   videoReference: VideoReference;
 }
+// START [video-reference] legacy types
+export interface LegacyCreateMemberPayload {
+  full_name: string;
+  request_invite_from_member_id?: MemberId;
+  username: MemberUsername;
+  video_url: string;
+}
+export type LegacyCompatCreateMemberPayload = CreateMemberPayload &
+  LegacyCreateMemberPayload;
+// END [video-reference] legacy types
 
 export interface EditMemberPayload {
   full_name?: string;
@@ -44,12 +53,27 @@ export interface VerifyPayload {
   to_uid: MemberId;
   videoReference: VideoReference;
 }
+// START [video-reference] legacy types
+export interface LegacyVerifyPayload {
+  to_uid: MemberId;
+  video_url: string;
+}
+export type LegacyCompatVerifyPayload = VerifyPayload & LegacyVerifyPayload;
+// END [video-reference] legacy types
 
 export interface InvitePayload {
   invite_token: string;
   is_joint_video: boolean;
   videoReference: VideoReference;
 }
+// START [video-reference] legacy types
+export interface LegacyInvitePayload {
+  invite_token: string;
+  is_joint_video: boolean;
+  video_token: string;
+}
+export type LegacyCompatInvitePayload = InvitePayload & LegacyInvitePayload;
+// END [video-reference] legacy types
 
 export interface TrustPayload {
   to_uid: MemberId;
@@ -90,7 +114,9 @@ export interface SavedOperationBase {
 
 interface CreateMemberOperationMetadata {
   op_code: OperationType.CREATE_MEMBER;
-  data: CreateMemberPayload;
+  // TODO: [video-reference] legacy - once apps updated, use CreateMemberPayload
+  // data: CreateMemberPayload;
+  data: LegacyCompatCreateMemberPayload;
 }
 
 export type CreateMemberOperation = SavedOperationBase &
@@ -136,7 +162,9 @@ export type RequestVerificationOperationToBeCreated = ToSaveOperationBase &
 
 interface VerifyOperationMetadata {
   op_code: OperationType.VERIFY;
-  data: VerifyPayload;
+  // TODO: [video-reference] legacy - once apps updated, use VerifyPayload
+  // data: VerifyPayload;
+  data: LegacyCompatVerifyPayload;
 }
 
 export type VerifyOperation = SavedOperationBase & VerifyOperationMetadata;
@@ -145,7 +173,9 @@ export type VerifyOperationToBeCreated = ToSaveOperationBase &
 
 interface InviteOperationMetadata {
   op_code: OperationType.INVITE;
-  data: InvitePayload;
+  // TODO: [video-reference] legacy - once apps updated, use InvitePayload
+  // data: InviteMemberPayload;
+  data: LegacyCompatInvitePayload;
 }
 export type InviteOperation = SavedOperationBase & InviteOperationMetadata;
 export type InviteOperationToBeCreated = ToSaveOperationBase &
@@ -198,70 +228,3 @@ export type OperationToBeCreated =
   | TrustOperationToBeCreated
   | MintOperationToBeCreated
   | GiveOperationToBeCreated;
-
-// LEGACY TYPES START---------------------
-// TODO: remove legacy types
-// missing videoReference means video location is inferred from member ID
-export type LegacyCreateMemberPayload = Omit<
-  CreateMemberPayload,
-  "videoReference"
->;
-interface LegacyCreateMemberOperationMetadata
-  extends Omit<CreateMemberOperationMetadata, "data"> {
-  data: LegacyCreateMemberPayload;
-}
-export type LegacyCreateMemberOperation = SavedOperationBase &
-  LegacyCreateMemberOperationMetadata;
-export type LegacyCreateMemberOperationToBeCreated = ToSaveOperationBase &
-  LegacyCreateMemberOperationMetadata;
-
-// Presence of video_url instead of videoReference indicates legacy request
-export interface LegacyVerifyPayload
-  extends Omit<VerifyPayload, "videoReference"> {
-  video_url: string;
-}
-export interface LegacyVerifyOperationMetadata
-  extends Omit<VerifyOperationMetadata, "data"> {
-  data: LegacyVerifyPayload;
-}
-export type LegacyVerifyOperation = SavedOperationBase &
-  LegacyVerifyOperationMetadata;
-export type LegacyVerifyOperationToBeCreated = ToSaveOperationBase &
-  LegacyVerifyOperationMetadata;
-
-export interface LegacyInvitePayload
-  extends Omit<InvitePayload, "videoReference"> {
-  video_token: string;
-}
-export interface LegacyInviteOperationMetadata
-  extends Omit<InviteOperationMetadata, "data"> {
-  data: LegacyInvitePayload;
-}
-export type LegacyInviteOperation = SavedOperationBase &
-  LegacyInviteOperationMetadata;
-export type LegacyInviteOperationToBeCreated = ToSaveOperationBase &
-  LegacyInviteOperationMetadata;
-
-export type LegacyOperation =
-  | LegacyCreateMemberOperation
-  | LegacyVerifyOperation
-  | LegacyInviteOperation
-  | EditMemberOperation
-  | FlagMemberOperation
-  | ResolveFlagMemberOperation
-  | RequestVerificationOperation
-  | TrustOperation
-  | MintOperation
-  | GiveOperation;
-export type LegacyOperationToBeCreated =
-  | LegacyCreateMemberOperationToBeCreated
-  | LegacyVerifyOperationToBeCreated
-  | LegacyInviteOperationToBeCreated
-  | EditMemberOperationToBeCreated
-  | FlagMemberOperationToBeCreated
-  | ResolveFlagMemberOperationToBeCreated
-  | RequestVerificationOperationToBeCreated
-  | TrustOperationToBeCreated
-  | MintOperationToBeCreated
-  | GiveOperationToBeCreated;
-// LEGACY TYPES END---------------------
