@@ -11,6 +11,18 @@ import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute, OperationToInsert } from "..";
 import { Config } from "../../config/config";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import {
+  VideoReference,
+  MediaReferenceKind
+} from "@raha/api-shared/dist/models/MediaReference";
+import { generateId } from "../../helpers/id";
+import {
+  movePrivateVideoToPublicInviteVideo,
+  movePrivateInviteVideoToPublicBucket,
+  videoPaths,
+  getPublicUrlForPath
+} from "../../helpers/legacyVideoMethods";
+import { Storage } from "@google-cloud/storage";
 
 interface DynamicTemplateData {
   inviter_fullname: string;
@@ -29,8 +41,67 @@ interface EmailMessage {
   template_id: string;
 }
 
+function createVideoReference(
+  content: VideoReference["content"]
+): VideoReference {
+  return {
+    id: generateId(),
+    content
+  };
+}
+
+async function LEGACY_createVideoReference(
+  config: Config,
+  storage: Storage,
+  body: SendInviteApiEndpoint["call"]["request"]["body"]
+): Promise<VideoReference> {
+  if ("videoReference" in body) {
+    // technically, this breaks backwards compatibility since we're not copying
+    // the new video location to the old one; but the only people who would
+    // experience this is people who are joining Raha but already somehow have
+    // an outdated version of the app installed. Pretty unlikely, so not
+    // worrying about copying the video over; failure case is that the invite
+    // video doesn't show up when signing up.
+    return createVideoReference(body.videoReference);
+  }
+
+  // then we will see if this is a legacy request.
+  const legacyBody: {
+    videoToken: string;
+  } = body;
+
+  if (!("videoToken" in legacyBody) || !legacyBody.videoToken) {
+    throw new Error(
+      "Unexpected: could not retrieve video reference from send invite API call."
+    );
+  }
+
+  const newVideoReferenceId = generateId();
+
+  // we assume this is a legacy request.
+  await movePrivateInviteVideoToPublicBucket({
+    config,
+    storage,
+    newVideoReferenceId,
+    privateVideoToken: legacyBody.videoToken, // old behavior was that invite token is video token
+    removeOriginal: false
+  });
+
+  const paths = videoPaths(newVideoReferenceId);
+
+  return {
+    id: newVideoReferenceId,
+    content: {
+      kind: MediaReferenceKind.VIDEO,
+      url: getPublicUrlForPath(config, paths.video),
+      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
+    }
+  };
+}
+
 export const sendInvite = (
   config: Config,
+  storage: Storage,
   sgMail: { send: (message: EmailMessage) => void },
   members: CollectionReference,
   operations: CollectionReference
@@ -46,15 +117,16 @@ export const sendInvite = (
       loggedInMember
     );
 
-    const { inviteEmail, videoToken, isJointVideo } = call.body;
+    const { inviteEmail, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
     }
 
+    // TODO: once legacy code above is removed, check for videoReference too
     const requiredParams = {
       inviteEmail,
-      videoToken,
+      // videoReference,
       isJointVideo
     };
     const missingParams = (Object.keys(requiredParams) as Array<
@@ -64,8 +136,15 @@ export const sendInvite = (
       throw new MissingParamsError(missingParams);
     }
 
-    // TODO generate this server side somewhere.
-    const inviteToken = videoToken;
+    // TODO: replace with just createVideoReference once legacy support dropped
+    // const videoReference = createVideoReference(call.body.videoReference);
+    const videoReference = await LEGACY_createVideoReference(
+      config,
+      storage,
+      call.body
+    );
+    // separate ID to avoid temptation to address invites by videos/vice versa
+    const inviteToken = generateId();
 
     const newInvite: OperationToInsert = {
       creator_uid: loggedInMemberId,
@@ -74,7 +153,8 @@ export const sendInvite = (
       data: {
         invite_token: inviteToken,
         is_joint_video: isJointVideo,
-        video_token: inviteToken
+        video_token: videoReference.id,
+        videoReference
       }
     };
     await operations.doc().create(newInvite);
