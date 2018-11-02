@@ -57,7 +57,7 @@ export const sendInviteApiLocation: SendInviteApiLocation = {
 export interface SendInviteApiBody {
   inviteEmail: string;
   isJointVideo: boolean;
-  videoReference: VideoReference;
+  videoReference: VideoReference["content"];
 }
 export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["uri"],
