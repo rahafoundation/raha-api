@@ -21,18 +21,9 @@ import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { Config } from "../../config/config";
 import { createApiRoute, OperationToInsert } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import { getPublicUrlForMemberAndToken } from "../../helpers/legacyVideoMethods";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
-
-function getPublicUrlForMemberAndToken(
-  config: Config,
-  memberUid: string,
-  videoToken: string
-) {
-  return `https://storage.googleapis.com/${
-    config.publicVideoBucket
-  }/${memberUid}/${videoToken}/video.mp4`;
-}
 
 /**
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
