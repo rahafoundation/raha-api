@@ -76,11 +76,11 @@ export function getPublicInviteVideoThumbnailRefForMember(
 
 export function getPublicInviteVideoUrlForMember(
   config: Config,
-  memberUid: string
-) {
+  memberId: string
+): string {
   return `https://storage.googleapis.com/${
     config.publicVideoBucket
-  }/${memberUid}/invite.mp4`;
+  }/${memberId}/invite.mp4`;
 }
 
 export function getPublicVideoBucketRef(
@@ -96,7 +96,7 @@ export async function moveVideo(
   sourceVideoRef: Storage.File,
   sourceThumbnailRef: Storage.File,
   removeOriginal: boolean
-) {
+): Promise<void> {
   if (
     (await Promise.all([
       targetVideoRef.exists(),
@@ -131,8 +131,6 @@ export async function moveVideo(
       ? sourceThumbnailRef.move(targetThumbnailRef)
       : sourceThumbnailRef.copy(targetThumbnailRef));
   }
-
-  return targetVideoRef;
 }
 
 /**
@@ -144,7 +142,7 @@ export async function movePrivateInviteVideoToPublicBucket(
   inviteToken: string,
   privateVideoToken: string,
   removeOriginal: boolean
-) {
+): Promise<void> {
   const targetVideoRef = getPublicInviteVideoRef(config, storage, inviteToken);
   const targetThumbnailRef = getPublicInviteVideoThumbnailRef(
     config,
@@ -180,7 +178,7 @@ export async function movePrivateVideoToPublicInviteVideo(
   memberUid: string,
   videoToken: string,
   removeOriginal: boolean
-) {
+): Promise<void> {
   const publicVideoRef = getPublicInviteVideoRefForMember(
     config,
     storage,
@@ -200,7 +198,7 @@ export async function movePrivateVideoToPublicInviteVideo(
     .bucket(config.privateVideoBucket)
     .file(`private-video/${videoToken}/thumbnail.jpg`);
 
-  return moveVideo(
+  await moveVideo(
     publicVideoRef,
     publicThumbnailRef,
     privateVideoRef,
