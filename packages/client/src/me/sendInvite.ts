@@ -19,7 +19,7 @@ export function sendInvite(
   apiBase: string,
   authToken: string,
   inviteEmail: string,
-  videoReference: VideoReference,
+  videoReference: VideoReference["content"],
   isJointVideo: boolean
 ) {
   const apiCall: SendInviteApiCall = {

@@ -26,7 +26,7 @@ export function createMember(
   fullName: string,
   emailAddress: string,
   username: string,
-  videoReference: VideoReference,
+  videoReference: VideoReference["content"],
   inviteToken?: string,
   subscribeToNewsletter?: boolean
 ) {

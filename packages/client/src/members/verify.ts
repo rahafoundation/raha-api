@@ -18,7 +18,7 @@ export function verify(
   apiBase: string,
   authToken: string,
   memberId: MemberId,
-  videoReference: VideoReference
+  videoReference: VideoReference["content"]
 ) {
   const apiCall: VerifyMemberApiCall = {
     location: verifyMemberApiLocation,
