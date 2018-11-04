@@ -161,7 +161,7 @@ export const verify = (
         membersCollection.doc(toVerifyMemberId)
       );
 
-      if (!memberToVerify) {
+      if (!memberToVerify.exists) {
         throw new NotFoundError(toVerifyMemberId);
       }
 

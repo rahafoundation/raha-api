@@ -96,7 +96,7 @@ export const flagMember = (
         loggedInMember
       );
 
-      if (!toFlagMember) {
+      if (!toFlagMember.exists) {
         throw new NotFoundError(toFlagMemberid);
       }
 
@@ -180,11 +180,11 @@ export const resolveFlagMember = (
             loggedInMember
           );
 
-          if (!flaggedMember) {
+          if (!flaggedMember.exists) {
             throw new NotFoundError(flaggedMemberid);
           }
 
-          if (!flagOperation) {
+          if (!flagOperation.exists) {
             throw new NotFoundError(flag_operation_id);
           }
 

@@ -39,7 +39,7 @@ export const trust = (
         membersCollection.doc(memberToTrustId)
       );
 
-      if (!memberToTrust) {
+      if (!memberToTrust.exists) {
         throw new NotFoundError(memberToTrustId);
       }
       if (
