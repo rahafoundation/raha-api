@@ -11,6 +11,11 @@ import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute, OperationToInsert } from "..";
 import { Config } from "../../config/config";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import { generateId } from "../../helpers/id";
+import {
+  BucketStorage,
+  LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo
+} from "../../helpers/legacyVideoMethods";
 
 interface DynamicTemplateData {
   inviter_fullname: string;
@@ -29,32 +34,41 @@ interface EmailMessage {
   template_id: string;
 }
 
-export const sendInvite = (
-  config: Config,
-  sgMail: { send: (message: EmailMessage) => void },
-  members: CollectionReference,
-  operations: CollectionReference
-) =>
+export const sendInvite = ({
+  config,
+  storage,
+  sgMail,
+  membersCollection,
+  operationsCollection
+}: {
+  config: Config;
+  storage: BucketStorage;
+  sgMail: { send: (message: EmailMessage) => void };
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+}) =>
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInMemberId = loggedInMemberToken.uid;
-    const loggedInMember = await members.doc(loggedInMemberId).get();
+    const loggedInMember = await membersCollection.doc(loggedInMemberId).get();
 
     await validateAbilityToCreateOperation(
       OperationType.INVITE,
-      operations,
+      operationsCollection,
       undefined,
       loggedInMember
     );
 
-    const { inviteEmail, videoToken, isJointVideo } = call.body;
+    const { inviteEmail, isJointVideo } = call.body;
 
     if (!loggedInMember.exists) {
       throw new InviterMustBeInvitedError();
     }
 
+    // TODO: LEGACY [explicit-video-refs] once legacy code below is removed,
+    // check for videoReference too
     const requiredParams = {
       inviteEmail,
-      videoToken,
+      // videoReference,
       isJointVideo
     };
     const missingParams = (Object.keys(requiredParams) as Array<
@@ -64,8 +78,19 @@ export const sendInvite = (
       throw new MissingParamsError(missingParams);
     }
 
-    // TODO generate this server side somewhere.
-    const inviteToken = videoToken;
+    // TODO: LEGACY [explicit-video-refs] replace with just createVideoReference
+    // once legacy support dropped
+    // const videoReference = createVideoReference(call.body.videoReference);
+    const videoReference = await LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo(
+      {
+        config,
+        storage,
+        videoData: call.body
+      }
+    );
+    // separate ID from video token to avoid temptation to address invites by
+    // videos/vice versa
+    const inviteToken = generateId();
 
     const newInvite: OperationToInsert = {
       creator_uid: loggedInMemberId,
@@ -74,10 +99,11 @@ export const sendInvite = (
       data: {
         invite_token: inviteToken,
         is_joint_video: isJointVideo,
-        video_token: inviteToken
+        video_token: videoReference.id,
+        videoReference
       }
     };
-    await operations.doc().create(newInvite);
+    await operationsCollection.doc().create(newInvite);
 
     const loggedInFullName = loggedInMember.get("full_name");
 

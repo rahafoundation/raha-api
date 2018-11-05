@@ -12,6 +12,7 @@ import {
 } from "../ApiEndpoint/ApiResponse";
 import { ApiLocationDefinition } from "../ApiEndpoint/ApiCall";
 import { MintPayload, EditMemberPayload } from "../../models/Operation";
+import { VideoReference } from "../../models/MediaReference";
 
 export type EditMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.EDIT_MEMBER,
@@ -53,17 +54,23 @@ export const sendInviteApiLocation: SendInviteApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface SendInviteApiBody {
+  inviteEmail: string;
+  isJointVideo: boolean;
+  videoReference: VideoReference["content"];
+}
 export type SendInviteApiCall = ApiCallDefinition<
   SendInviteApiLocation["uri"],
   SendInviteApiLocation["method"],
   SendInviteApiLocation["authenticated"],
   void,
-  { inviteEmail: string; videoToken: string; isJointVideo: boolean }
+  SendInviteApiBody
 >;
 export type SendInviteApiResponse = ApiResponseDefinition<
   201,
   MessageApiResponseBody
 >;
+
 export type SendInviteApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.SEND_INVITE,
   SendInviteApiCall,

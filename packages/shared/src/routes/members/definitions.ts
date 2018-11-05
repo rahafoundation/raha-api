@@ -18,6 +18,7 @@ import {
   ResolveFlagMemberPayload
 } from "../../models/Operation";
 import { Omit } from "../../helpers/Omit";
+import { VideoReference } from "../../models/MediaReference";
 
 export type ListMembersApiLocation = ApiLocationDefinition<
   ApiEndpointUri.GET_MEMBERS,
@@ -116,19 +117,20 @@ export const createMemberApiLocation: CreateMemberApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface CreateMemberApiCallBody {
+  fullName: string;
+  emailAddress: string;
+  username: string;
+  inviteToken?: string;
+  subscribeToNewsletter?: boolean;
+  videoReference: VideoReference["content"];
+}
 export type CreateMemberApiCall = ApiCallDefinition<
   CreateMemberApiLocation["uri"],
   CreateMemberApiLocation["method"],
   CreateMemberApiLocation["authenticated"],
   void,
-  {
-    fullName: string;
-    emailAddress: string;
-    videoToken: string;
-    username: string;
-    inviteToken?: string;
-    subscribeToNewsletter?: boolean;
-  }
+  CreateMemberApiCallBody
 >;
 export type CreateMemberApiResponse = ApiResponseDefinition<
   201,
@@ -151,12 +153,15 @@ export const verifyMemberApiLocation: VerifyMemberApiLocation = {
   method: HttpVerb.POST,
   authenticated: true
 };
+export interface VerifyMemberApiCallBody {
+  videoReference: VideoReference["content"];
+}
 export type VerifyMemberApiCall = ApiCallDefinition<
   VerifyMemberApiLocation["uri"],
   VerifyMemberApiLocation["method"],
   VerifyMemberApiLocation["authenticated"],
   { memberId: MemberId },
-  { videoToken: string }
+  VerifyMemberApiCallBody
 >;
 export type VerifyMemberApiResponse = ApiResponseDefinition<
   201,

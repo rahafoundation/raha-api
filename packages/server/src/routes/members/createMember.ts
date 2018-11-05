@@ -1,12 +1,6 @@
-import {
-  firestore,
-  storage as adminStorage,
-  messaging as adminMessaging
-} from "firebase-admin";
-import * as Storage from "@google-cloud/storage";
+import { firestore, messaging as adminMessaging } from "firebase-admin";
 import { OperationToInsert, createApiRoute } from "..";
 import { CollectionReference, Firestore } from "@google-cloud/firestore";
-import * as httpStatus from "http-status";
 
 import {
   OperationType,
@@ -19,14 +13,26 @@ import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiErr
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
-import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
-import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
+import {
+  CreateMemberApiEndpoint,
+  CreateMemberApiCallBody
+} from "@raha/api-shared/dist/routes/members/definitions";
+import { MemberToBeCreated } from "@raha/api-shared/dist/models/Member";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import {
+  BucketStorage,
+  LEGACY_getPublicInviteVideoUrlForMember,
+  LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo,
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference
+} from "../../helpers/legacyVideoMethods";
 
-type BucketStorage = adminStorage.Storage | Storage.Storage;
+type MemberToInsert = MemberToBeCreated & {
+  created_at: firestore.FieldValue;
+};
+
 interface SgClient {
   request: (
     request: {
@@ -35,99 +41,6 @@ interface SgClient {
       body?: any;
     }
   ) => Promise<[any, { persisted_recipients: string[] }]>;
-}
-
-function getPublicInviteVideoRef(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
-}
-
-function getPublicInviteVideoThumbnailRef(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    `${uid}/invite.mp4.thumb.jpg`
-  );
-}
-
-function getPublicInviteVideoUrlForMember(config: Config, memberUid: string) {
-  return `https://storage.googleapis.com/${
-    config.publicVideoBucket
-  }/${memberUid}/invite.mp4`;
-}
-
-function getPublicVideoBucketRef(config: Config, storage: BucketStorage) {
-  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
-}
-
-/**
- * Expects the video to be at /private-video/<videoToken>/video.mp4.
- * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
- * TODO: Remove this once all invite videos have been moved to tokenized locations
- * and tokens recorded on operations/members.
- */
-async function movePrivateVideoToPublicInviteVideo(
-  config: Config,
-  storage: BucketStorage,
-  memberUid: string,
-  videoToken: string,
-  removeOriginal: boolean
-) {
-  const publicVideoRef = getPublicInviteVideoRef(config, storage, memberUid);
-  const publicThumbnailRef = getPublicInviteVideoThumbnailRef(
-    config,
-    storage,
-    memberUid
-  );
-
-  if (
-    (await Promise.all([
-      publicVideoRef.exists(),
-      publicThumbnailRef.exists()
-    ])).find(x => x[0])
-  ) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Video already exists at intended storage destination. Cannot overwrite.",
-      {}
-    );
-  }
-
-  const privateVideoRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/video.mp4`);
-
-  const privateThumbnailRef = (storage as Storage.Storage)
-    .bucket(config.privateVideoBucket)
-    .file(`private-video/${videoToken}/thumbnail.jpg`);
-
-  if (!(await privateVideoRef.exists())[0]) {
-    throw new HttpApiError(
-      httpStatus.BAD_REQUEST,
-      "Private video does not exist at expected location. Cannot move.",
-      {}
-    );
-  }
-
-  await (removeOriginal
-    ? privateVideoRef.move(publicVideoRef)
-    : privateVideoRef.copy(publicVideoRef));
-
-  // Until the iOS app gets updated and starts generating thumbnails, we
-  // cannot throw an error on the thumbnail not existing.
-  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
-  if ((await privateThumbnailRef.exists())[0]) {
-    await (removeOriginal
-      ? privateThumbnailRef.move(publicThumbnailRef)
-      : privateThumbnailRef.copy(publicThumbnailRef));
-  }
-
-  return publicVideoRef;
 }
 
 async function _notifyRequestVerificationRecipient(
@@ -159,19 +72,24 @@ async function _notifyRequestVerificationRecipient(
   );
 }
 
-async function _createInvitedMember(
-  config: Config,
-  storage: BucketStorage,
-  transaction: FirebaseFirestore.Transaction,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference,
-  loggedInUid: string,
-  fullName: string,
-  emailAddress: string,
-  username: string,
-  videoToken: string,
-  inviteToken: string
-) {
+async function _createInvitedMember({
+  config,
+  storage,
+  transaction,
+  membersCollection,
+  operationsCollection,
+  loggedInUid,
+  requestBody
+}: {
+  config: Config;
+  storage: BucketStorage;
+  transaction: FirebaseFirestore.Transaction;
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+  loggedInUid: string;
+  requestBody: CreateMemberApiCallBody;
+}): Promise<firestore.DocumentReference[]> {
+  const { fullName, emailAddress, username, inviteToken } = requestBody;
   const inviteOperations = await operationsCollection
     .where("op_code", "==", OperationType.INVITE)
     .where("data.invite_token", "==", inviteToken)
@@ -202,6 +120,15 @@ async function _createInvitedMember(
     throw new NotFoundError(requestInviteFromMemberId);
   }
 
+  // TODO: LEGACY [explicit-video-refs] once clients stop sending videoTokens
+  // referring to auth-restricted videos, we can just create videoReferences
+  // directly.
+  // this ensures that old clients that upload a video by token, also have their
+  // video copied to the new videoReferences dir.
+  const videoReference = await LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo(
+    { config, storage, videoData: requestBody }
+  );
+
   const newCreateMemberOperation: OperationToInsert = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
@@ -209,7 +136,8 @@ async function _createInvitedMember(
       username,
       full_name: fullName,
       request_invite_from_member_id: requestInviteFromMemberId,
-      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+      videoReference,
+      video_url: videoReference.content.url
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
@@ -223,16 +151,16 @@ async function _createInvitedMember(
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
-  const newMember = {
+  const newMember: MemberToInsert = {
     username,
     full_name: fullName,
-    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
-    // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || null,
+    email_address: emailAddress,
     email_address_is_verified: false,
-    request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
-    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
+      config,
+      loggedInUid
+    ),
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -245,50 +173,63 @@ async function _createInvitedMember(
   );
   transaction.create(membersCollection.doc(loggedInUid), newMember);
 
-  movePrivateVideoToPublicInviteVideo(
+  // TODO: LEGACY [explicit-video-refs] remove this once we no longer need to
+  // support old clients that expect videos to appear at the legacy identity
+  // video location
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference({
     config,
     storage,
-    loggedInUid,
-    videoToken,
-    // If the videoToken == the videoToken of the identity video, then we want to leave
-    // the private video in place so that the verifier can confirm it.
-    videoToken !== inviteVideoToken
-  );
+    memberId: loggedInUid,
+    videoReference
+  });
 
   return [createMemberOperationRef, requestVerificationOperationRef];
 }
 
-async function _createUninvitedMember(
-  config: Config,
-  storage: BucketStorage,
-  transaction: FirebaseFirestore.Transaction,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference,
-  loggedInUid: string,
-  fullName: string,
-  emailAddress: string,
-  username: string,
-  videoToken: string
-) {
+async function _createUninvitedMember({
+  config,
+  storage,
+  transaction,
+  membersCollection,
+  operationsCollection,
+  loggedInUid,
+  requestBody
+}: {
+  config: Config;
+  storage: BucketStorage;
+  transaction: FirebaseFirestore.Transaction;
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+  loggedInUid: string;
+  requestBody: CreateMemberApiCallBody;
+}): Promise<firestore.DocumentReference[]> {
+  const { fullName, emailAddress, username } = requestBody;
+  const videoReference = await LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo(
+    { config, storage, videoData: requestBody }
+  );
+
   const newCreateMemberOperation: OperationToInsert = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
     data: {
       username,
       full_name: fullName,
-      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+      videoReference,
+      video_url: videoReference.content.url
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
-  const newMember = {
+
+  const newMember: MemberToInsert = {
     username,
     full_name: fullName,
-    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
-    // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || null,
+    email_address: emailAddress,
     email_address_is_verified: false,
     invite_confirmed: false,
-    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
+      config,
+      loggedInUid
+    ),
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -297,13 +238,15 @@ async function _createUninvitedMember(
   const newMemberRef = membersCollection.doc(loggedInUid);
   transaction.create(newMemberRef, newMember);
 
-  movePrivateVideoToPublicInviteVideo(
+  // TODO: LEGACY [explicit-video-refs] remove this once we no longer need to
+  // support old clients that expect videos to appear at the legacy identity
+  // video location
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference({
     config,
     storage,
-    loggedInUid,
-    videoToken,
-    true
-  );
+    memberId: loggedInUid,
+    videoReference
+  });
 
   return [createMemberOperationRef];
 }
@@ -357,17 +300,17 @@ export const createMember = (
           username,
           fullName,
           emailAddress,
-          videoToken,
+          // videoReference,
           inviteToken
         } = call.body;
 
         const requiredParams = {
           username,
           fullName,
-          // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
-          // Updated client will have version number 0.0.6 for Android.
-          // emailAddress
-          videoToken
+          // TODO: LEGACY [explicit-video-refs] require videoReference once
+          // videoToken no longer accepted
+          // videoReference,
+          emailAddress
         };
         const missingParams = (Object.keys(requiredParams) as Array<
           keyof typeof requiredParams
@@ -377,31 +320,24 @@ export const createMember = (
         }
 
         const opRefs = inviteToken
-          ? _createInvitedMember(
+          ? _createInvitedMember({
               config,
               storage,
               transaction,
               membersCollection,
               operationsCollection,
               loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoToken,
-              inviteToken
-            )
-          : _createUninvitedMember(
+              requestBody: call.body
+            })
+          : _createUninvitedMember({
               config,
               storage,
               transaction,
               membersCollection,
               operationsCollection,
               loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoToken
-            );
+              requestBody: call.body
+            });
 
         return opRefs;
       }

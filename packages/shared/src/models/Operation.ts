@@ -1,5 +1,6 @@
 // TODO: change all to_uid to to_member_id
 import { MemberId, MemberUsername, OperationId } from "./identifiers";
+import { VideoReference } from "./MediaReference";
 
 export enum OperationType {
   CREATE_MEMBER = "CREATE_MEMBER",
@@ -18,7 +19,19 @@ export interface CreateMemberPayload {
   full_name: string;
   request_invite_from_member_id?: MemberId;
   username: MemberUsername;
+  videoReference: VideoReference;
 }
+// START [video-reference] legacy types
+export interface LegacyCreateMemberPayload {
+  full_name: string;
+  request_invite_from_member_id?: MemberId;
+  username: MemberUsername;
+  video_url: string;
+}
+export type LegacyCompatCreateMemberPayload = CreateMemberPayload &
+  LegacyCreateMemberPayload;
+// END [video-reference] legacy types
+
 export interface EditMemberPayload {
   full_name?: string;
   username?: string;
@@ -38,13 +51,30 @@ export interface RequestVerificationPayload {
 }
 export interface VerifyPayload {
   to_uid: MemberId;
+  videoReference: VideoReference;
+}
+// START [video-reference] legacy types
+export interface LegacyVerifyPayload {
+  to_uid: MemberId;
   video_url: string;
 }
+export type LegacyCompatVerifyPayload = VerifyPayload & LegacyVerifyPayload;
+// END [video-reference] legacy types
+
 export interface InvitePayload {
+  invite_token: string;
+  is_joint_video: boolean;
+  videoReference: VideoReference;
+}
+// START [video-reference] legacy types
+export interface LegacyInvitePayload {
   invite_token: string;
   is_joint_video: boolean;
   video_token: string;
 }
+export type LegacyCompatInvitePayload = InvitePayload & LegacyInvitePayload;
+// END [video-reference] legacy types
+
 export interface TrustPayload {
   to_uid: MemberId;
 }
@@ -62,6 +92,7 @@ export interface MintReferralBonusPayload {
   invited_member_id: MemberId;
 }
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
+// TODO: support media metadata. Deferring for now to not interfere with tipping
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
@@ -83,8 +114,11 @@ export interface SavedOperationBase {
 
 interface CreateMemberOperationMetadata {
   op_code: OperationType.CREATE_MEMBER;
-  data: CreateMemberPayload;
+  // TODO: [video-reference] legacy - once apps updated, use CreateMemberPayload
+  // data: CreateMemberPayload;
+  data: LegacyCompatCreateMemberPayload;
 }
+
 export type CreateMemberOperation = SavedOperationBase &
   CreateMemberOperationMetadata;
 export type CreateMemberOperationToBeCreated = ToSaveOperationBase &
@@ -128,15 +162,20 @@ export type RequestVerificationOperationToBeCreated = ToSaveOperationBase &
 
 interface VerifyOperationMetadata {
   op_code: OperationType.VERIFY;
-  data: VerifyPayload;
+  // TODO: [video-reference] legacy - once apps updated, use VerifyPayload
+  // data: VerifyPayload;
+  data: LegacyCompatVerifyPayload;
 }
+
 export type VerifyOperation = SavedOperationBase & VerifyOperationMetadata;
 export type VerifyOperationToBeCreated = ToSaveOperationBase &
   VerifyOperationMetadata;
 
 interface InviteOperationMetadata {
   op_code: OperationType.INVITE;
-  data: InvitePayload;
+  // TODO: [video-reference] legacy - once apps updated, use InvitePayload
+  // data: InviteMemberPayload;
+  data: LegacyCompatInvitePayload;
 }
 export type InviteOperation = SavedOperationBase & InviteOperationMetadata;
 export type InviteOperationToBeCreated = ToSaveOperationBase &

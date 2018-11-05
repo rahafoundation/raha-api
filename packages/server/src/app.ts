@@ -180,12 +180,13 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: sendInviteApiLocation,
-    handler: meRoutes.sendInvite(
+    handler: meRoutes.sendInvite({
       config,
+      storage,
       sgMail,
       membersCollection,
       operationsCollection
-    )
+    })
   },
   {
     location: mintApiLocation,
