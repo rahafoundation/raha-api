@@ -218,23 +218,13 @@ function LEGACY_getPublicIdentityVideoRefForMember(
   config: Config,
   storage: BucketStorage,
   uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
-}
-
-/**
- * Legacy getter for a member's identity video's thumbnail at canonical location
- * based on a member's Id, instead of the new videoReference ids. It's named
- * `invite.mp4`, but you'll have one even if you're not invited.
- */
-function LEGACY_getPublicIdentityVideoThumbnailRefForMember(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    `${uid}/invite.mp4.thumb.jpg`
-  );
+): { video: Storage.File; thumbnail: Storage.File } {
+  return {
+    video: getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`),
+    thumbnail: getPublicVideoBucketRef(config, storage).file(
+      `${uid}/invite.mp4.thumb.jpg`
+    )
+  };
 }
 
 export function LEGACY_getPublicInviteVideoUrlForMember(
@@ -308,14 +298,11 @@ export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
   videoToken: string,
   removeOriginal: boolean
 ): Promise<void> {
-  const publicVideoRefs = {
-    video: LEGACY_getPublicIdentityVideoRefForMember(config, storage, memberId),
-    thumbnail: LEGACY_getPublicIdentityVideoThumbnailRefForMember(
-      config,
-      storage,
-      memberId
-    )
-  };
+  const publicVideoRefs = LEGACY_getPublicIdentityVideoRefForMember(
+    config,
+    storage,
+    memberId
+  );
 
   const authRestrictedVideoRefs = {
     video: (storage as Storage.Storage)
