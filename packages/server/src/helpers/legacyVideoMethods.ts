@@ -3,7 +3,7 @@
  * Helpers to migrate from implicit inferred videos to explicit video
  * references. Involves copying videos from their old locations to new ones, and
  * returning data structures necessary for storing the new structure of video
- * references for the following methods:
+ * references for the following API methods:
  *
  * - sendInvite
  * - createMember
@@ -40,11 +40,11 @@ import { generateId } from "./id";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
-// ---------------
-// utility methods
-// ---------------
+// -----------------
+// utility functions
+// -----------------
 // These are likely to remain useful after legacy support is dropped. for legacy
-// methods, see the section below, where functions are prepended by LEGACY_ or
+// functions, see the section below, where functions are prepended by LEGACY_ or
 // LEGACY_COMPAT titles.
 
 const VIDEOS_DIRNAME = "videosByReferenceId";
@@ -151,22 +151,26 @@ export async function moveVideo(
   }
 }
 
-// ----------------------------
-// Legacy compatibility methods
-// ----------------------------
+// ------------------------------
+// Legacy compatibility functions
+// ------------------------------
 
 /**
- * Legacy compatibility method to copy auth-restricted invite videos to new,
+ * Legacy compatibility function to copy auth-restricted invite videos to new,
  * public non-legacy locations, and return a new-style video reference pointing
  * to the new public, referenceId-addressed video location.
  */
-export async function LEGACY_COMPAT_createVideoReferenceForInviteVideo(
-  config: Config,
-  storage: BucketStorage,
+export async function LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo({
+  config,
+  storage,
+  videoData
+}: {
+  config: Config;
+  storage: BucketStorage;
   videoData:
     | { videoReference: VideoReference["content"] }
-    | { videoToken: string }
-): Promise<VideoReference> {
+    | { videoToken: string };
+}): Promise<VideoReference> {
   if ("videoReference" in videoData) {
     // technically, this breaks backwards compatibility since we're not copying
     // the new video location to the old one; but the only people who would
@@ -217,12 +221,14 @@ export async function LEGACY_COMPAT_createVideoReferenceForInviteVideo(
 function LEGACY_getPublicIdentityVideoRefForMember(
   config: Config,
   storage: BucketStorage,
-  uid: string
+  memberId: string
 ): { video: Storage.File; thumbnail: Storage.File } {
   return {
-    video: getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`),
+    video: getPublicVideoBucketRef(config, storage).file(
+      `${memberId}/invite.mp4`
+    ),
     thumbnail: getPublicVideoBucketRef(config, storage).file(
-      `${uid}/invite.mp4.thumb.jpg`
+      `${memberId}/invite.mp4.thumb.jpg`
     )
   };
 }
@@ -237,7 +243,7 @@ export function LEGACY_getPublicInviteVideoUrlForMember(
 }
 
 /**
- * Legacy compatibility method that moves a video from the legacy
+ * Legacy compatibility function that moves a video from the legacy
  * auth-restricted invite video bucket to the new, global public vidoeReference
  * bucket. Necessary when old clients that store videos in the legacy locations
  * send an invite, so that new clients that expect it from the videoReference
@@ -249,7 +255,7 @@ export function LEGACY_getPublicInviteVideoUrlForMember(
  * auth-restricted video to that location, and refer to that new public video in
  * a videoReference object on the new invite operation.
  */
-export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
+async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
   config,
   storage,
   newVideoReferenceId,
@@ -281,7 +287,7 @@ export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoRefer
 }
 
 /**
- * Legacy method that moves a video from the legacy auth-restricted invite video
+ * Legacy function that moves a video from the legacy auth-restricted invite video
  * bucket to the public video bucket, at a legacy per-member location. Only one
  * such video can exist.
  *
@@ -291,7 +297,7 @@ export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoRefer
  * NOTE: the name of the file is invite, even if the user wasn't invited and
  * just joined by uploading a video of themselves
  */
-export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
+async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
   config: Config,
   storage: BucketStorage,
   memberId: string,
@@ -318,7 +324,7 @@ export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
 }
 
 /**
- * Legacy method to get the invite URL corresponding to a member, addressed by
+ * Legacy function to get the invite URL corresponding to a member, addressed by
  * their user ID and a video token.
  */
 export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
@@ -330,7 +336,7 @@ export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
 }
 
 /**
- * Legacy method that moves a auth-restricted invite video to the public bucket,
+ * Legacy function that moves a auth-restricted invite video to the public bucket,
  * into the specified member's combined invite/verification video folder. Many
  * of these can exist.
  *
