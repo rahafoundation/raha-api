@@ -5,7 +5,8 @@ import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import {
   OperationType,
   RequestVerificationOperation,
-  Operation
+  Operation,
+  CreateMemberOperationToBeCreated
 } from "@raha/api-shared/dist/models/Operation";
 import { InvalidInviteOperationError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteOperation";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
@@ -13,7 +14,11 @@ import { InvalidInviteTokenError } from "@raha/api-shared/dist/errors/RahaApiErr
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 import { MemberAlreadyExistsError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/MemberAlreadyExists";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
-import { CreateMemberApiEndpoint } from "@raha/api-shared/dist/routes/members/definitions";
+import {
+  CreateMemberApiEndpoint,
+  CreateMemberApiCallBody
+} from "@raha/api-shared/dist/routes/members/definitions";
+import { MemberToBeCreated } from "@raha/api-shared/dist/models/Member";
 
 import { Config } from "../../config/config";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
@@ -63,19 +68,24 @@ async function _notifyRequestVerificationRecipient(
   );
 }
 
-async function _createInvitedMember(
-  config: Config,
-  storage: BucketStorage,
-  transaction: FirebaseFirestore.Transaction,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference,
-  loggedInUid: string,
-  fullName: string,
-  emailAddress: string,
-  username: string,
-  videoToken: string,
-  inviteToken: string
-) {
+async function _createInvitedMember({
+  config,
+  storage,
+  transaction,
+  membersCollection,
+  operationsCollection,
+  loggedInUid,
+  requestBody
+}: {
+  config: Config;
+  storage: BucketStorage;
+  transaction: FirebaseFirestore.Transaction;
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+  loggedInUid: string;
+  requestBody: CreateMemberApiCallBody;
+}) {
+  const { fullName, emailAddress, username, inviteToken } = requestBody;
   const inviteOperations = await operationsCollection
     .where("op_code", "==", OperationType.INVITE)
     .where("data.invite_token", "==", inviteToken)
@@ -106,14 +116,13 @@ async function _createInvitedMember(
     throw new NotFoundError(requestInviteFromMemberId);
   }
 
-  const newCreateMemberOperation: OperationToInsert = {
+  const newCreateMemberOperation: CreateMemberOperationToBeCreated = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
     data: {
       username,
       full_name: fullName,
-      request_invite_from_member_id: requestInviteFromMemberId,
-      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+      request_invite_from_member_id: requestInviteFromMemberId
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
@@ -170,34 +179,41 @@ async function _createInvitedMember(
   return [createMemberOperationRef, requestVerificationOperationRef];
 }
 
-async function _createUninvitedMember(
-  config: Config,
-  storage: BucketStorage,
-  transaction: FirebaseFirestore.Transaction,
-  membersCollection: CollectionReference,
-  operationsCollection: CollectionReference,
-  loggedInUid: string,
-  fullName: string,
-  emailAddress: string,
-  username: string,
-  videoToken: string
-) {
-  const newCreateMemberOperation: OperationToInsert = {
+async function _createUninvitedMember({
+  config,
+  storage,
+  transaction,
+  membersCollection,
+  operationsCollection,
+  loggedInUid,
+  requestBody
+}: {
+  config: Config;
+  storage: BucketStorage;
+  transaction: FirebaseFirestore.Transaction;
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+  loggedInUid: string;
+  requestBody: CreateMemberApiCallBody;
+}) {
+  const { fullName, emailAddress, username } = requestBody;
+  const newCreateMemberOperation: CreateMemberOperationToBeCreated = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
     data: {
       username,
-      full_name: fullName,
-      identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid)
+      full_name: fullName
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
-  const newMember = {
+
+  type MemberToInsert = MemberToBeCreated & {
+    created_at: firestore.FieldValue;
+  };
+  const newMember: MemberToInsert = {
     username,
     full_name: fullName,
-    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
-    // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || null,
+    email_address: emailAddress,
     email_address_is_verified: false,
     invite_confirmed: false,
     identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
@@ -272,17 +288,17 @@ export const createMember = (
           username,
           fullName,
           emailAddress,
-          videoToken,
+          // videoReference,
           inviteToken
         } = call.body;
 
         const requiredParams = {
           username,
           fullName,
-          // TODO Enable this check once we're sure all clients have upgraded to request email on signup.
-          // Updated client will have version number 0.0.6 for Android.
-          // emailAddress
-          videoToken
+          // TODO: LEGACY [explicit-video-refs] require videoReference once
+          // videoToken no longer accepted
+          // videoReference,
+          emailAddress
         };
         const missingParams = (Object.keys(requiredParams) as Array<
           keyof typeof requiredParams
@@ -292,31 +308,24 @@ export const createMember = (
         }
 
         const opRefs = inviteToken
-          ? _createInvitedMember(
+          ? _createInvitedMember({
               config,
               storage,
               transaction,
               membersCollection,
               operationsCollection,
               loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoToken,
-              inviteToken
-            )
-          : _createUninvitedMember(
+              requestBody: call.body
+            })
+          : _createUninvitedMember({
               config,
               storage,
               transaction,
               membersCollection,
               operationsCollection,
               loggedInUid,
-              fullName,
-              emailAddress,
-              username,
-              videoToken
-            );
+              requestBody: call.body
+            });
 
         return opRefs;
       }
