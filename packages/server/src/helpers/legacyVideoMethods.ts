@@ -1,3 +1,14 @@
+/**
+ * LEGACY [explicit-video-refs]
+ * Helpers to migrate from implicit inferred videos to explicit video
+ * references. Involves copying videos from their old locations to new ones, and
+ * returning data structures necessary for storing the new structure of video
+ * references for the following methods:
+ *
+ * - sendInvite
+ * - createMember
+ * - verifyMember
+ */
 import * as Storage from "@google-cloud/storage";
 import { storage as adminStorage } from "firebase-admin";
 import * as httpStatus from "http-status";
@@ -29,6 +40,10 @@ function createVideoReference(
   };
 }
 
+/**
+ * Copy private invite videos to new non-legacy locations, and return a
+ * new-style video reference pointing to the non-legacy location.
+ */
 export async function LEGACY_createVideoReferenceForInviteVideo(
   config: Config,
   storage: BucketStorage,
