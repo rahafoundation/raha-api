@@ -78,12 +78,13 @@ async function LEGACY_createVideoReference(
 
   const newVideoReferenceId = generateId();
 
-  // we assume this is a legacy request.
+  // we assume this is a legacy request. Copy the legacy video to the new
+  // video reference location
   await movePrivateInviteVideoToPublicBucket({
     config,
     storage,
     newVideoReferenceId,
-    privateVideoToken: legacyBody.videoToken, // old behavior was that invite token is video token
+    privateVideoToken: legacyBody.videoToken,
     removeOriginal: false
   });
 
@@ -129,7 +130,8 @@ export const sendInvite = ({
       throw new InviterMustBeInvitedError();
     }
 
-    // TODO: once legacy code above is removed, check for videoReference too
+    // TODO: LEGACY [explicit-video-refs] once legacy code below is removed,
+    // check for videoReference too
     const requiredParams = {
       inviteEmail,
       // videoReference,
@@ -142,14 +144,16 @@ export const sendInvite = ({
       throw new MissingParamsError(missingParams);
     }
 
-    // TODO: replace with just createVideoReference once legacy support dropped
+    // TODO: LEGACY [explicit-video-refs] replace with just createVideoReference
+    // once legacy support dropped
     // const videoReference = createVideoReference(call.body.videoReference);
     const videoReference = await LEGACY_createVideoReference(
       config,
       storage,
       call.body
     );
-    // separate ID to avoid temptation to address invites by videos/vice versa
+    // separate ID from video token to avoid temptation to address invites by
+    // videos/vice versa
     const inviteToken = generateId();
 
     const newInvite: OperationToInsert = {
