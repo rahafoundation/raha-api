@@ -20,8 +20,8 @@ import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import {
   BucketStorage,
-  getPublicInviteVideoUrlForMember,
-  LEGACY_movePrivateInviteVideoToPublicInviteVideo
+  LEGACY_getPublicInviteVideoUrlForMember,
+  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo
 } from "../../helpers/legacyVideoMethods";
 
 interface SgClient {
@@ -136,7 +136,10 @@ async function _createInvitedMember(
     email_address_is_verified: false,
     request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
-    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
+      config,
+      loggedInUid
+    ),
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -149,13 +152,18 @@ async function _createInvitedMember(
   );
   transaction.create(membersCollection.doc(loggedInUid), newMember);
 
-  LEGACY_movePrivateInviteVideoToPublicInviteVideo(
+  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
     config,
     storage,
     loggedInUid,
     videoToken,
-    // If the videoToken == the videoToken of the identity video, then we want to leave
-    // the private video in place so that the verifier can confirm it.
+    // If the videoToken == the videoToken of the identity video, it's a joint
+    // video and the new member elected to use that video as their identity
+    // video (they didn't record a new one). So, leave the auth-restricted
+    // invite video in place so that the inviter can confirm it when they verify
+    // the new member.
+    // otherwise, we can just move it because the verifier will have to make a
+    // new verification video anyway.
     videoToken !== inviteVideoToken
   );
 
@@ -192,7 +200,10 @@ async function _createUninvitedMember(
     email_address: emailAddress || null,
     email_address_is_verified: false,
     invite_confirmed: false,
-    identity_video_url: getPublicInviteVideoUrlForMember(config, loggedInUid),
+    identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
+      config,
+      loggedInUid
+    ),
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
@@ -201,7 +212,7 @@ async function _createUninvitedMember(
   const newMemberRef = membersCollection.doc(loggedInUid);
   transaction.create(newMemberRef, newMember);
 
-  LEGACY_movePrivateInviteVideoToPublicInviteVideo(
+  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
     config,
     storage,
     loggedInUid,

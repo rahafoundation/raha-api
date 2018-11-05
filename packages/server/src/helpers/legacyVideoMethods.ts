@@ -8,6 +8,22 @@
  * - sendInvite
  * - createMember
  * - verifyMember
+ *
+ * These are the following locations referenced by legacy clients:
+ *
+ * - the client always uploads all videos—invite videos or new user videos—to a
+ *   bucket only logged in users can see ("auth-restricted"), addressed by a
+ *   client-generated videoToken.
+ * - member video locations are always expected to be in the public video
+ *   bucket, at {memberId}/invite.mp4. These can be joint invite videos
+ *   including the user, or a video of themselves introducing themselves.
+ * - When an existing member verifies a new member, they either create a new
+ *   auth-restricted video verifying the member, or if they are the inviter,
+ *   they use their own previous (auth-restricted) invite video to make sure
+ *   it looks right.
+ *   - Then, that video gets copied to the verifier's list of verification
+ *     videos, at {memberId}/{videoToken}/video.mp4.
+ * - all these videos are expected to have thumbnails at <url>.thumb.jpg
  */
 import * as Storage from "@google-cloud/storage";
 import { storage as adminStorage } from "firebase-admin";
@@ -31,7 +47,17 @@ export type BucketStorage = adminStorage.Storage | Storage.Storage;
 // methods, see the section below, where functions are prepended by LEGACY_ or
 // LEGACY_COMPAT titles.
 
-const VIDEOS_DIRNAME = "videosById";
+const VIDEOS_DIRNAME = "videosByReferenceId";
+
+/**
+ * Get reference to the storage bucket for public videos.
+ */
+export function getPublicVideoBucketRef(
+  config: Config,
+  storage: BucketStorage
+) {
+  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
+}
 
 /**
  * Get the public url for a file stored in Google Cloud Storage
@@ -106,7 +132,7 @@ export async function moveVideo(
   if (!(await sourceVideoRefs.video.exists())[0]) {
     throw new HttpApiError(
       httpStatus.BAD_REQUEST,
-      "Private video does not exist at expected location. Cannot move.",
+      "Auth-restricted video does not exist at expected location. Cannot move.",
       {}
     );
   }
@@ -130,9 +156,9 @@ export async function moveVideo(
 // ----------------------------
 
 /**
- * Legacy compatibility method to copy private invite videos to new non-legacy
- * locations, and return a new-style video reference pointing to the new public,
- * referenceId-addressed video location.
+ * Legacy compatibility method to copy auth-restricted invite videos to new,
+ * public non-legacy locations, and return a new-style video reference pointing
+ * to the new public, referenceId-addressed video location.
  */
 export async function LEGACY_createVideoReferenceForInviteVideo(
   config: Config,
@@ -163,11 +189,11 @@ export async function LEGACY_createVideoReferenceForInviteVideo(
 
   // we assume this is a legacy request. Copy the legacy video to the new
   // video reference location
-  await LEGACY_COMPAT_movePrivateInviteVideoToNewPublicVideoReferencesBucket({
+  await LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReferencesBucket({
     config,
     storage,
     newVideoReferenceId,
-    privateVideoToken: videoData.videoToken,
+    authRestrictedVideoToken: videoData.videoToken,
     removeOriginal: false
   });
 
@@ -209,7 +235,7 @@ function LEGACY_getPublicInviteVideoThumbnailRefForMember(
   );
 }
 
-export function getPublicInviteVideoUrlForMember(
+export function LEGACY_getPublicInviteVideoUrlForMember(
   config: Config,
   memberId: string
 ): string {
@@ -218,37 +244,30 @@ export function getPublicInviteVideoUrlForMember(
   }/${memberId}/invite.mp4`;
 }
 
-export function getPublicVideoBucketRef(
-  config: Config,
-  storage: BucketStorage
-) {
-  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
-}
-
 /**
- * Legacy compatibility method that moves a video from the legacy private invite
- * video bucket to the new, global public vidoeReference bucket. Necessary when
- * old clients that store videos in the legacy locations send an invite, so that
- * new clients that expect it from the videoReference bucket will be able to
- * access it.
+ * Legacy compatibility method that moves a video from the legacy
+ * auth-restricted invite video bucket to the new, global public vidoeReference
+ * bucket. Necessary when old clients that store videos in the legacy locations
+ * send an invite, so that new clients that expect it from the videoReference
+ * bucket will be able to access it.
  *
- * Invite videos used to be stored in a private bucket, addressed by a "video
- * token" selected by the client app, which in turn was saved as the
+ * Invite videos used to be stored in a auth-restricted bucket, addressed by a
+ * "video token" selected by the client app, which in turn was saved as the
  * inviteToken. Now, we will generate a separate videoReferenceId, copy the
- * private video to that location, and refer to that new public video in a
- * videoReference object on the new invite operation.
+ * auth-restricted video to that location, and refer to that new public video in
+ * a videoReference object on the new invite operation.
  */
-export async function LEGACY_COMPAT_movePrivateInviteVideoToNewPublicVideoReferencesBucket({
+export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReferencesBucket({
   config,
   storage,
   newVideoReferenceId,
-  privateVideoToken,
+  authRestrictedVideoToken,
   removeOriginal
 }: {
   config: Config;
   storage: BucketStorage;
   newVideoReferenceId: string;
-  privateVideoToken: string;
+  authRestrictedVideoToken: string;
   removeOriginal: boolean;
 }): Promise<void> {
   const targetVideoRefs = getPublicVideoRef(
@@ -256,28 +275,31 @@ export async function LEGACY_COMPAT_movePrivateInviteVideoToNewPublicVideoRefere
     storage,
     newVideoReferenceId
   );
-  const privateVideoRefs = {
+  const authRestrictedVideoRefs = {
     video: (storage as Storage.Storage)
       .bucket(config.privateVideoBucket)
-      .file(`private-video/${privateVideoToken}/video.mp4`),
+      .file(`private-video/${authRestrictedVideoToken}/video.mp4`),
 
     thumbnail: (storage as Storage.Storage)
       .bucket(config.privateVideoBucket)
-      .file(`private-video/${privateVideoToken}/thumbnail.jpg`)
+      .file(`private-video/${authRestrictedVideoToken}/thumbnail.jpg`)
   };
 
-  return moveVideo(targetVideoRefs, privateVideoRefs, removeOriginal);
+  return moveVideo(targetVideoRefs, authRestrictedVideoRefs, removeOriginal);
 }
 
 /**
- * Legacy method that moves a video from the legacy private invite video bucket
- * to the legacy per-member public identity video bucket. This ensures old
- * clients will still be able to access videos where they expect to find them.
+ * Legacy method that moves a video from the legacy auth-restricted invite video
+ * bucket to the public video bucket, at a legacy per-member location. Only one
+ * such video can exist.
  *
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
+ *
+ * NOTE: the name of the file is invite, even if the user wasn't invited and
+ * just joined by uploading a video of themselves
  */
-export async function LEGACY_movePrivateInviteVideoToPublicInviteVideo(
+export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
   config: Config,
   storage: BucketStorage,
   memberUid: string,
@@ -293,7 +315,7 @@ export async function LEGACY_movePrivateInviteVideoToPublicInviteVideo(
     )
   };
 
-  const privateVideoRefs = {
+  const authRestrictedVideoRefs = {
     video: (storage as Storage.Storage)
       .bucket(config.privateVideoBucket)
       .file(`private-video/${videoToken}/video.mp4`),
@@ -303,7 +325,7 @@ export async function LEGACY_movePrivateInviteVideoToPublicInviteVideo(
       .file(`private-video/${videoToken}/thumbnail.jpg`)
   };
 
-  await moveVideo(publicVideoRefs, privateVideoRefs, removeOriginal);
+  await moveVideo(publicVideoRefs, authRestrictedVideoRefs, removeOriginal);
 }
 
 /**
@@ -316,4 +338,70 @@ export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
   videoToken: string
 ): string {
   return getPublicUrlForPath(config, `${memberUid}/${videoToken}/video.mp4`);
+}
+
+/**
+ * Legacy method that moves a auth-restricted invite video to the public bucket,
+ * into the specified member's combined invite/verification video folder. Many
+ * of these can exist.
+ *
+ * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
+ */
+export async function LEGACY_moveAuthRestrictedVideoToPublicMemberInviteVideoFolder(
+  config: Config,
+  storage: BucketStorage,
+  memberUid: string,
+  videoToken: string,
+  removeOriginal: boolean
+) {
+  const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
+  const publicVideoBucket = (storage as Storage.Storage).bucket(
+    config.publicVideoBucket
+  );
+  const publicVideoRef = publicVideoBucket.file(newVideoPath);
+  const publicThumbnailRef = publicVideoBucket.file(
+    `${newVideoPath}.thumb.jpg`
+  );
+
+  if ((await publicVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Video already exists at intended storage destination. Cannot overwrite.",
+      {}
+    );
+  }
+
+  const authRestrictedVideoPath = `private-video/${videoToken}`;
+  const authRestrictedVideoBucket = (storage as Storage.Storage).bucket(
+    config.privateVideoBucket
+  );
+  const authRestrictedVideoRef = authRestrictedVideoBucket.file(
+    `${authRestrictedVideoPath}/video.mp4`
+  );
+  const authRestrictedVideoThumbnailRef = (storage as Storage.Storage)
+    .bucket(config.privateVideoBucket)
+    .file(`${authRestrictedVideoPath}/thumbnail.jpg`);
+
+  if (!(await authRestrictedVideoRef.exists())[0]) {
+    throw new HttpApiError(
+      httpStatus.BAD_REQUEST,
+      "Private video does not exist at expected location. Cannot move.",
+      {}
+    );
+  }
+
+  await (removeOriginal
+    ? authRestrictedVideoRef.move(publicVideoRef)
+    : authRestrictedVideoRef.copy(publicVideoRef));
+
+  // Until the iOS app gets updated and starts generating thumbnails, we
+  // cannot throw an error on the thumbnail not existing.
+  // TODO: Throw an error on non-existent thumbnail once the iOS app gets updated.
+  if ((await authRestrictedVideoThumbnailRef.exists())[0]) {
+    await (removeOriginal
+      ? authRestrictedVideoThumbnailRef.move(publicThumbnailRef)
+      : authRestrictedVideoThumbnailRef.copy(publicThumbnailRef));
+  }
+
+  return publicVideoRef;
 }
