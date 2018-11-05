@@ -294,7 +294,7 @@ export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoRefer
  * such video can exist.
  *
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
- * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
+ * Video is moved to /<publicBucket>/<memberId>/invite.mp4.
  *
  * NOTE: the name of the file is invite, even if the user wasn't invited and
  * just joined by uploading a video of themselves
@@ -302,16 +302,16 @@ export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoRefer
 export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
   config: Config,
   storage: BucketStorage,
-  memberUid: string,
+  memberId: string,
   videoToken: string,
   removeOriginal: boolean
 ): Promise<void> {
   const publicVideoRefs = {
-    video: LEGACY_getPublicInviteVideoRefForMember(config, storage, memberUid),
+    video: LEGACY_getPublicInviteVideoRefForMember(config, storage, memberId),
     thumbnail: LEGACY_getPublicInviteVideoThumbnailRefForMember(
       config,
       storage,
-      memberUid
+      memberId
     )
   };
 
@@ -334,10 +334,10 @@ export async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
  */
 export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
   config: Config,
-  memberUid: string,
+  memberId: string,
   videoToken: string
 ): string {
-  return getPublicUrlForPath(config, `${memberUid}/${videoToken}/video.mp4`);
+  return getPublicUrlForPath(config, `${memberId}/${videoToken}/video.mp4`);
 }
 
 /**
@@ -345,16 +345,16 @@ export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
  * into the specified member's combined invite/verification video folder. Many
  * of these can exist.
  *
- * Video is moved to /<publicBucket>/<memberUid>/<videoToken>/video.mp4.
+ * Video is moved to /<publicBucket>/<memberId>/<videoToken>/video.mp4.
  */
 export async function LEGACY_moveAuthRestrictedVideoToPublicMemberInviteVideoFolder(
   config: Config,
   storage: BucketStorage,
-  memberUid: string,
+  memberId: string,
   videoToken: string,
   removeOriginal: boolean
 ) {
-  const newVideoPath = `${memberUid}/${videoToken}/video.mp4`;
+  const newVideoPath = `${memberId}/${videoToken}/video.mp4`;
   const publicVideoBucket = (storage as Storage.Storage).bucket(
     config.publicVideoBucket
   );
