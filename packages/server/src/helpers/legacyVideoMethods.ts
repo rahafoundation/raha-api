@@ -47,7 +47,15 @@ export type BucketStorage = adminStorage.Storage | Storage.Storage;
 // functions, see the section below, where functions are prepended by LEGACY_ or
 // LEGACY_COMPAT titles.
 
-const VIDEOS_DIRNAME = "videosByReferenceId";
+/**
+ * Dirname of the default location videos are placed in the public bucket by the
+ * API.
+ *
+ * VideoReferences may have videos located elsewhere (they're arbitrary URLs),
+ * so not reliable as a way to derive Google Cloud Storage references to a
+ * public video.
+ */
+const VIDEOS_DEFAULT_DIRNAME = "videosByReferenceId";
 
 /**
  * Get reference to the storage bucket for public videos.
@@ -62,12 +70,18 @@ export function getPublicVideoBucketRef(
 /**
  * Get the public url for a file stored in Google Cloud Storage
  */
-export function getPublicUrlForPath(config: Config, path: string): string {
-  return `https://storage.googleapis.com/${config.publicVideoBucket}/${path}`;
+export function getCloudStorageUrlForPath(
+  publicVideoBucket: string,
+  path: string
+): string {
+  return `https://storage.googleapis.com/${publicVideoBucket}/${path}`;
 }
 
 /**
- * Create a VideoReference from its content, generating a unique ID for it
+ * Create a VideoReference from its content, generating a unique ID for it.
+ *
+ * Expects videos to already be hosted somewhere, so ID is not a reliable way to
+ * determine Google Cloud Storage references to the videos.
  */
 function createVideoReference(
   content: VideoReference["content"]
@@ -79,27 +93,27 @@ function createVideoReference(
 }
 
 /**
- * Get relative paths to a publically-stored video in a bucket (by reference
- * id).
+ * Get relative paths to where a video with a given reference ID should be
+ * stored by default in Raha Google Cloud Storage.
  */
-function videoPaths(
+function newDefaultVideoPathsForReferenceId(
   videoReferenceId: string
 ): { video: string; thumbnail: string } {
   return {
-    video: `${VIDEOS_DIRNAME}/${videoReferenceId}/video.mp4`,
-    thumbnail: `${VIDEOS_DIRNAME}/${videoReferenceId}/thumbnail.jpg`
+    video: `${VIDEOS_DEFAULT_DIRNAME}/${videoReferenceId}/video.mp4`,
+    thumbnail: `${VIDEOS_DEFAULT_DIRNAME}/${videoReferenceId}/thumbnail.jpg`
   };
 }
 
 /**
  * Get a Storage reference to a video stored publically (by reference id).
  */
-export function getPublicVideoRef(
+export function getDestinationRefForNewPublicVideo(
   config: Config,
   storage: BucketStorage,
   videoReferenceId: string
 ): { video: Storage.File; thumbnail: Storage.File } {
-  const paths = videoPaths(videoReferenceId);
+  const paths = newDefaultVideoPathsForReferenceId(videoReferenceId);
   return {
     video: getPublicVideoBucketRef(config, storage).file(paths.video),
     thumbnail: getPublicVideoBucketRef(config, storage).file(paths.thumbnail)
@@ -110,7 +124,7 @@ export function getPublicVideoRef(
  * Move a video from one storage ref to another.
  * @param removeOriginal [boolean] copy if false, move if true.
  */
-export async function moveVideo(
+export async function moveVideoWithinCloudStorage(
   targetVideoRefs: { video: Storage.File; thumbnail: Storage.File },
   sourceVideoRefs: { video: Storage.File; thumbnail: Storage.File },
   removeOriginal: boolean
@@ -201,14 +215,17 @@ export async function LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo({
     removeOriginal: false
   });
 
-  const paths = videoPaths(newVideoReferenceId);
+  const paths = newDefaultVideoPathsForReferenceId(newVideoReferenceId);
 
   return {
     id: newVideoReferenceId,
     content: {
       kind: MediaReferenceKind.VIDEO,
-      url: getPublicUrlForPath(config, paths.video),
-      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
+      url: getCloudStorageUrlForPath(config.publicVideoBucket, paths.video),
+      thumbnailUrl: getCloudStorageUrlForPath(
+        config.publicVideoBucket,
+        paths.thumbnail
+      )
     }
   };
 }
@@ -268,7 +285,7 @@ async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
   authRestrictedVideoToken: string;
   removeOriginal: boolean;
 }): Promise<void> {
-  const targetVideoRefs = getPublicVideoRef(
+  const targetVideoRefs = getDestinationRefForNewPublicVideo(
     config,
     storage,
     newVideoReferenceId
@@ -283,7 +300,11 @@ async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
       .file(`private-video/${authRestrictedVideoToken}/thumbnail.jpg`)
   };
 
-  return moveVideo(targetVideoRefs, authRestrictedVideoRefs, removeOriginal);
+  return moveVideoWithinCloudStorage(
+    targetVideoRefs,
+    authRestrictedVideoRefs,
+    removeOriginal
+  );
 }
 
 /**
@@ -320,7 +341,11 @@ async function LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
       .file(`private-video/${videoToken}/thumbnail.jpg`)
   };
 
-  await moveVideo(publicVideoRefs, authRestrictedVideoRefs, removeOriginal);
+  await moveVideoWithinCloudStorage(
+    publicVideoRefs,
+    authRestrictedVideoRefs,
+    removeOriginal
+  );
 }
 
 /**
@@ -332,7 +357,10 @@ export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
   memberId: string,
   videoToken: string
 ): string {
-  return getPublicUrlForPath(config, `${memberId}/${videoToken}/video.mp4`);
+  return getCloudStorageUrlForPath(
+    config.publicVideoBucket,
+    `${memberId}/${videoToken}/video.mp4`
+  );
 }
 
 /**
@@ -399,4 +427,74 @@ export async function LEGACY_moveAuthRestrictedVideoToPublicMemberInviteVideoFol
   }
 
   return publicVideoRef;
+}
+
+/**
+ * Paths that can be used to find refs to the videoReference content, if they
+ * are stored in Google Cloud Storage. Helpful for now to simplify handling of
+ * legacy compatibility methods.
+ *
+ * @returns undefined if not in cloud storage or not a video
+ *
+ */
+export function LEGACY_COMPAT_refsForVideoReferenceInCloudStorage(
+  config: Config,
+  storage: BucketStorage,
+  videoReference: VideoReference
+): { video: Storage.File; thumbnail: Storage.File } | undefined {
+  if (videoReference.content.kind !== MediaReferenceKind.VIDEO) {
+    return undefined;
+  }
+  const { url, thumbnailUrl } = videoReference.content;
+  const urlPrefix = getCloudStorageUrlForPath(config.publicVideoBucket, "");
+  if (!url.startsWith(urlPrefix) || !thumbnailUrl.startsWith(urlPrefix)) {
+    return undefined;
+  }
+  const paths = {
+    video: url.substr(urlPrefix.length),
+    thumbnail: url.substr(urlPrefix.length)
+  };
+  return {
+    video: getPublicVideoBucketRef(config, storage).file(paths.video),
+    thumbnail: getPublicVideoBucketRef(config, storage).file(paths.thumbnail)
+  };
+}
+
+/**
+ * Legacy compatibility function create a video at the legacy public location
+ * for identity videos at <memberId>/invite.mp4
+ *
+ * Expects an already stored videoReference, not just its content
+ */
+export async function LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference({
+  config,
+  storage,
+  memberId,
+  videoReference
+}: {
+  config: Config;
+  storage: BucketStorage;
+  memberId: string;
+  videoReference: VideoReference;
+}): Promise<void> {
+  const sourceVideoRefs = LEGACY_COMPAT_refsForVideoReferenceInCloudStorage(
+    config,
+    storage,
+    videoReference
+  );
+  if (!sourceVideoRefs) {
+    // Since we're the only people uploading videos at the moment, this
+    // shouldn't occur; hopefully we'll be getting rid of legacy compatibility
+    // functions soon so this will be removable in due time.
+    throw new Error(
+      "Legacy compatibility methods don't support video references that are not stored in Raha's cloud storage systems."
+    );
+  }
+
+  const targetVideoRefs = LEGACY_getPublicIdentityVideoRefForMember(
+    config,
+    storage,
+    memberId
+  );
+  moveVideoWithinCloudStorage(targetVideoRefs, sourceVideoRefs, false);
 }
