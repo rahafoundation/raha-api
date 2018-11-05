@@ -20,9 +20,9 @@ import {
   movePrivateVideoToPublicInviteVideo,
   movePrivateInviteVideoToPublicBucket,
   videoPaths,
-  getPublicUrlForPath
+  getPublicUrlForPath,
+  BucketStorage
 } from "../../helpers/legacyVideoMethods";
-import { Storage } from "@google-cloud/storage";
 
 interface DynamicTemplateData {
   inviter_fullname: string;
@@ -52,7 +52,7 @@ function createVideoReference(
 
 async function LEGACY_createVideoReference(
   config: Config,
-  storage: Storage,
+  storage: BucketStorage,
   body: SendInviteApiEndpoint["call"]["request"]["body"]
 ): Promise<VideoReference> {
   if ("videoReference" in body) {
@@ -99,20 +99,26 @@ async function LEGACY_createVideoReference(
   };
 }
 
-export const sendInvite = (
-  config: Config,
-  storage: Storage,
-  sgMail: { send: (message: EmailMessage) => void },
-  members: CollectionReference,
-  operations: CollectionReference
-) =>
+export const sendInvite = ({
+  config,
+  storage,
+  sgMail,
+  membersCollection,
+  operationsCollection
+}: {
+  config: Config;
+  storage: BucketStorage;
+  sgMail: { send: (message: EmailMessage) => void };
+  membersCollection: CollectionReference;
+  operationsCollection: CollectionReference;
+}) =>
   createApiRoute<SendInviteApiEndpoint>(async (call, loggedInMemberToken) => {
     const loggedInMemberId = loggedInMemberToken.uid;
-    const loggedInMember = await members.doc(loggedInMemberId).get();
+    const loggedInMember = await membersCollection.doc(loggedInMemberId).get();
 
     await validateAbilityToCreateOperation(
       OperationType.INVITE,
-      operations,
+      operationsCollection,
       undefined,
       loggedInMember
     );
@@ -157,7 +163,7 @@ export const sendInvite = (
         videoReference
       }
     };
-    await operations.doc().create(newInvite);
+    await operationsCollection.doc().create(newInvite);
 
     const loggedInFullName = loggedInMember.get("full_name");
 
