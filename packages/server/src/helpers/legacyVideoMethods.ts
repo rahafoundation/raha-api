@@ -24,10 +24,22 @@ import { generateId } from "./id";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
-const REFERENCE_ID_DIRNAME = "byReferenceId";
+// ---------------
+// utility methods
+// ---------------
+// These are likely to remain useful after legacy support is dropped. for legacy
+// methods, see the section below, where functions are prepended by LEGACY_ or
+// LEGACY_COMPAT titles.
 
-// TODO: LEGACY [explicit-video-refs] once legacy stuff isn't required, move
-// this helper to a file not associated with legacy things
+const VIDEOS_DIRNAME = "videosById";
+
+/**
+ * Get the public url for a file stored in Google Cloud Storage
+ */
+export function getPublicUrlForPath(config: Config, path: string): string {
+  return `https://storage.googleapis.com/${config.publicVideoBucket}/${path}`;
+}
+
 /**
  * Create a VideoReference from its content, generating a unique ID for it
  */
@@ -41,71 +53,20 @@ function createVideoReference(
 }
 
 /**
- * Copy private invite videos to new non-legacy locations, and return a
- * new-style video reference pointing to the non-legacy location.
+ * Get relative paths to a publically-stored video in a bucket (by reference
+ * id).
  */
-export async function LEGACY_createVideoReferenceForInviteVideo(
-  config: Config,
-  storage: BucketStorage,
-  videoData:
-    | { videoReference: VideoReference["content"] }
-    | { videoToken: string }
-): Promise<VideoReference> {
-  if ("videoReference" in videoData) {
-    // technically, this breaks backwards compatibility since we're not copying
-    // the new video location to the old one; but the only people who would
-    // experience this is people who are joining Raha but already somehow have
-    // an outdated version of the app installed. Pretty unlikely, so not
-    // worrying about copying the video over; failure case is that the invite
-    // video doesn't show up when signing up.
-    return createVideoReference(videoData.videoReference);
-  }
-
-  // then we will see if this is a legacy request.
-
-  if (!("videoToken" in videoData) || !videoData.videoToken) {
-    throw new Error(
-      "Unexpected: could not retrieve video reference from send invite API call."
-    );
-  }
-
-  const newVideoReferenceId = generateId();
-
-  // we assume this is a legacy request. Copy the legacy video to the new
-  // video reference location
-  await movePrivateInviteVideoToPublicBucket({
-    config,
-    storage,
-    newVideoReferenceId,
-    privateVideoToken: videoData.videoToken,
-    removeOriginal: false
-  });
-
-  const paths = videoPaths(newVideoReferenceId);
-
-  return {
-    id: newVideoReferenceId,
-    content: {
-      kind: MediaReferenceKind.VIDEO,
-      url: getPublicUrlForPath(config, paths.video),
-      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
-    }
-  };
-}
-
-/**
- * Get videos by video reference ID
- */
-export function videoPaths(
+function videoPaths(
   videoReferenceId: string
 ): { video: string; thumbnail: string } {
   return {
-    video: `${REFERENCE_ID_DIRNAME}/${videoReferenceId}/video.mp4`,
-    thumbnail: `${REFERENCE_ID_DIRNAME}/${videoReferenceId}/thumbnail.jpg`
+    video: `${VIDEOS_DIRNAME}/${videoReferenceId}/video.mp4`,
+    thumbnail: `${VIDEOS_DIRNAME}/${videoReferenceId}/thumbnail.jpg`
   };
 }
+
 /**
- * Invites thrown into a public bucket
+ * Get a Storage reference to a video stored publically (by reference id).
  */
 export function getPublicVideoRef(
   config: Config,
@@ -120,56 +81,9 @@ export function getPublicVideoRef(
 }
 
 /**
- * Legacy getter for invite videos at canonical location based on a member's uid
- *
- * Now video urls will be explicit and public; since the accepting member's UID
- * isn't present when sendInvite occurs (until they accept the invite), we need
- * to use a different identifier to address them—hence the new invite video ref
- * methods.
+ * Move a video from one storage ref to another.
+ * @param removeOriginal [boolean] copy if false, move if true.
  */
-export function getPublicInviteVideoRefForMember(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
-}
-
-/**
- * Legacy getter for invite videos' thumbnails at canonical location based on a
- * member's uid
- *
- * Now video urls will be explicit and public; since the accepting member's UID
- * isn't present when sendInvite occurs (until they accept the invite), we need
- * to use a different identifier to address them—hence the new invite video ref
- * methods.
- */
-export function getPublicInviteVideoThumbnailRefForMember(
-  config: Config,
-  storage: BucketStorage,
-  uid: string
-): Storage.File {
-  return getPublicVideoBucketRef(config, storage).file(
-    `${uid}/invite.mp4.thumb.jpg`
-  );
-}
-
-export function getPublicInviteVideoUrlForMember(
-  config: Config,
-  memberId: string
-): string {
-  return `https://storage.googleapis.com/${
-    config.publicVideoBucket
-  }/${memberId}/invite.mp4`;
-}
-
-export function getPublicVideoBucketRef(
-  config: Config,
-  storage: BucketStorage
-) {
-  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
-}
-
 export async function moveVideo(
   targetVideoRefs: { video: Storage.File; thumbnail: Storage.File },
   sourceVideoRefs: { video: Storage.File; thumbnail: Storage.File },
@@ -211,8 +125,112 @@ export async function moveVideo(
   }
 }
 
+// ----------------------------
+// Legacy compatibility methods
+// ----------------------------
+
 /**
- * For migration from legacy in sendInvite and migration scripts.
+ * Legacy compatibility method to copy private invite videos to new non-legacy
+ * locations, and return a new-style video reference pointing to the new public,
+ * referenceId-addressed video location.
+ */
+export async function LEGACY_createVideoReferenceForInviteVideo(
+  config: Config,
+  storage: BucketStorage,
+  videoData:
+    | { videoReference: VideoReference["content"] }
+    | { videoToken: string }
+): Promise<VideoReference> {
+  if ("videoReference" in videoData) {
+    // technically, this breaks backwards compatibility since we're not copying
+    // the new video location to the old one; but the only people who would
+    // experience this is people who are joining Raha but already somehow have
+    // an outdated version of the app installed. Pretty unlikely, so not
+    // worrying about copying the video over; failure case is that the invite
+    // video doesn't show up when signing up.
+    return createVideoReference(videoData.videoReference);
+  }
+
+  // then we will see if this is a legacy request.
+
+  if (!("videoToken" in videoData) || !videoData.videoToken) {
+    throw new Error(
+      "Unexpected: could not retrieve video reference from send invite API call."
+    );
+  }
+
+  const newVideoReferenceId = generateId();
+
+  // we assume this is a legacy request. Copy the legacy video to the new
+  // video reference location
+  await LEGACY_COMPAT_movePrivateInviteVideoToNewPublicVideoReferencesBucket({
+    config,
+    storage,
+    newVideoReferenceId,
+    privateVideoToken: videoData.videoToken,
+    removeOriginal: false
+  });
+
+  const paths = videoPaths(newVideoReferenceId);
+
+  return {
+    id: newVideoReferenceId,
+    content: {
+      kind: MediaReferenceKind.VIDEO,
+      url: getPublicUrlForPath(config, paths.video),
+      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
+    }
+  };
+}
+
+/**
+ * Legacy getter for invite videos at canonical location based on a member's
+ * uid, instead of the new videoReference ids.
+ */
+function LEGACY_getPublicInviteVideoRefForMember(
+  config: Config,
+  storage: BucketStorage,
+  uid: string
+): Storage.File {
+  return getPublicVideoBucketRef(config, storage).file(`${uid}/invite.mp4`);
+}
+
+/**
+ * Legacy getter for invite videos' thumbnails at canonical location based on a
+ * member's uid, instead of the new videoReference ids.
+ */
+function LEGACY_getPublicInviteVideoThumbnailRefForMember(
+  config: Config,
+  storage: BucketStorage,
+  uid: string
+): Storage.File {
+  return getPublicVideoBucketRef(config, storage).file(
+    `${uid}/invite.mp4.thumb.jpg`
+  );
+}
+
+export function getPublicInviteVideoUrlForMember(
+  config: Config,
+  memberId: string
+): string {
+  return `https://storage.googleapis.com/${
+    config.publicVideoBucket
+  }/${memberId}/invite.mp4`;
+}
+
+export function getPublicVideoBucketRef(
+  config: Config,
+  storage: BucketStorage
+) {
+  return (storage as Storage.Storage).bucket(config.publicVideoBucket);
+}
+
+/**
+ * Legacy compatibility method that moves a video from the legacy private invite
+ * video bucket to the new, global public vidoeReference bucket. Necessary when
+ * old clients that store videos in the legacy locations send an invite, so that
+ * new clients that expect it from the videoReference bucket will be able to
+ * access it.
  *
  * Invite videos used to be stored in a private bucket, addressed by a "video
  * token" selected by the client app, which in turn was saved as the
@@ -220,7 +238,7 @@ export async function moveVideo(
  * private video to that location, and refer to that new public video in a
  * videoReference object on the new invite operation.
  */
-export async function movePrivateInviteVideoToPublicBucket({
+export async function LEGACY_COMPAT_movePrivateInviteVideoToNewPublicVideoReferencesBucket({
   config,
   storage,
   newVideoReferenceId,
@@ -252,12 +270,14 @@ export async function movePrivateInviteVideoToPublicBucket({
 }
 
 /**
+ * Legacy method that moves a video from the legacy private invite video bucket
+ * to the legacy per-member public identity video bucket. This ensures old
+ * clients will still be able to access videos where they expect to find them.
+ *
  * Expects the video to be at /private-video/<videoToken>/video.mp4.
  * Video is moved to /<publicBucket>/<memberUid>/invite.mp4.
- * TODO: Remove this once all invite videos have been moved to tokenized locations
- * and tokens recorded on operations/members.
  */
-export async function movePrivateVideoToPublicInviteVideo(
+export async function LEGACY_movePrivateInviteVideoToPublicInviteVideo(
   config: Config,
   storage: BucketStorage,
   memberUid: string,
@@ -265,8 +285,8 @@ export async function movePrivateVideoToPublicInviteVideo(
   removeOriginal: boolean
 ): Promise<void> {
   const publicVideoRefs = {
-    video: getPublicInviteVideoRefForMember(config, storage, memberUid),
-    thumbnail: getPublicInviteVideoThumbnailRefForMember(
+    video: LEGACY_getPublicInviteVideoRefForMember(config, storage, memberUid),
+    thumbnail: LEGACY_getPublicInviteVideoThumbnailRefForMember(
       config,
       storage,
       memberUid
@@ -286,11 +306,11 @@ export async function movePrivateVideoToPublicInviteVideo(
   await moveVideo(publicVideoRefs, privateVideoRefs, removeOriginal);
 }
 
-export function getPublicUrlForPath(config: Config, path: string): string {
-  return `https://storage.googleapis.com/${config.publicVideoBucket}/${path}`;
-}
-
-export function getPublicUrlForMemberAndToken(
+/**
+ * Legacy method to get the invite URL corresponding to a member, addressed by
+ * their user ID and a video token.
+ */
+export function LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
   config: Config,
   memberUid: string,
   videoToken: string

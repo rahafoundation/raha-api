@@ -21,7 +21,7 @@ import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import {
   BucketStorage,
   getPublicInviteVideoUrlForMember,
-  movePrivateVideoToPublicInviteVideo
+  LEGACY_movePrivateInviteVideoToPublicInviteVideo
 } from "../../helpers/legacyVideoMethods";
 
 interface SgClient {
@@ -149,7 +149,7 @@ async function _createInvitedMember(
   );
   transaction.create(membersCollection.doc(loggedInUid), newMember);
 
-  movePrivateVideoToPublicInviteVideo(
+  LEGACY_movePrivateInviteVideoToPublicInviteVideo(
     config,
     storage,
     loggedInUid,
@@ -201,7 +201,7 @@ async function _createUninvitedMember(
   const newMemberRef = membersCollection.doc(loggedInUid);
   transaction.create(newMemberRef, newMember);
 
-  movePrivateVideoToPublicInviteVideo(
+  LEGACY_movePrivateInviteVideoToPublicInviteVideo(
     config,
     storage,
     loggedInUid,

@@ -21,7 +21,7 @@ import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { Config } from "../../config/config";
 import { createApiRoute, OperationToInsert } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
-import { getPublicUrlForMemberAndToken } from "../../helpers/legacyVideoMethods";
+import { LEGACY_getPublicIdentityVideoUrlForMemberAndToken } from "../../helpers/legacyVideoMethods";
 
 type BucketStorage = adminStorage.Storage | Storage.Storage;
 
@@ -175,7 +175,7 @@ export const verify = (
         return existingVerifyOperations.docs[0].ref;
       }
 
-      const videoUrl = getPublicUrlForMemberAndToken(
+      const videoUrl = LEGACY_getPublicIdentityVideoUrlForMemberAndToken(
         config,
         loggedInUid,
         videoToken
