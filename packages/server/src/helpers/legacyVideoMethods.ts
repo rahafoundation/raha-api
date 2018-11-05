@@ -5,10 +5,78 @@ import * as httpStatus from "http-status";
 import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
 import { Config } from "../config/prod.config";
+import {
+  MediaReferenceKind,
+  VideoReference
+} from "@raha/api-shared/dist/models/MediaReference";
+import { generateId } from "./id";
 
 export type BucketStorage = adminStorage.Storage | Storage.Storage;
 
 const REFERENCE_ID_DIRNAME = "byReferenceId";
+
+// TODO: LEGACY [explicit-video-refs] once legacy stuff isn't required, move
+// this helper to a file not associated with legacy things
+/**
+ * Create a VideoReference from its content, generating a unique ID for it
+ */
+function createVideoReference(
+  content: VideoReference["content"]
+): VideoReference {
+  return {
+    id: generateId(),
+    content
+  };
+}
+
+export async function LEGACY_createVideoReferenceForInviteVideo(
+  config: Config,
+  storage: BucketStorage,
+  videoData:
+    | { videoReference: VideoReference["content"] }
+    | { videoToken: string }
+): Promise<VideoReference> {
+  if ("videoReference" in videoData) {
+    // technically, this breaks backwards compatibility since we're not copying
+    // the new video location to the old one; but the only people who would
+    // experience this is people who are joining Raha but already somehow have
+    // an outdated version of the app installed. Pretty unlikely, so not
+    // worrying about copying the video over; failure case is that the invite
+    // video doesn't show up when signing up.
+    return createVideoReference(videoData.videoReference);
+  }
+
+  // then we will see if this is a legacy request.
+
+  if (!("videoToken" in videoData) || !videoData.videoToken) {
+    throw new Error(
+      "Unexpected: could not retrieve video reference from send invite API call."
+    );
+  }
+
+  const newVideoReferenceId = generateId();
+
+  // we assume this is a legacy request. Copy the legacy video to the new
+  // video reference location
+  await movePrivateInviteVideoToPublicBucket({
+    config,
+    storage,
+    newVideoReferenceId,
+    privateVideoToken: videoData.videoToken,
+    removeOriginal: false
+  });
+
+  const paths = videoPaths(newVideoReferenceId);
+
+  return {
+    id: newVideoReferenceId,
+    content: {
+      kind: MediaReferenceKind.VIDEO,
+      url: getPublicUrlForPath(config, paths.video),
+      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
+    }
+  };
+}
 
 /**
  * Get videos by video reference ID

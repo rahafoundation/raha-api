@@ -11,17 +11,10 @@ import { OperationType } from "@raha/api-shared/dist/models/Operation";
 import { createApiRoute, OperationToInsert } from "..";
 import { Config } from "../../config/config";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
-import {
-  VideoReference,
-  MediaReferenceKind
-} from "@raha/api-shared/dist/models/MediaReference";
 import { generateId } from "../../helpers/id";
 import {
-  movePrivateVideoToPublicInviteVideo,
-  movePrivateInviteVideoToPublicBucket,
-  videoPaths,
-  getPublicUrlForPath,
-  BucketStorage
+  BucketStorage,
+  LEGACY_createVideoReferenceForInviteVideo
 } from "../../helpers/legacyVideoMethods";
 
 interface DynamicTemplateData {
@@ -39,65 +32,6 @@ interface EmailMessage {
   subject: string;
   dynamic_template_data: DynamicTemplateData;
   template_id: string;
-}
-
-function createVideoReference(
-  content: VideoReference["content"]
-): VideoReference {
-  return {
-    id: generateId(),
-    content
-  };
-}
-
-async function LEGACY_createVideoReference(
-  config: Config,
-  storage: BucketStorage,
-  body: SendInviteApiEndpoint["call"]["request"]["body"]
-): Promise<VideoReference> {
-  if ("videoReference" in body) {
-    // technically, this breaks backwards compatibility since we're not copying
-    // the new video location to the old one; but the only people who would
-    // experience this is people who are joining Raha but already somehow have
-    // an outdated version of the app installed. Pretty unlikely, so not
-    // worrying about copying the video over; failure case is that the invite
-    // video doesn't show up when signing up.
-    return createVideoReference(body.videoReference);
-  }
-
-  // then we will see if this is a legacy request.
-  const legacyBody: {
-    videoToken: string;
-  } = body;
-
-  if (!("videoToken" in legacyBody) || !legacyBody.videoToken) {
-    throw new Error(
-      "Unexpected: could not retrieve video reference from send invite API call."
-    );
-  }
-
-  const newVideoReferenceId = generateId();
-
-  // we assume this is a legacy request. Copy the legacy video to the new
-  // video reference location
-  await movePrivateInviteVideoToPublicBucket({
-    config,
-    storage,
-    newVideoReferenceId,
-    privateVideoToken: legacyBody.videoToken,
-    removeOriginal: false
-  });
-
-  const paths = videoPaths(newVideoReferenceId);
-
-  return {
-    id: newVideoReferenceId,
-    content: {
-      kind: MediaReferenceKind.VIDEO,
-      url: getPublicUrlForPath(config, paths.video),
-      thumbnailUrl: getPublicUrlForPath(config, paths.thumbnail)
-    }
-  };
 }
 
 export const sendInvite = ({
@@ -147,7 +81,7 @@ export const sendInvite = ({
     // TODO: LEGACY [explicit-video-refs] replace with just createVideoReference
     // once legacy support dropped
     // const videoReference = createVideoReference(call.body.videoReference);
-    const videoReference = await LEGACY_createVideoReference(
+    const videoReference = await LEGACY_createVideoReferenceForInviteVideo(
       config,
       storage,
       call.body
