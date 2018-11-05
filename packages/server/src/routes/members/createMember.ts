@@ -5,8 +5,7 @@ import { CollectionReference, Firestore } from "@google-cloud/firestore";
 import {
   OperationType,
   RequestVerificationOperation,
-  Operation,
-  CreateMemberOperationToBeCreated
+  Operation
 } from "@raha/api-shared/dist/models/Operation";
 import { InvalidInviteOperationError } from "@raha/api-shared/dist/errors/RahaApiError/members/createMember/InvalidInviteOperation";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
@@ -26,8 +25,13 @@ import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import {
   BucketStorage,
   LEGACY_getPublicInviteVideoUrlForMember,
-  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo
+  LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo,
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference
 } from "../../helpers/legacyVideoMethods";
+
+type MemberToInsert = MemberToBeCreated & {
+  created_at: firestore.FieldValue;
+};
 
 interface SgClient {
   request: (
@@ -84,7 +88,7 @@ async function _createInvitedMember({
   operationsCollection: CollectionReference;
   loggedInUid: string;
   requestBody: CreateMemberApiCallBody;
-}) {
+}): Promise<firestore.DocumentReference[]> {
   const { fullName, emailAddress, username, inviteToken } = requestBody;
   const inviteOperations = await operationsCollection
     .where("op_code", "==", OperationType.INVITE)
@@ -116,13 +120,24 @@ async function _createInvitedMember({
     throw new NotFoundError(requestInviteFromMemberId);
   }
 
-  const newCreateMemberOperation: CreateMemberOperationToBeCreated = {
+  // TODO: LEGACY [explicit-video-refs] once clients stop sending videoTokens
+  // referring to auth-restricted videos, we can just create videoReferences
+  // directly.
+  // this ensures that old clients that upload a video by token, also have their
+  // video copied to the new videoReferences dir.
+  const videoReference = await LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo(
+    { config, storage, videoData: requestBody }
+  );
+
+  const newCreateMemberOperation: OperationToInsert = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
     data: {
       username,
       full_name: fullName,
-      request_invite_from_member_id: requestInviteFromMemberId
+      request_invite_from_member_id: requestInviteFromMemberId,
+      videoReference,
+      video_url: videoReference.content.url
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
@@ -136,14 +151,11 @@ async function _createInvitedMember({
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
-  const newMember = {
+  const newMember: MemberToInsert = {
     username,
     full_name: fullName,
-    // TODO Remove or-check once we're sure all clients have upgraded to request email on signup.
-    // Updated client will have version number 0.0.6 for Android.
-    email_address: emailAddress || null,
+    email_address: emailAddress,
     email_address_is_verified: false,
-    request_invite_from_member_id: requestInviteFromMemberId,
     invite_confirmed: false,
     identity_video_url: LEGACY_getPublicInviteVideoUrlForMember(
       config,
@@ -161,20 +173,15 @@ async function _createInvitedMember({
   );
   transaction.create(membersCollection.doc(loggedInUid), newMember);
 
-  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
+  // TODO: LEGACY [explicit-video-refs] remove this once we no longer need to
+  // support old clients that expect videos to appear at the legacy identity
+  // video location
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference({
     config,
     storage,
-    loggedInUid,
-    videoToken,
-    // If the videoToken == the videoToken of the identity video, it's a joint
-    // video and the new member elected to use that video as their identity
-    // video (they didn't record a new one). So, leave the auth-restricted
-    // invite video in place so that the inviter can confirm it when they verify
-    // the new member.
-    // otherwise, we can just move it because the verifier will have to make a
-    // new verification video anyway.
-    videoToken !== inviteVideoToken
-  );
+    memberId: loggedInUid,
+    videoReference
+  });
 
   return [createMemberOperationRef, requestVerificationOperationRef];
 }
@@ -195,21 +202,24 @@ async function _createUninvitedMember({
   operationsCollection: CollectionReference;
   loggedInUid: string;
   requestBody: CreateMemberApiCallBody;
-}) {
+}): Promise<firestore.DocumentReference[]> {
   const { fullName, emailAddress, username } = requestBody;
-  const newCreateMemberOperation: CreateMemberOperationToBeCreated = {
+  const videoReference = await LEGACY_COMPAT_createVideoReferenceForAuthRestrictedVideo(
+    { config, storage, videoData: requestBody }
+  );
+
+  const newCreateMemberOperation: OperationToInsert = {
     creator_uid: loggedInUid,
     op_code: OperationType.CREATE_MEMBER,
     data: {
       username,
-      full_name: fullName
+      full_name: fullName,
+      videoReference,
+      video_url: videoReference.content.url
     },
     created_at: firestore.FieldValue.serverTimestamp()
   };
 
-  type MemberToInsert = MemberToBeCreated & {
-    created_at: firestore.FieldValue;
-  };
   const newMember: MemberToInsert = {
     username,
     full_name: fullName,
@@ -228,13 +238,15 @@ async function _createUninvitedMember({
   const newMemberRef = membersCollection.doc(loggedInUid);
   transaction.create(newMemberRef, newMember);
 
-  LEGACY_moveAuthRestrictedVideoToPublicIdentityVideo(
+  // TODO: LEGACY [explicit-video-refs] remove this once we no longer need to
+  // support old clients that expect videos to appear at the legacy identity
+  // video location
+  LEGACY_COMPAT_createLegacyIdentityVideoFromVideoReference({
     config,
     storage,
-    loggedInUid,
-    videoToken,
-    true
-  );
+    memberId: loggedInUid,
+    videoReference
+  });
 
   return [createMemberOperationRef];
 }
