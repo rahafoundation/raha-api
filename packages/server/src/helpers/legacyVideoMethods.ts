@@ -160,7 +160,7 @@ export async function moveVideo(
  * public non-legacy locations, and return a new-style video reference pointing
  * to the new public, referenceId-addressed video location.
  */
-export async function LEGACY_createVideoReferenceForInviteVideo(
+export async function LEGACY_COMPAT_createVideoReferenceForInviteVideo(
   config: Config,
   storage: BucketStorage,
   videoData:
@@ -189,7 +189,7 @@ export async function LEGACY_createVideoReferenceForInviteVideo(
 
   // we assume this is a legacy request. Copy the legacy video to the new
   // video reference location
-  await LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReferencesBucket({
+  await LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
     config,
     storage,
     newVideoReferenceId,
@@ -249,7 +249,7 @@ export function LEGACY_getPublicInviteVideoUrlForMember(
  * auth-restricted video to that location, and refer to that new public video in
  * a videoReference object on the new invite operation.
  */
-export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReferencesBucket({
+export async function LEGACY_COMPAT_moveAuthRestrictedVideoToNewPublicVideoReference({
   config,
   storage,
   newVideoReferenceId,

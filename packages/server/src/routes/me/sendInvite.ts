@@ -14,7 +14,7 @@ import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import { generateId } from "../../helpers/id";
 import {
   BucketStorage,
-  LEGACY_createVideoReferenceForInviteVideo
+  LEGACY_COMPAT_createVideoReferenceForInviteVideo
 } from "../../helpers/legacyVideoMethods";
 
 interface DynamicTemplateData {
@@ -81,7 +81,7 @@ export const sendInvite = ({
     // TODO: LEGACY [explicit-video-refs] replace with just createVideoReference
     // once legacy support dropped
     // const videoReference = createVideoReference(call.body.videoReference);
-    const videoReference = await LEGACY_createVideoReferenceForInviteVideo(
+    const videoReference = await LEGACY_COMPAT_createVideoReferenceForInviteVideo(
       config,
       storage,
       call.body
