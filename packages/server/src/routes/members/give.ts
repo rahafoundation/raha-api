@@ -12,7 +12,6 @@ import { GiveApiEndpoint } from "@raha/api-shared/dist/routes/members/definition
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
 
 import { createApiRoute, OperationToInsert } from "..";
-import { getMemberById } from "../../collections/members";
 import { sendPushNotification } from "../../helpers/sendPushNotification";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 
@@ -77,11 +76,10 @@ export const give = (
       );
 
       const memberToGiveToId = call.params.memberId;
-      const memberToGiveTo = await getMemberById(
-        membersCollection,
-        memberToGiveToId
+      const memberToGiveTo = await transaction.get(
+        membersCollection.doc(memberToGiveToId)
       );
-      if (!memberToGiveTo) {
+      if (!memberToGiveTo.exists) {
         throw new NotFoundError(memberToGiveToId);
       }
 
@@ -93,7 +91,7 @@ export const give = (
         membersCollection.doc(donationRecipientId)
       );
 
-      if (donationRecipient === undefined) {
+      if (!donationRecipient.exists) {
         throw new NotFoundError(
           donationRecipientId,
           "Donation recipient not found."
