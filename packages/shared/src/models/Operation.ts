@@ -61,13 +61,56 @@ export interface MintReferralBonusPayload {
   amount: string;
   invited_member_id: MemberId;
 }
+
+export interface MintReferralBonusOperation extends MintOperation {
+  data: MintReferralBonusPayload;
+}
+
+export interface MintBasicIncomeOperation extends MintOperation {
+  data: MintBasicIncomePayload;
+}
+
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
+
+export declare enum GiveType {
+  DIRECT_GIVE = "DIRECT_GIVE",
+  TIP = "TIP"
+}
+export interface DirectGiveMetadata {
+  type: GiveType.DIRECT_GIVE;
+  memo: string;
+}
+export interface TipMetadata {
+  type: GiveType.TIP;
+  memo: string;
+  target_operation: string;
+}
+
+export interface DirectGivePayload extends GivePayload {
+  metadata: DirectGiveMetadata;
+}
+
+export interface TipGivePayload extends GivePayload {
+  metadata: TipMetadata;
+}
+
+export interface DirectGiveOperation extends GiveOperation {
+  data: DirectGivePayload;
+}
+
+export interface TipGiveOperation extends GiveOperation {
+  data: TipGivePayload;
+}
+
 export interface GivePayload {
   to_uid: MemberId;
   amount: string;
-  memo: string;
   donation_to: MemberId;
   donation_amount: string;
+  metadata?: DirectGiveMetadata | TipMetadata;
+
+  // Deprecated in favor of metadata
+  memo: string;
 }
 
 export interface ToSaveOperationBase {
