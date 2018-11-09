@@ -222,9 +222,10 @@ function createRouter(routerConfig: {
   const { routes, preMiddleware, postMiddleware } = routerConfig;
   return routes.reduce((router, route) => {
     const { handler, location } = route;
-    const { uri, method } = location;
+    const { uri, method, authenticated } = location;
     const fullUri = path.join("/api/", uri);
     const routeHandlers = [
+      ...(authenticated ? [verifyFirebaseIdToken(admin)] : []),
       ...(preMiddleware || []),
       handler,
       ...(postMiddleware || [])
@@ -247,20 +248,11 @@ function createRouter(routerConfig: {
   }, new Router());
 }
 
-// Publicly accessible endpoints
-const publicRouter = createRouter({
-  routes: apiRoutes.filter(r => !r.location.authenticated)
+const apiRouter = createRouter({
+  routes: apiRoutes
 });
-app.use(publicRouter.routes());
-app.use(publicRouter.allowedMethods());
-
-// Authenticated endpoints
-const authenticatedRouter = createRouter({
-  routes: apiRoutes.filter(r => r.location.authenticated),
-  preMiddleware: [verifyFirebaseIdToken(admin)]
-});
-app.use(authenticatedRouter.routes());
-app.use(authenticatedRouter.allowedMethods());
+app.use(apiRouter.routes());
+app.use(apiRouter.allowedMethods());
 
 const port = process.env.PORT || 4000;
 app.listen(port);
