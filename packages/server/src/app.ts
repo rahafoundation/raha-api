@@ -214,22 +214,32 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   }
 ];
 
-function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
+function createRouter(routerConfig: {
+  routes: Array<RouteHandler<ApiLocation>>;
+  preMiddleware?: Koa.Middleware[];
+  postMiddleware?: Koa.Middleware[];
+}): Router {
+  const { routes, preMiddleware, postMiddleware } = routerConfig;
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method } = location;
     const fullUri = path.join("/api/", uri);
+    const routeHandlers = [
+      ...(preMiddleware || []),
+      handler,
+      ...(postMiddleware || [])
+    ];
     switch (method as HttpVerb) {
       case HttpVerb.GET:
-        return router.get(fullUri, handler);
+        return router.get(fullUri, ...routeHandlers);
       case HttpVerb.POST:
-        return router.post(fullUri, handler);
+        return router.post(fullUri, ...routeHandlers);
       case HttpVerb.PUT:
-        return router.put(fullUri, handler);
+        return router.put(fullUri, ...routeHandlers);
       case HttpVerb.PATCH:
-        return router.patch(fullUri, handler);
+        return router.patch(fullUri, ...routeHandlers);
       case HttpVerb.DELETE:
-        return router.delete(fullUri, handler);
+        return router.delete(fullUri, ...routeHandlers);
       default:
         // should be unreachable
         throw new Error("Invalid HTTP verb");
@@ -237,21 +247,18 @@ function createRouter(routes: Array<RouteHandler<ApiLocation>>): Router {
   }, new Router());
 }
 
-const publicRouter = createRouter(
-  apiRoutes.filter(r => !r.location.authenticated)
-);
-
+// Publicly accessible endpoints
+const publicRouter = createRouter({
+  routes: apiRoutes.filter(r => !r.location.authenticated)
+});
 app.use(publicRouter.routes());
 app.use(publicRouter.allowedMethods());
 
-// Put endpoints that don't need the user to be authenticated above this.
-app.use(verifyFirebaseIdToken(admin));
-// Put endpoints that do need the user to be authenticated below this.
-
-const authenticatedRouter = createRouter(
-  apiRoutes.filter(r => r.location.authenticated)
-);
-
+// Authenticated endpoints
+const authenticatedRouter = createRouter({
+  routes: apiRoutes.filter(r => r.location.authenticated),
+  preMiddleware: [verifyFirebaseIdToken(admin)]
+});
 app.use(authenticatedRouter.routes());
 app.use(authenticatedRouter.allowedMethods());
 
