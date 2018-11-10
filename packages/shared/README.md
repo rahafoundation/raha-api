@@ -47,6 +47,11 @@ npm publish
 
 Please follow [semver](https://semver.org) when choosing a version number.
 
+After publishing the new version, update the api-shared version that the
+server and client packages depend on, and create a PR with the updated version
+numbers (a commit updating the api-shared package.json version number should
+have automatically been created by npm).
+
 ## Testing
 
 Run `yarn test`.
