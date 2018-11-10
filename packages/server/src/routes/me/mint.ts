@@ -20,6 +20,7 @@ import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoi
 
 import { createApiRoute } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
+import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 
 const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
@@ -115,6 +116,14 @@ export const mint = (
       );
 
       const { type, amount } = call.body;
+
+      if (!type) {
+        throw new MissingParamsError(["type"]);
+      }
+      if (!amount) {
+        throw new MissingParamsError(["amount"]);
+      }
+
       // Round to 2 decimal places and using rounding mode 0 = round down.
       const bigAmount = new Big(amount).round(2, 0);
 
