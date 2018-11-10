@@ -44,7 +44,11 @@ npm publish
 
 Please follow [semver](https://semver.org) when choosing a version number.
 
-If you're getting Typescript errors related to `@raha/api-shared`, go to `packages/shared` and run `yarn build` first.
+If you're getting Typescript errors related to `@raha/api-shared`, go to
+`packages/shared` and run `yarn build` first.
+
+After publishing the new version, create a PR with the updated version number
+in package.json (the commit should have been automatically created by NPM).
 
 ## Testing
 
