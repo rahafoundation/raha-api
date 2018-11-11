@@ -121,7 +121,7 @@ export type TipApiCall = ApiCallDefinition<
   TipApiLocation["method"],
   TipApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; target_operation: string }
+  { amount: string; targetOperation: string }
 >;
 export type TipApiResponse = ApiResponseDefinition<
   201,

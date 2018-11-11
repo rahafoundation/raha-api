@@ -54,7 +54,7 @@ export function tip(
     request: {
       params: { memberId },
       // TODO: should this be round down to some precision?
-      body: { amount: amount.toString(), target_operation: targetOperation }
+      body: { amount: amount.toString(), targetOperation }
     }
   };
   return callApi<TipApiEndpoint>(apiBase, apiCall, authToken);

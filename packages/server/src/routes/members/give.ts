@@ -104,7 +104,7 @@ export const tip = (
   createApiRoute<TipApiEndpoint>(async (call, loggedInMemberToken) => {
     const metadata: TipMetadata = {
       type: GiveType.TIP,
-      target_operation: call.body.target_operation
+      targetOperation: call.body.targetOperation
     };
     return _createGiveOperationAndNotify(
       db,
