@@ -78,11 +78,11 @@ export declare enum GiveType {
 }
 export interface DirectGiveMetadata {
   type: GiveType.DIRECT_GIVE;
-  memo: string;
+  memo?: string;
 }
 export interface TipMetadata {
   type: GiveType.TIP;
-  memo: string;
+  memo?: string;
   target_operation: string;
 }
 
@@ -110,7 +110,7 @@ export interface GivePayload {
   metadata?: DirectGiveMetadata | TipMetadata;
 
   // Deprecated in favor of metadata
-  memo: string;
+  memo?: string;
 }
 
 export interface ToSaveOperationBase {

@@ -11,7 +11,8 @@ import {
   VerifyMemberApiEndpoint,
   ListMembersApiEndpoint,
   FlagMemberApiEndpoint,
-  ResolveFlagMemberApiEndpoint
+  ResolveFlagMemberApiEndpoint,
+  TipApiEndpoint
 } from "../../routes/members/definitions";
 import {
   MintApiEndpoint,
@@ -36,6 +37,7 @@ export enum ApiEndpointName {
   CREATE_MEMBER = "CREATE_MEMBER",
   TRUST_MEMBER = "TRUST_MEMBER",
   GIVE = "GIVE",
+  TIP = "TIP",
   VERIFY_MEMBER = "VERIFY_MEMBER",
   FLAG_MEMBER = "FLAG_MEMBER",
   RESOLVE_FLAG_MEMBER = "RESOLVE_FLAG_MEMBER",
@@ -59,6 +61,7 @@ export enum ApiEndpointUri {
   CREATE_MEMBER = "members/createMember",
   TRUST_MEMBER = "members/:memberId/trust",
   GIVE = "members/:memberId/give",
+  TIP = "members/:memberId/tip",
   VERIFY_MEMBER = "members/:memberId/verify",
   FLAG_MEMBER = "members/:memberId/flag",
   RESOLVE_FLAG_MEMBER = "members/:memberId/resolveFlag",
@@ -103,6 +106,7 @@ export type ApiEndpoint =
   | CreateMemberApiEndpoint
   | TrustMemberApiEndpoint
   | GiveApiEndpoint
+  | TipApiEndpoint
   | VerifyMemberApiEndpoint
   | FlagMemberApiEndpoint
   | ResolveFlagMemberApiEndpoint

@@ -106,6 +106,33 @@ export type GiveApiEndpoint = ApiEndpointDefinition<
   GiveApiResponse
 >;
 
+export type TipApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.TIP,
+  HttpVerb.POST,
+  true
+>;
+export const tipApiLocation: TipApiLocation = {
+  uri: ApiEndpointUri.TIP,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type TipApiCall = ApiCallDefinition<
+  TipApiLocation["uri"],
+  TipApiLocation["method"],
+  TipApiLocation["authenticated"],
+  { memberId: MemberId },
+  { amount: string; target_operation: string }
+>;
+export type TipApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+export type TipApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.TIP,
+  TipApiCall,
+  TipApiResponse
+>;
+
 export type CreateMemberApiLocation = ApiLocationDefinition<
   ApiEndpointUri.CREATE_MEMBER,
   HttpVerb.POST,
