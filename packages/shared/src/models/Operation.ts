@@ -83,7 +83,7 @@ export interface DirectGiveMetadata {
 export interface TipMetadata {
   type: GiveType.TIP;
   memo?: string;
-  targetOperation: string;
+  targetOperationId: OperationId;
 }
 
 export interface DirectGivePayload extends GivePayload {

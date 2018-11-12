@@ -1,6 +1,9 @@
 import { Big } from "big.js";
 
-import { MemberId } from "@raha/api-shared/dist/models/identifiers";
+import {
+  MemberId,
+  OperationId
+} from "@raha/api-shared/dist/models/identifiers";
 import {
   GiveApiEndpoint,
   GiveApiCall,
@@ -47,14 +50,14 @@ export function tip(
   authToken: string,
   memberId: MemberId,
   amount: Big,
-  targetOperation: string
+  targetOperationId: OperationId
 ) {
   const apiCall: TipApiCall = {
     location: tipApiLocation,
     request: {
       params: { memberId },
       // TODO: should this be round down to some precision?
-      body: { amount: amount.toString(), targetOperation }
+      body: { amount: amount.toString(), targetOperationId }
     }
   };
   return callApi<TipApiEndpoint>(apiBase, apiCall, authToken);

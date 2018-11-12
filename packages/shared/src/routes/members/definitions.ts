@@ -1,4 +1,4 @@
-import { MemberId } from "../../models/identifiers";
+import { MemberId, OperationId } from "../../models/identifiers";
 import {
   ApiCallDefinition,
   ApiResponseDefinition,
@@ -121,7 +121,7 @@ export type TipApiCall = ApiCallDefinition<
   TipApiLocation["method"],
   TipApiLocation["authenticated"],
   { memberId: MemberId },
-  { amount: string; targetOperation: string }
+  { amount: string; targetOperationId: OperationId }
 >;
 export type TipApiResponse = ApiResponseDefinition<
   201,

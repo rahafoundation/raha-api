@@ -24,6 +24,7 @@ import {
   ApiEndpoint,
   ApiResponseDefinition
 } from "@raha/api-shared/dist/routes/ApiEndpoint";
+import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 const DEFAULT_DONATION_RECIPIENT_UID = "RAHA";
 const DEFAULT_DONATION_RATE = 0.03;
@@ -104,7 +105,7 @@ export const tip = (
   createApiRoute<TipApiEndpoint>(async (call, loggedInMemberToken) => {
     const metadata: TipMetadata = {
       type: GiveType.TIP,
-      targetOperation: call.body.targetOperation
+      targetOperationId: call.body.targetOperationId
     };
     return _createGiveOperationAndNotify(
       db,
@@ -129,7 +130,7 @@ const _createGiveOperationAndNotify = async (
   operations: CollectionReference,
   fcmTokens: CollectionReference,
   loggedInMemberToken: auth.DecodedIdToken,
-  toMemberId: string,
+  toMemberId: MemberId,
   amount: string,
   metadata: DirectGiveMetadata | TipMetadata,
   // Deprecated, but need to handle for older clients
