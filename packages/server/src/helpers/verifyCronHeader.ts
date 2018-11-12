@@ -1,6 +1,7 @@
 import { Middleware } from "koa";
+import { HttpApiError } from "@raha/api-shared/dist/errors/HttpApiError";
 
-const CRON_HEADER_NAME = "X-Appengine-Cron";
+const CRON_HEADER_NAME = "x-appengine-cron";
 
 /**
  * Middleware that verifies the presence of the X-Appengine-Cron header.
@@ -11,9 +12,12 @@ const CRON_HEADER_NAME = "X-Appengine-Cron";
  */
 const verifyCronHeader: Middleware = async (ctx, next) => {
   const { headers } = ctx;
+  console.log(headers);
   if (headers[CRON_HEADER_NAME] !== "true") {
-    throw new Error(
-      "Cron request does not appear to originate from AppEngine!"
+    throw new HttpApiError(
+      403,
+      "Cron request does not appear to originate from AppEngine!",
+      {}
     );
   }
   return next();
