@@ -37,8 +37,8 @@
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
     "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test",
-    "deploy-prod-cron": "gcloud app deploy yarn.cron --project=raha-5395e",
-    "deploy-test-cron": "gcloud app deploy yarn.cron --project=raha-test"
+    "deploy-prod-cron": "gcloud app deploy cron.yaml --project=raha-5395e",
+    "deploy-test-cron": "gcloud app deploy cron.yaml --project=raha-test"
   },
   "devDependencies": {
     "@types/jest": "^23.3.0",
