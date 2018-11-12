@@ -72,7 +72,7 @@ export interface MintBasicIncomeOperation extends MintOperation {
 
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
 
-export declare enum GiveType {
+export enum GiveType {
   DIRECT_GIVE = "DIRECT_GIVE",
   TIP = "TIP"
 }
