@@ -1,0 +1,4 @@
+cron:
+  - description: "test"
+    url: /cron/notifyOnUnminted
+    schedule: every 5 minutes

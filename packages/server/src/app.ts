@@ -18,6 +18,7 @@ import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
 import * as ssoRoutes from "./routes/sso";
+import * as cronRouteHandlers from "./routes/cron";
 
 import { config } from "./config/config";
 import { sendgridApiKey } from "./config/DO_NOT_COMMIT.secrets.config";
@@ -44,6 +45,8 @@ import {
   editMemberApiLocation
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
+import { verifyCronHeader } from "./helpers/verifyCronHeader";
+import { cronNotifyOnUnmintedApiLocation } from "@raha/api-shared/dist/routes/cron/definitions";
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
@@ -214,16 +217,30 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   }
 ];
 
+// List of all routes that handle AppEngine cron jobs.
+const cronRoutes: Array<RouteHandler<ApiLocation>> = [
+  {
+    location: cronNotifyOnUnmintedApiLocation,
+    handler: cronRouteHandlers.notifyOnUnminted(
+      db,
+      messaging,
+      fmcTokensCollection,
+      membersCollection
+    )
+  }
+];
+
 function createRouter(routerConfig: {
+  prefix: string;
   routes: Array<RouteHandler<ApiLocation>>;
   preMiddleware?: Koa.Middleware[];
   postMiddleware?: Koa.Middleware[];
 }): Router {
-  const { routes, preMiddleware, postMiddleware } = routerConfig;
+  const { prefix, routes, preMiddleware, postMiddleware } = routerConfig;
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method, authenticated } = location;
-    const fullUri = path.join("/api/", uri);
+    const fullUri = path.join(`/${prefix}/`, uri);
     const routeHandlers = [
       ...(authenticated ? [verifyFirebaseIdToken(admin)] : []),
       ...(preMiddleware || []),
@@ -249,10 +266,19 @@ function createRouter(routerConfig: {
 }
 
 const apiRouter = createRouter({
+  prefix: "api",
   routes: apiRoutes
 });
 app.use(apiRouter.routes());
 app.use(apiRouter.allowedMethods());
+
+const cronRouter = createRouter({
+  prefix: "cron",
+  routes: cronRoutes,
+  preMiddleware: [verifyCronHeader]
+});
+app.use(cronRouter.routes());
+app.use(cronRouter.allowedMethods());
 
 const port = process.env.PORT || 4000;
 app.listen(port);

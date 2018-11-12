@@ -13,7 +13,7 @@
     "@google-cloud/firestore": "^0.15.4",
     "@google-cloud/storage": "^1.6.0",
     "@koa/cors": "2",
-    "@raha/api-shared": "^0.1.19",
+    "@raha/api-shared": "^0.1.21",
     "@sendgrid/client": "^6.3.0",
     "@sendgrid/mail": "^6.2.1",
     "@types/big.js": "^4.0.4",
@@ -36,7 +36,9 @@
     "start:dev": "yarn build && concurrently --names \"BUILD,SERVER\" \"yarn build:nodelete --watch\" \"NODE_ENV=development nodemon --watch 'dist/' --ext js,ts --ignore 'dist/**/*.test.(js,ts)' dist/app.js\"",
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
-    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
+    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test",
+    "deploy-prod-cron": "gcloud app deploy cron.yaml --project=raha-5395e",
+    "deploy-test-cron": "gcloud app deploy cron.yaml --project=raha-test"
   },
   "devDependencies": {
     "@types/jest": "^23.3.0",
