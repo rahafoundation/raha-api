@@ -196,10 +196,10 @@ const _createGiveOperationAndNotify = async (
       data: {
         to_uid: memberToGiveToId,
         amount: toAmount.toString(),
-        memo,
         donation_to: donationRecipient.id,
         donation_amount: donationAmount.toString(),
-        metadata
+        metadata,
+        ...(memo && [memo])
       },
       created_at: firestore.FieldValue.serverTimestamp()
     };
