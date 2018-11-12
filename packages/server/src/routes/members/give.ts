@@ -39,7 +39,7 @@ async function _notifyGiveRecipient(
   giveOperation: GiveOperation
 ) {
   const { id, creator_uid, data } = giveOperation;
-  const { to_uid, amount, memo } = data;
+  const { to_uid, amount, donation_amount, memo } = data;
 
   const fromMember = await members.doc(creator_uid).get();
   const toMember = await members.doc(to_uid).get();
@@ -50,13 +50,14 @@ async function _notifyGiveRecipient(
     );
   }
   const toMemberId = toMember.id;
+  const displayAmount = new Big(amount).plus(donation_amount).toString();
 
   await sendPushNotification(
     messaging,
     fcmTokens,
     toMemberId,
     "You received Raha!",
-    `${fromMember.get("full_name")} gave you ${amount} Raha${
+    `${fromMember.get("full_name")} gave you ${displayAmount} Raha${
       memo ? ` for ${memo}` : ""
     }.`
   );
