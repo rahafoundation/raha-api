@@ -39,7 +39,7 @@ export type CronNotifyOnUnmintedApiResponse = ApiResponseDefinition<
 >;
 
 export type CronNotifyOnUnmintedApiEndpoint = ApiEndpointDefinition<
-  ApiEndpointName.SSO_DISCOURSE,
+  ApiEndpointName.CRON_NOTIFY_ON_UNMINTED,
   CronNotifyOnUnmintedApiCall,
   CronNotifyOnUnmintedApiResponse
 >;
