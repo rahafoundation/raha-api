@@ -25,6 +25,7 @@ import {
 } from "../../routes/me/definitions";
 import { ListOperationsApiEndpoint } from "../../routes/operations/definitions";
 import { SSODiscourseApiEndpoint } from "../../routes/sso/definitions";
+import { CronNotifyOnUnmintedApiEndpoint } from "../cron/definitions";
 
 /**
  * Canonical name of an endpoint you can query.
@@ -50,7 +51,9 @@ export enum ApiEndpointName {
   CLEAR_FCM_TOKEN = "CLEAR_FCM_TOKEN",
   SET_FCM_TOKEN = "SET_FCM_TOKEN",
   // sso
-  SSO_DISCOURSE = "SSO_DISCOURSE"
+  SSO_DISCOURSE = "SSO_DISCOURSE",
+  // cron
+  CRON_NOTIFY_ON_UNMINTED = "SSO_NOTIFY_ON_UNMINTED"
 }
 
 export enum ApiEndpointUri {
@@ -74,7 +77,9 @@ export enum ApiEndpointUri {
   CLEAR_FCM_TOKEN = "me/clearFcmToken",
   SET_FCM_TOKEN = "me/setFcmToken",
   // sso
-  SSO_DISCOURSE = "sso/discourse"
+  SSO_DISCOURSE = "sso/discourse",
+  // cron
+  CRON_NOTIFY_ON_UNMINTED = "cron/notifyOnUnminted"
 }
 
 /**
@@ -119,7 +124,9 @@ export type ApiEndpoint =
   | ClearFcmTokenApiEndpoint
   | SetFcmTokenApiEndpoint
   // sso
-  | SSODiscourseApiEndpoint;
+  | SSODiscourseApiEndpoint
+  // cron
+  | CronNotifyOnUnmintedApiEndpoint;
 
 export { ApiCallDefinition } from "./ApiCall";
 export { ApiResponseDefinition } from "./ApiResponse";

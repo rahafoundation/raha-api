@@ -36,7 +36,9 @@
     "start:dev": "yarn build && concurrently --names \"BUILD,SERVER\" \"yarn build:nodelete --watch\" \"NODE_ENV=development nodemon --watch 'dist/' --ext js,ts --ignore 'dist/**/*.test.(js,ts)' dist/app.js\"",
     "test": "jest",
     "deploy-prod": "yarn use-prod-config && yarn build && gcloud app deploy --project=raha-5395e",
-    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test"
+    "deploy-test": "yarn use-test-config && yarn build && gcloud app deploy --project=raha-test",
+    "deploy-prod-cron": "gcloud app deploy yarn.cron --project=raha-5395e",
+    "deploy-test-cron": "gcloud app deploy yarn.cron --project=raha-test"
   },
   "devDependencies": {
     "@types/jest": "^23.3.0",

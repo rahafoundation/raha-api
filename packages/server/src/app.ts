@@ -44,6 +44,7 @@ import {
   editMemberApiLocation
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
+import { verifyCronHeader } from "./helpers/verifyCronHeader";
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
@@ -214,6 +215,9 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   }
 ];
 
+// List of all routes that handle AppEngine cron jobs.
+const cronRoutes: Array<RouteHandler<ApiLocation>> = [];
+
 function createRouter(routerConfig: {
   routes: Array<RouteHandler<ApiLocation>>;
   preMiddleware?: Koa.Middleware[];
@@ -253,6 +257,13 @@ const apiRouter = createRouter({
 });
 app.use(apiRouter.routes());
 app.use(apiRouter.allowedMethods());
+
+const cronRouter = createRouter({
+  routes: cronRoutes,
+  preMiddleware: [verifyCronHeader]
+});
+app.use(cronRouter.routes());
+app.use(cronRouter.allowedMethods());
 
 const port = process.env.PORT || 4000;
 app.listen(port);
