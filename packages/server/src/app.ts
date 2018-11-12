@@ -231,15 +231,16 @@ const cronRoutes: Array<RouteHandler<ApiLocation>> = [
 ];
 
 function createRouter(routerConfig: {
+  prefix: string;
   routes: Array<RouteHandler<ApiLocation>>;
   preMiddleware?: Koa.Middleware[];
   postMiddleware?: Koa.Middleware[];
 }): Router {
-  const { routes, preMiddleware, postMiddleware } = routerConfig;
+  const { prefix, routes, preMiddleware, postMiddleware } = routerConfig;
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method, authenticated } = location;
-    const fullUri = path.join("/api/", uri);
+    const fullUri = path.join(`/${prefix}/`, uri);
     const routeHandlers = [
       ...(authenticated ? [verifyFirebaseIdToken(admin)] : []),
       ...(preMiddleware || []),
@@ -265,12 +266,14 @@ function createRouter(routerConfig: {
 }
 
 const apiRouter = createRouter({
+  prefix: "api",
   routes: apiRoutes
 });
 app.use(apiRouter.routes());
 app.use(apiRouter.allowedMethods());
 
 const cronRouter = createRouter({
+  prefix: "cron",
   routes: cronRoutes,
   preMiddleware: [verifyCronHeader]
 });
