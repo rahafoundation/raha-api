@@ -18,6 +18,7 @@ import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
 import * as ssoRoutes from "./routes/sso";
+import * as cronRouteHandlers from "./routes/cron";
 
 import { config } from "./config/config";
 import { sendgridApiKey } from "./config/DO_NOT_COMMIT.secrets.config";
@@ -45,6 +46,7 @@ import {
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
 import { verifyCronHeader } from "./helpers/verifyCronHeader";
+import { cronNotifyOnUnmintedApiLocation } from "@raha/api-shared/dist/routes/cron/definitions";
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
@@ -216,7 +218,17 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
 ];
 
 // List of all routes that handle AppEngine cron jobs.
-const cronRoutes: Array<RouteHandler<ApiLocation>> = [];
+const cronRoutes: Array<RouteHandler<ApiLocation>> = [
+  {
+    location: cronNotifyOnUnmintedApiLocation,
+    handler: cronRouteHandlers.notifyOnUnminted(
+      db,
+      messaging,
+      fmcTokensCollection,
+      membersCollection
+    )
+  }
+];
 
 function createRouter(routerConfig: {
   routes: Array<RouteHandler<ApiLocation>>;
