@@ -79,7 +79,7 @@ export enum ApiEndpointUri {
   // sso
   SSO_DISCOURSE = "sso/discourse",
   // cron
-  CRON_NOTIFY_ON_UNMINTED = "cron/notifyOnUnminted"
+  CRON_NOTIFY_ON_UNMINTED = "notifyOnUnminted"
 }
 
 /**

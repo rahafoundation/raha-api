@@ -11,7 +11,7 @@ const CRON_HEADER_NAME = "X-Appengine-Cron";
  */
 const verifyCronHeader: Middleware = async (ctx, next) => {
   const { headers } = ctx;
-  if (headers[CRON_HEADER_NAME] !== true) {
+  if (headers[CRON_HEADER_NAME] !== "true") {
     throw new Error(
       "Cron request does not appear to originate from AppEngine!"
     );
