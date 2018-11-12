@@ -1,4 +1,4 @@
-import { MemberId } from "../../models/identifiers";
+import { MemberId, OperationId } from "../../models/identifiers";
 import {
   ApiCallDefinition,
   ApiResponseDefinition,
@@ -104,6 +104,33 @@ export type GiveApiEndpoint = ApiEndpointDefinition<
   ApiEndpointName.GIVE,
   GiveApiCall,
   GiveApiResponse
+>;
+
+export type TipApiLocation = ApiLocationDefinition<
+  ApiEndpointUri.TIP,
+  HttpVerb.POST,
+  true
+>;
+export const tipApiLocation: TipApiLocation = {
+  uri: ApiEndpointUri.TIP,
+  method: HttpVerb.POST,
+  authenticated: true
+};
+export type TipApiCall = ApiCallDefinition<
+  TipApiLocation["uri"],
+  TipApiLocation["method"],
+  TipApiLocation["authenticated"],
+  { memberId: MemberId },
+  { amount: string; targetOperationId: OperationId }
+>;
+export type TipApiResponse = ApiResponseDefinition<
+  201,
+  OperationApiResponseBody
+>;
+export type TipApiEndpoint = ApiEndpointDefinition<
+  ApiEndpointName.TIP,
+  TipApiCall,
+  TipApiResponse
 >;
 
 export type CreateMemberApiLocation = ApiLocationDefinition<

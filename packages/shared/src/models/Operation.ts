@@ -72,18 +72,18 @@ export interface MintBasicIncomeOperation extends MintOperation {
 
 export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
 
-export declare enum GiveType {
+export enum GiveType {
   DIRECT_GIVE = "DIRECT_GIVE",
   TIP = "TIP"
 }
 export interface DirectGiveMetadata {
   type: GiveType.DIRECT_GIVE;
-  memo: string;
+  memo?: string;
 }
 export interface TipMetadata {
   type: GiveType.TIP;
-  memo: string;
-  target_operation: string;
+  memo?: string;
+  targetOperationId: OperationId;
 }
 
 export interface DirectGivePayload extends GivePayload {
@@ -110,7 +110,7 @@ export interface GivePayload {
   metadata?: DirectGiveMetadata | TipMetadata;
 
   // Deprecated in favor of metadata
-  memo: string;
+  memo?: string;
 }
 
 export interface ToSaveOperationBase {
