@@ -21,25 +21,15 @@ import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoi
 import { createApiRoute } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { calculateMaxMintableForMember } from "../../helpers/calculateMaxMintableForMember";
 
-const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
-const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
 function _mintBasicIncome(
   loggedInMember: firestore.DocumentSnapshot,
   bigAmount: Big
 ): MintBasicIncomePayload {
-  const lastMinted: number =
-    loggedInMember.get("last_minted") ||
-    loggedInMember.get("created_at") ||
-    Date.now();
-  const now = Date.now();
-  const sinceLastMinted = now - lastMinted;
-  const maxMintable = new Big(RAHA_UBI_WEEKLY_RATE)
-    .times(sinceLastMinted)
-    .div(MILLISECONDS_PER_WEEK);
-
+  const maxMintable = calculateMaxMintableForMember(loggedInMember);
   if (bigAmount.gt(maxMintable)) {
     throw new MintAmountTooLargeError(bigAmount, maxMintable);
   }
