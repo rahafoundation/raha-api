@@ -3,7 +3,7 @@ import { CollectionReference } from "@google-cloud/firestore";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
 /**
- * Send a push notification. Uses Firebase Cloud Messaging.
+ * Send a push notification. Uses Firebase Cloud Messaging. Returns true if message sent and false otherwise.
  */
 export async function sendPushNotification(
   messaging: adminMessaging.Messaging,
@@ -25,5 +25,7 @@ export async function sendPushNotification(
       },
       token: fcmToken
     });
+    return true;
   }
+  return false;
 }
