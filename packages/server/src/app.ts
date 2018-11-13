@@ -33,7 +33,8 @@ import {
   verifyMemberApiLocation,
   listMembersApiLocation,
   flagMemberApiLocation,
-  resolveFlagMemberApiLocation
+  resolveFlagMemberApiLocation,
+  tipApiLocation
 } from "@raha/api-shared/dist/routes/members/definitions";
 import {
   sendInviteApiLocation,
@@ -137,6 +138,16 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: giveApiLocation,
     handler: membersRoutes.give(
+      db,
+      messaging,
+      membersCollection,
+      operationsCollection,
+      fmcTokensCollection
+    )
+  },
+  {
+    location: tipApiLocation,
+    handler: membersRoutes.tip(
       db,
       messaging,
       membersCollection,
