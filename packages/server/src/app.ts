@@ -195,7 +195,12 @@ const apiRoutes: Array<RouteHandler<ApiLocation>> = [
   },
   {
     location: mintApiLocation,
-    handler: meRoutes.mint(db, membersCollection, operationsCollection)
+    handler: meRoutes.mint(
+      db,
+      membersCollection,
+      notificationHistoryCollection,
+      operationsCollection
+    )
   },
   {
     location: validateMobileNumberApiLocation,

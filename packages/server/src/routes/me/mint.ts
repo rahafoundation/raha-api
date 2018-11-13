@@ -91,12 +91,16 @@ async function _mintReferralBonus(
 export const mint = (
   db: Firestore,
   members: CollectionReference,
+  notificationHistory: CollectionReference,
   operations: CollectionReference
 ) =>
   createApiRoute<MintApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(members.doc(loggedInUid));
+      const loggedInMemberNotificationHistory = await transaction.get(
+        notificationHistory.doc(loggedInUid)
+      );
 
       await validateAbilityToCreateOperation(
         OperationType.MINT,
@@ -153,12 +157,22 @@ export const mint = (
           : {
               raha_balance: newCreatorBalance.toString()
             };
+      // clear notification history for unminted basic income if minting basic income
+      const memberNotificationHistoryUpdate = {
+        ...loggedInMemberNotificationHistory.data(),
+        ...(type === MintType.BASIC_INCOME ? { notifiedOnUnminted: false } : {})
+      };
       transaction
         .update(loggedInMember.ref, {
           last_updated_at: firestore.FieldValue.serverTimestamp(),
           ...memberUpdate
         })
-        .set(newOperationRef, newOperation);
+        .set(newOperationRef, newOperation)
+        .set(
+          loggedInMemberNotificationHistory.ref,
+          memberNotificationHistoryUpdate
+        );
+
       return newOperationRef;
     });
 
