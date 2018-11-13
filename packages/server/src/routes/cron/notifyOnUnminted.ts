@@ -16,7 +16,8 @@ import {
 } from "../../helpers/sendPushNotification";
 import {
   calculateMaxMintableForMember,
-  MINT_CAP
+  MINT_CAP,
+  isPastMintCapTransitionDate
 } from "../../helpers/calculateMaxMintableForMember";
 
 // Notify people if it is 12 o'clock in their local time.
@@ -92,11 +93,16 @@ export const notifyOnUnminted = (
             notificationHistoryCollection.doc(member.id)
           );
           if (await shouldNotify(auth, member, memberNotificationHistory)) {
-            const title = `Mint ${calculateMaxMintableForMember(member)
-              .round(2, 0)
-              .toString()} Raha before it's too late!`;
-            const body =
-              "Your mintable amount will be capped at 40 Raha on Nov 15th. Tap this notification to mint now and avoid losing Raha!";
+            const isMintCapped = isPastMintCapTransitionDate();
+            const maxMintable = calculateMaxMintableForMember(
+              member
+            ).toString();
+            const title = isMintCapped
+              ? `Mint ${maxMintable} Raha now!`
+              : `Mint ${maxMintable} Raha before it's too late!`;
+            const body = isMintCapped
+              ? "You can't get any more basic income until you've minted. Tap to mint now and keep receiving your Raha!"
+              : "Your mintable amount will be capped at 40 Raha on Nov 15th. Tap this notification to mint now and avoid losing Raha!";
             try {
               if (
                 await sendPushNotification(
