@@ -66,10 +66,13 @@ const storage = credentialsPath ? admin.storage() : Storage();
 
 const messaging = admin.messaging();
 
+const auth = admin.auth();
+
 const db: Firestore = admin.firestore();
 const membersCollection = db.collection("members");
 const operationsCollection = db.collection("operations");
 const fmcTokensCollection = db.collection("firebaseCloudMessagingTokens");
+const notificationHistoryCollection = db.collection("notificationHistory");
 
 sgMail.setApiKey(sendgridApiKey);
 sgClient.setApiKey(sendgridApiKey);
@@ -222,10 +225,12 @@ const cronRoutes: Array<RouteHandler<ApiLocation>> = [
   {
     location: cronNotifyOnUnmintedApiLocation,
     handler: cronRouteHandlers.notifyOnUnminted(
+      auth,
       db,
       messaging,
+      membersCollection,
       fmcTokensCollection,
-      membersCollection
+      notificationHistoryCollection
     )
   }
 ];
