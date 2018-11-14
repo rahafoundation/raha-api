@@ -2,7 +2,7 @@ import { messaging as adminMessaging } from "firebase-admin";
 import { CollectionReference } from "@google-cloud/firestore";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 
-// Currently this is copied from raha-mobile//deeplinking.ts.
+// This is copied from raha-mobile//deeplinking.ts.
 export enum DEEPLINK_ROUTES {
   profileTab = "profileTab",
   walletTab = "walletTab"
