@@ -12,7 +12,6 @@ const CRON_HEADER_NAME = "x-appengine-cron";
  */
 const verifyCronHeader: Middleware = async (ctx, next) => {
   const { headers } = ctx;
-  console.log(headers);
   if (headers[CRON_HEADER_NAME] !== "true") {
     throw new HttpApiError(
       403,
