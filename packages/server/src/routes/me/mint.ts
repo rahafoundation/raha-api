@@ -21,25 +21,15 @@ import { OperationApiResponseBody } from "@raha/api-shared/dist/routes/ApiEndpoi
 import { createApiRoute } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
+import { calculateMaxMintableForMember } from "../../helpers/calculateMaxMintableForMember";
 
-const RAHA_UBI_WEEKLY_RATE = 10;
 const RAHA_REFERRAL_BONUS = 60;
-const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 
 function _mintBasicIncome(
   loggedInMember: firestore.DocumentSnapshot,
   bigAmount: Big
 ): MintBasicIncomePayload {
-  const lastMinted: number =
-    loggedInMember.get("last_minted") ||
-    loggedInMember.get("created_at") ||
-    Date.now();
-  const now = Date.now();
-  const sinceLastMinted = now - lastMinted;
-  const maxMintable = new Big(RAHA_UBI_WEEKLY_RATE)
-    .times(sinceLastMinted)
-    .div(MILLISECONDS_PER_WEEK);
-
+  const maxMintable = calculateMaxMintableForMember(loggedInMember);
   if (bigAmount.gt(maxMintable)) {
     throw new MintAmountTooLargeError(bigAmount, maxMintable);
   }
@@ -101,12 +91,16 @@ async function _mintReferralBonus(
 export const mint = (
   db: Firestore,
   members: CollectionReference,
+  notificationHistory: CollectionReference,
   operations: CollectionReference
 ) =>
   createApiRoute<MintApiEndpoint>(async (call, loggedInMemberToken) => {
     const newOperationReference = await db.runTransaction(async transaction => {
       const loggedInUid = loggedInMemberToken.uid;
       const loggedInMember = await transaction.get(members.doc(loggedInUid));
+      const loggedInMemberNotificationHistory = await transaction.get(
+        notificationHistory.doc(loggedInUid)
+      );
 
       await validateAbilityToCreateOperation(
         OperationType.MINT,
@@ -163,12 +157,24 @@ export const mint = (
           : {
               raha_balance: newCreatorBalance.toString()
             };
+      // clear notification history for unminted basic income if minting basic income
+      const memberNotificationHistoryUpdate = {
+        ...loggedInMemberNotificationHistory.data(),
+        ...(type === MintType.BASIC_INCOME
+          ? { notifiedOnUnmintedOverCap: false }
+          : {})
+      };
       transaction
         .update(loggedInMember.ref, {
           last_updated_at: firestore.FieldValue.serverTimestamp(),
           ...memberUpdate
         })
-        .set(newOperationRef, newOperation);
+        .set(newOperationRef, newOperation)
+        .set(
+          loggedInMemberNotificationHistory.ref,
+          memberNotificationHistoryUpdate
+        );
+
       return newOperationRef;
     });
 
