@@ -1,4 +1,4 @@
 cron:
   - description: "Notify members that they are about to hit their mint cap."
     url: /cron/notifyOnUnminted
-    schedule: every 1 hour
+    schedule: every 1 hours synchronized
