@@ -1,6 +1,7 @@
 import { DocumentSnapshot } from "@google-cloud/firestore";
 import Big from "big.js";
 
+// TODO put this and other important constants into shared package.
 const RAHA_UBI_WEEKLY_RATE = 10;
 const MILLISECONDS_PER_WEEK = 1000 * 60 * 60 * 24 * 7;
 // TODO enable this on the 11/15/2018.

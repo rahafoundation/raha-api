@@ -44,7 +44,7 @@ function getDefaultOffsetForPhoneNumber(
 
 /**
  * Return that we should notify the user if all the above is true:
- * * their max-mintable is >= the mint camp.
+ * * their max-mintable is >= the mint cap.
  * * they have an associated phone number (otherwise we can't notify them)
  * * their inferred local time is within the noon hour
  * * we haven't already notified them about their mintable amount
@@ -63,7 +63,7 @@ async function shouldNotify(
       const localTime = moment().utcOffset(offset || 0);
       if (localTime.hour() === HOUR_TO_NOTIFY) {
         if (memberNotificationHistory.exists) {
-          return !memberNotificationHistory.get("notifiedOnUnminted");
+          return !memberNotificationHistory.get("notifiedOnUnmintedOverCap");
         }
         return true;
       }
@@ -93,7 +93,7 @@ export const notifyOnUnminted = (
               .round(2, 0)
               .toString()} Raha before it's too late!`;
             const body =
-              "Your mintable amount will be capped at 40 Raha on November 15th. Tap this notification to mint now and avoid losing Raha!";
+              "Your mintable amount will be capped at 40 Raha on Nov 15th. Tap this notification to mint now and avoid losing Raha!";
             try {
               if (
                 await sendPushNotification(
@@ -106,7 +106,7 @@ export const notifyOnUnminted = (
               ) {
                 await transaction.set(memberNotificationHistory.ref, {
                   ...memberNotificationHistory.data,
-                  notifiedOnUnminted: true
+                  notifiedOnUnmintedOverCap: true
                 });
               }
             } catch (e) {

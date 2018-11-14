@@ -160,7 +160,9 @@ export const mint = (
       // clear notification history for unminted basic income if minting basic income
       const memberNotificationHistoryUpdate = {
         ...loggedInMemberNotificationHistory.data(),
-        ...(type === MintType.BASIC_INCOME ? { notifiedOnUnminted: false } : {})
+        ...(type === MintType.BASIC_INCOME
+          ? { notifiedOnUnmintedOverCap: false }
+          : {})
       };
       transaction
         .update(loggedInMember.ref, {
