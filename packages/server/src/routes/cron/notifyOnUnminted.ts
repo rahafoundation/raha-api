@@ -10,7 +10,10 @@ import * as moment from "moment";
 import { CronNotifyOnUnmintedApiEndpoint } from "@raha/api-shared/dist/routes/cron/definitions";
 
 import { createApiRoute } from "..";
-import { sendPushNotification } from "../../helpers/sendPushNotification";
+import {
+  sendPushNotification,
+  DEEPLINK_ROUTES
+} from "../../helpers/sendPushNotification";
 import {
   calculateMaxMintableForMember,
   MINT_CAP
@@ -101,7 +104,10 @@ export const notifyOnUnminted = (
                   fcmTokensCollection,
                   member.id,
                   title,
-                  body
+                  body,
+                  {
+                    deeplinkUrl: DEEPLINK_ROUTES.walletTab
+                  }
                 )
               ) {
                 await transaction.set(memberNotificationHistory.ref, {
