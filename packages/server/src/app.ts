@@ -13,7 +13,7 @@ import * as adminLib from "firebase-admin";
 
 import { getAdmin } from "./firebaseAdmin";
 import { handleErrors } from "./middleware";
-import { verifyFirebaseIdToken } from "./helpers/verifyFirebaseIdToken";
+import { verifyFirebaseIdToken } from "./middleware/verifyFirebaseIdToken";
 import * as meRoutes from "./routes/me";
 import * as membersRoutes from "./routes/members";
 import * as operationsRoutes from "./routes/operations";
@@ -46,8 +46,9 @@ import {
   editMemberApiLocation
 } from "@raha/api-shared/dist/routes/me/definitions";
 import { ssoDiscourseApiLocation } from "@raha/api-shared/dist/routes/sso/definitions";
-import { verifyCronHeader } from "./helpers/verifyCronHeader";
+import { verifyCronHeader } from "./middleware/verifyCronHeader";
 import { cronNotifyOnUnmintedApiLocation } from "@raha/api-shared/dist/routes/cron/definitions";
+import { blockSearchEngineIndexing } from "./middleware/blockSearchEngineIndexing";
 
 const isDevEnv = process.env.NODE_ENV === "development";
 const credentialsPathArg =
@@ -255,18 +256,17 @@ function createRouter(routerConfig: {
   prefix: string;
   routes: Array<RouteHandler<ApiLocation>>;
   preMiddleware?: Koa.Middleware[];
-  postMiddleware?: Koa.Middleware[];
 }): Router {
-  const { prefix, routes, preMiddleware, postMiddleware } = routerConfig;
+  const { prefix, routes, preMiddleware } = routerConfig;
   return routes.reduce((router, route) => {
     const { handler, location } = route;
     const { uri, method, authenticated } = location;
     const fullUri = path.join(`/${prefix}/`, uri);
     const routeHandlers = [
+      blockSearchEngineIndexing,
       ...(authenticated ? [verifyFirebaseIdToken(admin)] : []),
       ...(preMiddleware || []),
-      handler,
-      ...(postMiddleware || [])
+      handler
     ];
     switch (method as HttpVerb) {
       case HttpVerb.GET:
