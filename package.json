@@ -4,6 +4,6 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "./scripts/testAll.sh"
+    "test": "./scripts/buildTestAll.sh"
   }
 }
