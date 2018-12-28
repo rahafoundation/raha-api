@@ -19,7 +19,7 @@ export class AlreadyMintedInvitedBonus extends RahaApiError<
     return ERROR_CODE;
   }
 
-  constructor(amount: Big, allowedAmount: Big) {
+  constructor() {
     super(
       httpStatus.BAD_REQUEST,
       "You already claimed your bonus for being invited.",

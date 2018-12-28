@@ -49,7 +49,7 @@ async function _mintReferralBonus(
   bigAmount: Big,
   invitedMemberId: MemberId
 ): Promise<MintReferralBonusPayload> {
-  throwIfTooLarge(bigAmount, Config.REFERRAL_BONUS);
+  throwIfTooLarge(bigAmount, Config.getReferralBonus());
 
   const invitedMember = await transaction.get(members.doc(invitedMemberId));
 
