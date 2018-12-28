@@ -9,7 +9,7 @@ export interface MintAmountTooLargeErrorBody {
 }
 
 /**
- * Member attempts to give more Raha than they have available.
+ * Member attempts to mint more Raha than they can.
  */
 export class MintAmountTooLargeError extends RahaApiError<
   typeof ERROR_CODE,

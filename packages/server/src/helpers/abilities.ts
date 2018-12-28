@@ -14,6 +14,7 @@ export const VERIFICATIONS_REQUIRED_TO_FLAG = 5;
 
 /**
  * Returns whether a member has been verified.
+ * TODO should we cache is_verified on member object to prevent all these calls?
  */
 export async function isVerified(
   operations: CollectionReference,
@@ -45,28 +46,24 @@ export async function isInGoodStanding(
   member: DocumentSnapshot,
   transaction?: Transaction
 ) {
-  return (
-    (await isVerified(operations, member, transaction)) && !isFlagged(member)
-  );
+  if (isFlagged(member)) {
+    return false;
+  }
+  return isVerified(operations, member, transaction);
 }
 
 /**
  * Return whether or not the member can perform flag operations.
- *
- * This function only takes a MemberId and not a Member object to ensure that
- * it always retrieves the latest state from the Redux store. Passing a
- * Member object directly could result in stale data being used to determing
- * a member's status.
  */
 export async function canFlag(
   operations: CollectionReference,
   member: DocumentSnapshot,
   transaction?: Transaction
 ) {
-  return (
-    (await isInGoodStanding(operations, member, transaction)) &&
-    member.get("verifiedBy").size >= VERIFICATIONS_REQUIRED_TO_FLAG
-  );
+  if (member.get("verifiedBy").size < VERIFICATIONS_REQUIRED_TO_FLAG) {
+    return false;
+  }
+  return isInGoodStanding(operations, member, transaction);
 }
 
 export async function canCreateOperation(
@@ -116,7 +113,7 @@ export async function validateAbilityToCreateOperation(
   transaction?: Transaction,
   member?: DocumentSnapshot
 ) {
-  if (!canCreateOperation(operationType, operations, transaction, member)) {
+  if (!(await canCreateOperation(operationType, operations, transaction, member))) {
     throw new MemberDoesNotHaveRequiredAbilityError(operationType);
   }
 }

@@ -22,8 +22,7 @@ import { createApiRoute } from "..";
 import { validateAbilityToCreateOperation } from "../../helpers/abilities";
 import { MissingParamsError } from "@raha/api-shared/dist/errors/RahaApiError/MissingParamsError";
 import { calculateMaxMintableForMember } from "../../helpers/calculateMaxMintableForMember";
-
-const RAHA_REFERRAL_BONUS = 60;
+import { Config } from "@raha/api-shared/dist/helpers/Config";
 
 function _mintBasicIncome(
   loggedInMember: firestore.DocumentSnapshot,
@@ -48,6 +47,8 @@ async function _mintReferralBonus(
   bigAmount: Big,
   invitedMemberId: MemberId
 ): Promise<MintReferralBonusPayload> {
+  throwIfTooLarge(bigAmount, Config.REFERRAL_BONUS);
+
   const invitedMember = await transaction.get(members.doc(invitedMemberId));
 
   if (!invitedMember.exists) {
@@ -64,16 +65,11 @@ async function _mintReferralBonus(
     throw new NotVerifiedError(invitedMemberId);
   }
 
-  if (bigAmount.gt(RAHA_REFERRAL_BONUS)) {
-    throw new MintAmountTooLargeError(bigAmount, new Big(RAHA_REFERRAL_BONUS));
-  }
-
-  // Verify that bonus hasn't already been claimed.
+  // Verify that bonus for inviting this member hasn't been claimed by anyone.
   if (
     !(await transaction.get(
       operations
         .where("op_code", "==", OperationType.MINT)
-        .where("creator_uid", "==", loggedInMember.id)
         .where("data.type", "==", MintType.REFERRAL_BONUS)
         .where("data.invited_member_id", "==", invitedMemberId)
     )).empty
@@ -85,6 +81,27 @@ async function _mintReferralBonus(
     type: MintType.REFERRAL_BONUS,
     amount: bigAmount.toString(),
     invited_member_id: invitedMember.id
+  };
+}
+
+async function _mintInvitedBonus(
+  loggedInMember: firestore.DocumentSnapshot,
+  amount: Big
+): Promise<MintReferralBonusPayload> {
+  if (!loggedInMember.get("invite_confirmed")) {
+    throw new NotVerifiedError(loggedInMember);
+  }
+  const createdAt = loggedInMember.createTime;
+  if (!createdAt) {
+    // TODO create some type for generic unspecified error tht we do not expect client to interpret,
+    // because we don't expect it to happen and want devs to be alerted if it does.
+    throw Error("Logged in member create time did not exist, there is a bug.");
+  }
+  const allowedAmount = Config.getInvitedBonus(createdAt.toMillis());
+  throwIfTooLarge(amount, allowedAmount);
+  return {
+    type: MintType.INVITED_BONUS,
+    amount: amount.toString()
   };
 }
 
@@ -122,9 +139,10 @@ export const mint = (
       const bigAmount = new Big(amount).round(2, 0);
 
       let mintData;
-      if (call.body.type === MintType.BASIC_INCOME) {
+      const mintType = call.body.type;
+      if (mintType === MintType.BASIC_INCOME) {
         mintData = _mintBasicIncome(loggedInMember, bigAmount);
-      } else if (call.body.type === MintType.REFERRAL_BONUS) {
+      } else if (mintType === MintType.REFERRAL_BONUS) {
         const { invited_member_id } = call.body;
         mintData = await _mintReferralBonus(
           transaction,
@@ -133,6 +151,11 @@ export const mint = (
           loggedInMember,
           bigAmount,
           invited_member_id
+        );
+      } else if (mintType === MintType.JOIN_FROM_REFERRAL_BONUS) {
+        mintData = await _mintInvitedBonus(
+          loggedInMember,
+          bigAmount
         );
       } else {
         throw new MintInvalidTypeError(type);
@@ -186,3 +209,9 @@ export const mint = (
       status: 201
     };
   });
+
+function throwIfTooLarge(amount: Big, allowedAmount: Big) {
+  if (amount.gt(allowedAmount)) {
+    throw MintAmountTooLargeError(amount, allowedAmount);
+  }
+}
