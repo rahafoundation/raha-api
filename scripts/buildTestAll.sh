@@ -8,17 +8,19 @@
     if [ -d "${PACKAGE_DIR}" ]; then
       (
         cd "${PACKAGE_DIR}"
-        echo "Running \`yarn test\` in ${PACKAGE_DIR}..."
-        yarn test
-        retval=$?
-        if [ $retval -eq 0 ]; then
-            echo "Tests for ${PACKAGE_DIR} succeeded."
-            echo ""
-        else
-            echo "Tests for ${PACKAGE_DIR} failed."
-            echo "Aborting"
-            exit $retval
-        fi
+        for CMD in "build" "test"; do
+          echo "Running \`yarn ${CMD}\` in ${PACKAGE_DIR}..."
+          yarn $CMD
+          retval=$?
+          if [ $retval -eq 0 ]; then
+              echo "yarn ${CMD} for ${PACKAGE_DIR} succeeded."
+              echo ""
+          else
+              echo "yarn ${CMD} for ${PACKAGE_DIR} failed."
+              echo "Aborting"
+              exit $retval
+          fi
+        done
       )
     fi
   done
