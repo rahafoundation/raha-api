@@ -50,7 +50,10 @@ export interface TrustPayload {
 }
 export enum MintType {
   BASIC_INCOME = "BASIC_INCOME",
-  REFERRAL_BONUS = "REFERRAL_BONUS"
+  // Bonus for inviting someone else
+  REFERRAL_BONUS = "REFERRAL_BONUS",
+  // Bonus for joining the network through an invite
+  INVITED_BONUS = "INVITED_BONUS",
 }
 export interface MintBasicIncomePayload {
   type: MintType.BASIC_INCOME;
@@ -61,7 +64,11 @@ export interface MintReferralBonusPayload {
   amount: string;
   invited_member_id: MemberId;
 }
-
+export interface MintInvitedBonusPayload {
+  type: MintType.INVITED_BONUS;
+  amount: string;
+}
+export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload | MintInvitedBonusPayload;
 export interface MintReferralBonusOperation extends MintOperation {
   data: MintReferralBonusPayload;
 }
@@ -70,7 +77,10 @@ export interface MintBasicIncomeOperation extends MintOperation {
   data: MintBasicIncomePayload;
 }
 
-export type MintPayload = MintBasicIncomePayload | MintReferralBonusPayload;
+export interface MintInvitedBonus extends MintOperation {
+  data: MintInvitedBonusPayload;
+}
+
 
 export enum GiveType {
   DIRECT_GIVE = "DIRECT_GIVE",
