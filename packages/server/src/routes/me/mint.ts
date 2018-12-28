@@ -6,7 +6,8 @@ import {
   MintType,
   MintBasicIncomePayload,
   MintReferralBonusPayload,
-  OperationType
+  OperationType,
+  MintInvitedBonusPayload
 } from "@raha/api-shared/dist/models/Operation";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
@@ -85,11 +86,13 @@ async function _mintReferralBonus(
 }
 
 async function _mintInvitedBonus(
+  transaction: FirebaseFirestore.Transaction,
+  operations: FirebaseFirestore.CollectionReference,
   loggedInMember: firestore.DocumentSnapshot,
   amount: Big
-): Promise<MintReferralBonusPayload> {
+): Promise<MintInvitedBonusPayload> {
   if (!loggedInMember.get("invite_confirmed")) {
-    throw new NotVerifiedError(loggedInMember);
+    throw new NotVerifiedError(loggedInMember.id);
   }
   const createdAt = loggedInMember.createTime;
   if (!createdAt) {
@@ -99,6 +102,19 @@ async function _mintInvitedBonus(
   }
   const allowedAmount = Config.getInvitedBonus(createdAt.toMillis());
   throwIfTooLarge(amount, allowedAmount);
+
+  // Verify that bonus hasn't been claimed.
+  if (
+    !(await transaction.get(
+      operations
+        .where("op_code", "==", OperationType.MINT)
+        .where("data.type", "==", MintType.INVITED_BONUS)
+        .where("creator_uid", "==", loggedInMember.id)
+    )).empty
+  ) {
+    throw new AlreadyMintedError(loggedInMember.id);
+  }
+
   return {
     type: MintType.INVITED_BONUS,
     amount: amount.toString()
@@ -139,10 +155,9 @@ export const mint = (
       const bigAmount = new Big(amount).round(2, 0);
 
       let mintData;
-      const mintType = call.body.type;
-      if (mintType === MintType.BASIC_INCOME) {
+      if (call.body.type === MintType.BASIC_INCOME) {
         mintData = _mintBasicIncome(loggedInMember, bigAmount);
-      } else if (mintType === MintType.REFERRAL_BONUS) {
+      } else if (call.body.type === MintType.REFERRAL_BONUS) {
         const { invited_member_id } = call.body;
         mintData = await _mintReferralBonus(
           transaction,
@@ -152,8 +167,10 @@ export const mint = (
           bigAmount,
           invited_member_id
         );
-      } else if (mintType === MintType.JOIN_FROM_REFERRAL_BONUS) {
+      } else if (call.body.type === MintType.INVITED_BONUS) {
         mintData = await _mintInvitedBonus(
+          transaction,
+          operations,
           loggedInMember,
           bigAmount
         );
@@ -212,6 +229,6 @@ export const mint = (
 
 function throwIfTooLarge(amount: Big, allowedAmount: Big) {
   if (amount.gt(allowedAmount)) {
-    throw MintAmountTooLargeError(amount, allowedAmount);
+    throw new MintAmountTooLargeError(amount, allowedAmount);
   }
 }
