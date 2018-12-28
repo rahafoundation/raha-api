@@ -10,7 +10,8 @@ import { callApi } from "../callApi";
 import {
   MintPayload,
   MintBasicIncomePayload,
-  MintReferralBonusPayload
+  MintReferralBonusPayload,
+  MintInvitedBonusPayload
 } from "@raha/api-shared/dist/models/Operation";
 import { Omit } from "@raha/api-shared/dist/helpers/Omit";
 
@@ -23,8 +24,14 @@ export type MintReferralBonusParams = Omit<
 > & {
   amount: Big;
 };
+export type MintInvitedBonusParams = Omit<MintInvitedBonusPayload, "amount"> & {
+  amount: Big;
+};
 
-export type MintArgs = MintBasicIncomeParams | MintReferralBonusParams;
+export type MintArgs =
+  | MintBasicIncomeParams
+  | MintReferralBonusParams
+  | MintInvitedBonusParams;
 
 /**
  * API call that issues a request to mint Raha.
