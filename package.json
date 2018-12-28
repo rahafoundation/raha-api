@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "./scripts/testAll.sh"
+    "test": "./scripts/buildTestAll.sh",
+    "build": "(cd packages/shared && yarn build) & (cd packages/client && yarn build) & (cd packages/"
   }
 }
