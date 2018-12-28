@@ -14,14 +14,17 @@ import {
 } from "@raha/api-shared/dist/models/Operation";
 import { Omit } from "@raha/api-shared/dist/helpers/Omit";
 
-type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
+export type MintBasicIncomeParams = Omit<MintBasicIncomePayload, "amount"> & {
   amount: Big;
 };
-type MintReferralBonusParams = Omit<MintReferralBonusPayload, "amount"> & {
+export type MintReferralBonusParams = Omit<
+  MintReferralBonusPayload,
+  "amount"
+> & {
   amount: Big;
 };
 
-type MintArgs = MintBasicIncomeParams | MintReferralBonusParams;
+export type MintArgs = MintBasicIncomeParams | MintReferralBonusParams;
 
 /**
  * API call that issues a request to mint Raha.
