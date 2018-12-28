@@ -11,6 +11,7 @@ import {
 } from "@raha/api-shared/dist/models/Operation";
 import { MemberId } from "@raha/api-shared/dist/models/identifiers";
 import { NotFoundError } from "@raha/api-shared/dist/errors/RahaApiError/NotFoundError";
+import { AlreadyMintedInvitedBonus } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/AlreadyMintedInvitedBonus";
 import { MintAmountTooLargeError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/MintAmountTooLargeError";
 import { NotVerifiedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotVerifiedError";
 import { NotInvitedError } from "@raha/api-shared/dist/errors/RahaApiError/me/mint/referral/NotInvitedError";
@@ -112,7 +113,7 @@ async function _mintInvitedBonus(
         .where("creator_uid", "==", loggedInMember.id)
     )).empty
   ) {
-    throw new AlreadyMintedError(loggedInMember.id);
+    throw new AlreadyMintedInvitedBonus();
   }
 
   return {
