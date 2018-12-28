@@ -11,7 +11,7 @@ export const MILLISECONDS_PER_WEEK = Big(1000 * 60 * 60 * 24 * 7);
 export class Config {
   public static readonly UBI_WEEKLY_RATE = Big(10);
   public static readonly MAX_WEEKS_ACCRUE = Big(4);
-  public static readonly MINT_CAP = Config.UBI_WEEKLY_RATE.times(Config.MAX_WEEKS_ACCRUE);
+  public static readonly MINT_CAP = Confg.UBI_WEEKLY_RATE.times(Config.MAX_WEEKS_ACCRUE);
   public static readonly REFERRAL_BONUS_PRE_SPLIT = Big(60);
   public static readonly REFERRAL_BONUS_POST_SPLIT = Big(30);
   public static readonly INVITED_BONUS_PRE_SPLIT = Big(0);
