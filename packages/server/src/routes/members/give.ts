@@ -8,7 +8,9 @@ import {
   OperationType,
   GiveType,
   DirectGiveMetadata,
-  TipMetadata
+  TipMetadata,
+  TipGiveOperation,
+  DirectGiveOperation
 } from "@raha/api-shared/dist/models/Operation";
 import { InsufficientBalanceError } from "@raha/api-shared/dist/errors/RahaApiError/members/give/InsufficientBalanceError";
 import {
@@ -36,10 +38,11 @@ async function _notifyGiveRecipient(
   messaging: adminMessaging.Messaging,
   members: CollectionReference,
   fcmTokens: CollectionReference,
-  giveOperation: GiveOperation
+  giveOperation: DirectGiveOperation
 ) {
   const { id, creator_uid, data } = giveOperation;
-  const { to_uid, amount, donation_amount, memo } = data;
+  const { to_uid, amount, donation_amount } = data;
+  const memo = data.metadata.memo;
 
   const fromMember = await members.doc(creator_uid).get();
   const toMember = await members.doc(to_uid).get();
@@ -60,6 +63,42 @@ async function _notifyGiveRecipient(
     `${fromMember.get("full_name")} gave you ${displayAmount} Raha${
       memo ? ` for ${memo}` : ""
     }.`
+  );
+}
+
+/**
+ * A function to notify the recipient of a Tip operation.
+ */
+async function _notifyTipRecipient(
+  messaging: adminMessaging.Messaging,
+  members: CollectionReference,
+  fcmTokens: CollectionReference,
+  operations: CollectionReference,
+  tipOperation: TipGiveOperation
+) {
+  const { id, creator_uid, data } = tipOperation;
+  const { to_uid, amount, donation_amount } = data;
+
+  const fromMember = await members.doc(creator_uid).get();
+  const toMember = await members.doc(to_uid).get();
+  const transaction = await operations
+    .doc(data.metadata.targetOperationId)
+    .get();
+
+  if (!fromMember.exists || !toMember.exists) {
+    throw new Error(
+      `Invalid tip operation with ID ${id}. One or both members does not exist.`
+    );
+  }
+  const toMemberId = toMember.id;
+  const displayAmount = new Big(amount).plus(donation_amount).toString();
+
+  await sendPushNotification(
+    messaging,
+    fcmTokens,
+    toMemberId,
+    "You received a tip!",
+    `${fromMember.get("full_name")} tipped you ${displayAmount} Raha.`
   );
 }
 
@@ -90,7 +129,19 @@ export const give = (
       call.body.amount,
       metadata,
       transactionMemo
-    );
+    ).then((value: ApiResponseDefinition<201, Operation>) => {
+      // Notify the recipient, but never let notification failure cause this API request to fail.
+      _notifyGiveRecipient(
+        messaging,
+        membersCollection,
+        fcmTokens,
+        value.body as DirectGiveOperation
+      ).catch(exception => {
+        // tslint:disable-next-line:no-console
+        console.error(exception);
+      });
+      return value;
+    });
   });
 
 /**
@@ -118,7 +169,20 @@ export const tip = (
       call.params.memberId,
       call.body.amount,
       metadata
-    );
+    ).then((value: ApiResponseDefinition<201, Operation>) => {
+      // Notify the recipient, but never let notification failure cause this API request to fail.
+      _notifyTipRecipient(
+        messaging,
+        membersCollection,
+        fcmTokens,
+        operations,
+        value.body as TipGiveOperation
+      ).catch(exception => {
+        // tslint:disable-next-line:no-console
+        console.error(exception);
+      });
+      return value;
+    });
   });
 
 /**
@@ -221,18 +285,6 @@ const _createGiveOperationAndNotify = async (
   });
 
   const newOperationData = (await newOperationReference.get()).data();
-
-  // Notify the recipient, but never let notification failure cause this API request to fail.
-  _notifyGiveRecipient(
-    messaging,
-    membersCollection,
-    fcmTokens,
-    newOperationData as GiveOperation
-  ).catch(exception => {
-    // tslint:disable-next-line:no-console
-    console.error(exception);
-  });
-
   return {
     body: {
       ...newOperationData,
