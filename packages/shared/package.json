@@ -24,7 +24,7 @@
     "prettier": "^1.12.1",
     "ts-jest": "^23.10.4",
     "tslint": "^5.9.1",
-    "tslint-config-prettier": "^1.10.0",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.0.0-dev.20180711"
   },
   "scripts": {
