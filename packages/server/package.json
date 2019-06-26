@@ -18,7 +18,7 @@
     "@sendgrid/mail": "^6.2.1",
     "@types/big.js": "^4.0.4",
     "@types/url-join": "^0.8.2",
-    "big.js": "^5.0.3",
+    "big.js": "^5.2.2",
     "default-timezone-for-country": "https://github.com/rahulgi/default-timezones",
     "discourse-sso": "rahafoundation/discourse_sso_node",
     "firebase-admin": "^5.12.0",

@@ -12,7 +12,7 @@
     "access": "public"
   },
   "dependencies": {
-    "big.js": "^5.1.2",
+    "big.js": "^5.2.2",
     "enum-values": "^1.2.1",
     "http-status": "^1.2.0"
   },
