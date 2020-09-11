@@ -1,3 +1,7 @@
+# DEPRECATED
+
+This repo is inactive and not being monitored for security and functionality updates.
+
 # `@raha/api`
 
 This contains the server that runs the Raha API, a JavaScript client library
